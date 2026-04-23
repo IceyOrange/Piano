@@ -2,7 +2,10 @@ window.PianoApp = window.PianoApp || {};
 
 window.PianoApp.Sequencer = {
   isPlaying: false,
+  isPaused: false,
   timeouts: [],
+  elapsedMs: 0,
+  baseTime: 0,
 
   start() {
     if (this.isPlaying) return;
@@ -12,15 +15,23 @@ window.PianoApp.Sequencer = {
     }
 
     const ctx = window.PianoApp.audioCtx;
-    const startTime = ctx ? ctx.currentTime : 0;
     const seq = window.PianoApp.canonSequence;
+    const now = ctx ? ctx.currentTime : 0;
 
+    // baseTime is the virtual start time of the sequence.
+    // If continuing from pause, baseTime = now - elapsedMs so that
+    // note.time maps to the correct absolute AudioContext time.
+    this.baseTime = now - (this.elapsedMs / 1000);
     this.isPlaying = true;
+    this.isPaused = false;
 
     seq.forEach((note) => {
-      const audioDelay = note.time / 1000;
-      window.PianoApp.playNoteMidi(note.midi, note.duration, startTime + audioDelay);
+      if (note.time < this.elapsedMs) return; // skip already played
 
+      const audioDelay = note.time / 1000;
+      window.PianoApp.playNoteMidi(note.midi, note.duration, this.baseTime + audioDelay);
+
+      const visualDelay = note.time - this.elapsedMs;
       const visualTimer = setTimeout(() => {
         if (!this.isPlaying) return;
         if (note.hasKey && window.PianoApp.pressKeyVisual) {
@@ -32,24 +43,31 @@ window.PianoApp.Sequencer = {
           }
         }, note.duration);
         this.timeouts.push(releaseTimer);
-      }, note.time);
+      }, visualDelay);
 
       this.timeouts.push(visualTimer);
     });
 
     if (seq.length > 0) {
       const last = seq[seq.length - 1];
+      const remaining = last.time + last.duration - this.elapsedMs;
       const endTimer = setTimeout(() => {
         this.isPlaying = false;
+        this.isPaused = false;
+        this.elapsedMs = 0;
         this.timeouts = [];
-      }, last.time + last.duration + 100);
+      }, Math.max(0, remaining + 100));
       this.timeouts.push(endTimer);
     }
   },
 
-  stop() {
+  pause() {
     if (!this.isPlaying) return;
     this.isPlaying = false;
+    this.isPaused = true;
+    if (window.PianoApp.audioCtx && this.baseTime) {
+      this.elapsedMs = (window.PianoApp.audioCtx.currentTime - this.baseTime) * 1000;
+    }
     this.timeouts.forEach((t) => clearTimeout(t));
     this.timeouts = [];
     if (window.PianoApp.releaseAllKeysVisual) {
@@ -58,6 +76,13 @@ window.PianoApp.Sequencer = {
   },
 
   toggle() {
-    this.isPlaying ? this.stop() : this.start();
+    if (this.isPlaying) {
+      this.pause();
+    } else if (this.isPaused) {
+      this.start();
+    } else {
+      this.elapsedMs = 0;
+      this.start();
+    }
   },
 };
