@@ -277,6 +277,36 @@ window.PianoApp.initPiano = function () {
 
       container.addEventListener("contextmenu", (e) => e.preventDefault());
 
+      // ─── Auto-play Visual Helpers ──────────────────
+      window.PianoApp.pressKeyVisual = function (note) {
+        const group = svg.querySelector(`[data-note="${note}"]`);
+        if (group && !isBlackKey(note)) group.classList.add("pressed");
+        setVisualState(note, "pressed", true);
+      };
+
+      window.PianoApp.releaseKeyVisual = function (note) {
+        const group = svg.querySelector(`[data-note="${note}"]`);
+        if (group && !isBlackKey(note)) group.classList.remove("pressed");
+        setVisualState(note, "pressed", false);
+      };
+
+      window.PianoApp.releaseAllKeysVisual = function () {
+        whiteKeys.forEach((k) => window.PianoApp.releaseKeyVisual(k.note));
+        blackKeys.forEach((k) => window.PianoApp.releaseKeyVisual(k.note));
+      };
+
+      // ─── Cat Click ─────────────────────────────────
+      const ohCat = liveVisualSvg.getElementById("Oh Cat!");
+      if (ohCat) {
+        ohCat.style.cursor = "pointer";
+        ohCat.style.pointerEvents = "auto";
+        ohCat.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.PianoApp.Sequencer.toggle();
+        });
+      }
+
       // ─── Keyboard Chord Mapping ──────────────────
       const keyboardChords = {
         c: { major: ["C3", "E3", "G3"], minor: ["C3", "D#3", "G3"] },
