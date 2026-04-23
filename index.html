@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Piano — Personal Homepage</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=4">
+</head>
+<body>
+  <!-- Curtain Reveal -->
+  <div class="curtain curtain-top"></div>
+  <div class="curtain curtain-bottom"></div>
+
+  <!-- Page Transition Overlay -->
+  <div class="transition-overlay"></div>
+
+  <!-- Menu Button -->
+  <button class="menu-btn" aria-label="Menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="4" y="6" width="16" height="2" rx="1"/>
+      <rect x="4" y="11" width="16" height="2" rx="1"/>
+      <rect x="4" y="16" width="16" height="2" rx="1"/>
+    </svg>
+  </button>
+
+  <!-- Fullscreen Menu -->
+  <div class="menu-overlay">
+    <nav class="menu-links">
+      <a href="index.html">Home</a>
+      <a href="portfolio.html">Portfolio</a>
+      <a href="experience.html">Experience</a>
+      <a href="about.html">About</a>
+    </nav>
+    <div class="menu-social">
+      <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://twitter.com" target="_blank" rel="noopener">Twitter</a>
+    </div>
+  </div>
+
+  <!-- Home Page -->
+  <div class="page">
+    <div class="page-content">
+      <!-- Piano Keyboard -->
+      <div class="piano-wrapper">
+        <div id="piano-keyboard" class="piano-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js?v=2"></script>
+  <script src="js/audio.js?v=5"></script>
+  <script src="js/transitions.js?v=2"></script>
+  <script src="js/menu.js?v=2"></script>
+  <script src="js/piano.js?v=17"></script>
+  <script src="js/canon_data.js?v=1"></script>
+  <script src="js/sequencer.js?v=1"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      window.PianoApp.initTransitions();
+      window.PianoApp.initMenu();
+      window.PianoApp.initPiano();
+    });
+  </script>
+</body>
+</html>
