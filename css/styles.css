@@ -305,6 +305,30 @@ img {
   width: 100%;
   height: 100%;
 }
+
+/* ─── Key Preview Animation ─────────────────── */
+.key-preview-animation {
+  position: absolute;
+  left: 0;
+  bottom: 102%;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 120ms ease;
+}
+.key-preview-animation svg {
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(254, 246, 227, 0.5)) drop-shadow(0 0 2px rgba(254, 246, 227, 0.3));
+}
+.key-preview-animation path[data-anim-type="fill"] {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.key-preview-animation path[data-anim-type="fill"].revealed {
+  opacity: 1;
+}
+
 /* ─── Portfolio ─────────────────────────────── */
 .portfolio-header {
   padding: 6rem 2rem 1rem;
@@ -503,182 +527,6 @@ img {
 }
 .project-modal-close:hover {
   background: rgba(10, 25, 41, 0.9);
-}
-
-/* ─── Experience Map ────────────────────────── */
-.experience-map-container {
-  position: absolute;
-  inset: 0;
-}
-.experience-map-container svg {
-  width: 100%;
-  height: 100%;
-}
-.route-line {
-  fill: none;
-  stroke: var(--accent-warm-dim);
-  stroke-width: 0.3;
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-}
-.route-line.animate {
-  animation: drawRoute 1.5s ease-in-out 0.4s forwards;
-}
-@keyframes drawRoute {
-  to { stroke-dashoffset: 0; }
-}
-.city-marker {
-  transform: scale(0);
-  transform-origin: center;
-  cursor: pointer;
-}
-.city-marker.animate {
-  animation: scaleIn 0.4s ease-out forwards;
-}
-.city-marker-ring {
-  transform: scale(0);
-  transform-origin: center;
-}
-.city-marker-ring.animate {
-  animation: scaleIn 0.4s ease-out forwards;
-}
-@keyframes scaleIn {
-  to { transform: scale(1); }
-}
-.city-label {
-  opacity: 0;
-  font-size: 2px;
-  font-family: var(--font-sans);
-  pointer-events: none;
-}
-.city-label.animate {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-.experience-detail {
-  position: absolute;
-  bottom: 2rem;
-  left: 2rem;
-  right: 2rem;
-  background: var(--deep-navy-light);
-  border: 1px solid var(--warm-ivory-ghost);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
-@media (min-width: 768px) {
-  .experience-detail {
-    left: auto;
-    right: 2rem;
-    width: 320px;
-  }
-}
-.experience-detail.active {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-.experience-detail .period {
-  font-size: 0.75rem;
-  color: var(--accent-warm);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 0.25rem;
-}
-.experience-detail h3 {
-  font-family: var(--font-serif);
-  font-size: 1.125rem;
-  color: var(--warm-ivory);
-  margin-bottom: 0.25rem;
-}
-.experience-detail .role {
-  font-size: 0.875rem;
-  color: var(--warm-ivory-dim);
-  margin-bottom: 0.75rem;
-}
-.experience-detail p {
-  font-size: 0.875rem;
-  color: var(--warm-ivory-dim);
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-.experience-detail .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.experience-detail .tag {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--warm-ivory-ghost);
-  color: var(--warm-ivory-dim);
-}
-.experience-detail .close-btn {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--warm-ivory-faint);
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-.experience-detail .close-btn:hover {
-  color: var(--warm-ivory);
-}
-
-/* Mobile experience list */
-.mobile-experience-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 1.5rem 3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.experience-card {
-  background: var(--deep-navy-light);
-  border: 1px solid var(--warm-ivory-ghost);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-}
-.experience-card .period {
-  font-size: 0.75rem;
-  color: var(--accent-warm);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-.experience-card h3 {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  color: var(--warm-ivory);
-  margin-bottom: 0.25rem;
-}
-.experience-card .role {
-  font-size: 0.875rem;
-  color: var(--warm-ivory-dim);
-  margin-bottom: 0.75rem;
-}
-.experience-card p {
-  font-size: 0.875rem;
-  color: var(--warm-ivory-dim);
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-.experience-card .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 /* ─── About ─────────────────────────────────── */
@@ -911,6 +759,29 @@ img {
   margin-top: auto;
 }
 
+/* ─── Vinyl Cursor ──────────────────────────── */
+@keyframes vinylSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+body.vinyl-cursor-active,
+body.vinyl-cursor-active * {
+  cursor: none !important;
+}
+
+/* ─── China Map ─────────────────────────────── */
+.china-map-svg {
+  width: 100%;
+  height: 100%;
+}
+.china-map-svg path {
+  stroke: rgba(245, 240, 230, 0.35);
+  stroke-width: 0.3;
+  fill: none;
+  shape-rendering: geometricPrecision;
+}
+
 /* ─── Reduced Motion ────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -918,4 +789,205 @@ img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ─── Experience Page Layout ────────────────── */
+.experience-page {
+  flex-direction: column;
+}
+.experience-header {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 10;
+}
+.experience-desktop {
+  display: none;
+  flex: 1;
+  height: 100%;
+}
+.experience-map-panel {
+  flex: 0 0 58%;
+  position: relative;
+  border-right: 1px solid rgba(245, 240, 230, 0.08);
+}
+.experience-map-panel svg {
+  width: 100%;
+  height: 100%;
+}
+.experience-timeline-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4rem 1.5rem 2rem;
+}
+.experience-mobile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+.experience-mobile .experience-map-panel {
+  flex: 0 0 40vh;
+  border-right: none;
+  border-bottom: 1px solid rgba(245, 240, 230, 0.08);
+}
+
+@media (min-width: 768px) {
+  .experience-desktop {
+    display: flex;
+  }
+  .experience-mobile {
+    display: none;
+  }
+}
+
+/* ─── Experience Cards ──────────────────────── */
+.experience-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.experience-card {
+  background: rgba(245, 240, 230, 0.03);
+  border: 1px solid rgba(245, 240, 230, 0.08);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.experience-card:hover {
+  background: rgba(245, 240, 230, 0.06);
+  border-color: rgba(245, 240, 230, 0.15);
+}
+.experience-card.expanded {
+  border-color: rgba(212, 165, 116, 0.25);
+  background: rgba(212, 165, 116, 0.04);
+}
+.card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.card-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(245, 240, 230, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.card-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-logo-placeholder {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(245, 240, 230, 0.5);
+}
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.card-type {
+  font-size: 0.6rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 3px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.card-type.work {
+  background: rgba(212, 165, 116, 0.15);
+  color: #D4A574;
+}
+.card-type.study {
+  background: rgba(91, 139, 239, 0.15);
+  color: #5B8DEF;
+}
+.card-period {
+  font-size: 0.75rem;
+  color: rgba(245, 240, 230, 0.5);
+}
+.card-org {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--warm-ivory);
+  margin-bottom: 0.15rem;
+}
+.card-position {
+  font-size: 0.8rem;
+  color: rgba(245, 240, 230, 0.6);
+  margin-bottom: 0.4rem;
+}
+.card-org-label {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  background: rgba(245, 240, 230, 0.08);
+  color: rgba(245, 240, 230, 0.6);
+}
+.card-expand-icon {
+  font-size: 0.75rem;
+  color: rgba(245, 240, 230, 0.3);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+.experience-card.expanded .card-expand-icon {
+  transform: rotate(180deg);
+}
+.card-detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.25s ease, margin 0.25s ease, border-color 0.25s ease;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 1px solid transparent;
+}
+.experience-card.expanded .card-detail {
+  max-height: 300px;
+  opacity: 1;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top-color: rgba(245, 240, 230, 0.08);
+}
+.card-detail p {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(245, 240, 230, 0.7);
+}
+
+/* ─── Map Marker Styles ─────────────────────── */
+.map-marker-group {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.map-marker-group .marker-ring {
+  transition: opacity 0.3s ease, r 0.3s ease;
+}
+.map-marker-group.active .marker-ring {
+  opacity: 0.35;
+  r: 10;
+}
+.map-marker-group text {
+  transition: opacity 0.2s ease, fill 0.2s ease;
+}
+.map-marker-group:not(.active) text {
+  opacity: 0.5;
+}
+.map-marker-group.active text {
+  opacity: 1;
+  fill: var(--warm-ivory);
 }
