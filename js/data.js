@@ -4,21 +4,21 @@ window.PianoApp.data = {
   projects: [
     {
       id: "1",
-      name: "🎹 一个能弹琴的 Landing Page",
-      description: "灵感来自 Pinterest 的一张图片，设置真实琴键交互，并通过长按琴键绑定超链接跳转; 在留白处设计月之暗面同款乐谱，并安排一只小猫趴在上面用户自动演奏交互。",
+      name: "一个能弹琴的 Landing Page",
+      description: "真实琴键交互与 Web Audio API 音频合成，长按琴键触发页面跳转；月之暗面风格动态乐谱，搭配自动演奏的小猫角色。",
       year: "2026",
       category: "Web App",
-      image: "assets/images/demo.jpg",
+      image: "assets/images/Piano.png",
       tech: ["HTML", "CSS", "JavaScript", "Web Audio API"],
       link: "https://www.lovegood.cool",
     },
     {
       id: "2",
-      name: "☁️ 蓝天白云 Blue Sky & White Cloud",
-      description: "灵感来自 X 上看到的一个有趣的交互，思路由原项目的池塘发散到天空，并引入落叶、微风、昼夜更替、星空、流星(雨)、彗星和星座连线等元素。",
+      name: "Blue Sky & White Cloud",
+      description: "从池塘到天空的交互发散，Canvas 渲染落叶、微风、昼夜更替、星空、流星雨、彗星与星座连线。",
       year: "2026",
       category: "Creative",
-      image: "assets/images/demo.jpg",
+      image: "assets/images/BlueSkyWhiteCloud.png",
       tech: ["HTML", "CSS", "JavaScript", "Canvas"],
       link: "#",
     }

@@ -73,7 +73,7 @@ const PREVIEW_ANIMATION_DURATION = LONG_PRESS_DURATION - 500;
 
 const navKeyAnimations = {
   "C3": { svg: "assets/images/Guitar.svg", size: 76 },
-  "G3": { svg: "assets/images/BeatlesWalking.svg", size: 100 },
+  "G3": { svg: "assets/images/BeatlesWalking.svg", size: 140 },
   "B3": { svg: "assets/images/Drum.svg", size: 90 },
 };
 

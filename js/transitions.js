@@ -8,7 +8,7 @@ const transitionVariants = {
   "index.html": "fade",
 };
 
-// Bidirectional page-pair variants: when navigating between these pairs, use the specified variant
+// Bidirectional page-pair variants
 const transitionPairs = {
   "experience.html->index.html": "curtain-wipe",
   "index.html->experience.html": "curtain-wipe",
@@ -27,16 +27,38 @@ function getTransitionVariant(from, to) {
   return transitionPairs[pairKey] || transitionVariants[to] || "fade";
 }
 
-window.PianoApp.initTransitions = function () {
-  // Clean up any leftover transition layers
-  document.querySelectorAll('.reveal-circle-bg, .reveal-slide-bg, .iframe-reveal-container, .curtain-stage').forEach(el => el.remove());
+// ─── Shared helpers ───────────────────────────────────
 
+function getC3Origin() {
+  const c3Key = document.querySelector('[data-note="C3"]');
+  if (c3Key) {
+    const r = c3Key.getBoundingClientRect();
+    return { x: `${r.left + r.width / 2}px`, y: `${r.top + r.height / 2}px` };
+  }
+  return { x: 'calc(100% - 48px)', y: '48px' };
+}
+
+// Circle-reveal animation is handled via:
+// Forward: CSS animation on .page (injected by destination page's inline <style>)
+// Reverse: clip-path transition on .page (shrinks toward C3)
+
+function revealPiano() {
+  const pw = document.querySelector(".piano-wrapper");
+  if (pw) {
+    pw.style.transition = "none";
+    pw.classList.add("curtain-revealed");
+    pw.offsetHeight;
+    pw.style.transition = "";
+  }
+}
+
+function cleanupTransitionLayers() {
+  document.querySelectorAll('.circle-reveal-layer, .reveal-circle-bg, .reveal-slide-bg, .iframe-reveal-container, .slide-reveal-container').forEach(el => el.remove());
   const overlay = document.querySelector(".transition-overlay");
   if (overlay) {
     overlay.classList.remove("active", "slide-left", "scale", "fade", "curtain-wipe");
     overlay.innerHTML = "";
   }
-  // Clear any stale content transition classes
   document.querySelectorAll(".page-content").forEach(el => {
     el.classList.remove("exit-circle", "enter-circle", "exit-slide-left", "enter-slide-right");
     el.style.removeProperty("--circle-origin");
@@ -45,18 +67,22 @@ window.PianoApp.initTransitions = function () {
     el.style.transition = "";
     el.style.transformOrigin = "";
   });
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("curtain-exiting", "curtain-entering"));
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.remove("curtain-exiting", "curtain-entering");
+    p.style.removeProperty("clip-path");
+    p.style.removeProperty("transition");
+  });
+}
+
+// ─── Init ─────────────────────────────────────────────
+
+window.PianoApp.initTransitions = function () {
+  cleanupTransitionLayers();
 
   // Intercept internal links for animated exit
   document.querySelectorAll('a[href]').forEach((link) => {
     const href = link.getAttribute("href");
-    if (
-      !href ||
-      href.startsWith("http") ||
-      href.startsWith("#") ||
-      href.startsWith("mailto:")
-    )
-      return;
+    if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
 
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -66,123 +92,92 @@ window.PianoApp.initTransitions = function () {
     });
   });
 
-  // Content reveal after curtain opens
-  const pianoWrapper = document.querySelector(".piano-wrapper");
-  if (pianoWrapper) {
-    setTimeout(() => {
-      pianoWrapper.classList.add("curtain-revealed");
-    }, 200);
-  }
+  // Piano visible instantly
+  revealPiano();
 
-  // Remove initial curtains after animation completes (home page first load)
+  // Remove initial HTML curtains after animation (index first load)
   const curtainStage = document.querySelector(".curtain-stage");
   if (curtainStage) {
-    setTimeout(() => {
-      curtainStage.remove();
-    }, 2200);
+    setTimeout(() => curtainStage.remove(), 2200);
   }
 
-  // Play reverse transition for non-bfcache navigations (direct link clicks back)
+  // Reverse transition: play when landing on this page after a forward animation
   const trans = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
   const currentPage = getPageName();
   if (trans.to === currentPage && !sessionStorage.getItem('pianoTransitionPlayed')) {
     sessionStorage.setItem('pianoTransitionPlayed', 'true');
-    if (trans.variant === 'curtain-wipe') {
-      playCurtainOpen();
-    } else if (trans.variant === 'circle-reveal') {
-      const c3Key = document.querySelector('[data-note="C3"]');
-      let ox = 'calc(100% - 48px)', oy = '48px';
-      if (c3Key) {
-        const r = c3Key.getBoundingClientRect();
-        ox = `${r.left + r.width / 2}px`;
-        oy = `${r.top + r.height / 2}px`;
-      }
-      const pageContent = document.querySelector(".page-content");
-      if (pageContent) {
-        pageContent.style.setProperty("--circle-origin", `${ox} ${oy}`);
-        pageContent.classList.add("enter-circle");
-        setTimeout(() => {
-          pageContent.classList.remove("enter-circle");
-          pageContent.style.removeProperty("--circle-origin");
-        }, 1200);
-      }
-      const layer = document.createElement('div');
-      layer.className = 'exit-circle-layer';
-      layer.style.setProperty('--circle-origin', `${ox} ${oy}`);
-      document.body.appendChild(layer);
-      requestAnimationFrame(() => layer.classList.add('active'));
-      setTimeout(() => layer.remove(), 1200);
-    } else if (trans.variant === 'slide-from-right') {
-      const pageContent = document.querySelector(".page-content");
-      if (pageContent) {
-        pageContent.classList.add("enter-slide-left");
-        setTimeout(() => pageContent.classList.remove("enter-slide-left"), 600);
-      }
-      const layer = document.createElement('div');
-      layer.className = 'exit-slide-layer';
-      document.body.appendChild(layer);
-      requestAnimationFrame(() => layer.classList.add('active'));
-      setTimeout(() => layer.remove(), 600);
-    } else if (trans.variant === 'fade') {
-      const pageContent = document.querySelector(".page-content");
-      if (pageContent) {
-        pageContent.style.opacity = "0";
-        requestAnimationFrame(() => {
-          pageContent.style.transition = "opacity 0.5s ease";
-          pageContent.style.opacity = "1";
-          setTimeout(() => {
-            pageContent.style.transition = "";
-            pageContent.style.opacity = "";
-          }, 500);
-        });
-      }
-    }
+    playReverseAnimation(trans);
   }
 };
 
+// ─── Navigate (forward exit animation) ────────────────
+
 window.PianoApp.navigateWithTransition = function (url, variant, origin) {
-  // Record transition for reverse animation on back navigation
   const currentPage = getPageName();
+  console.log('[transition] navigate:', currentPage, '->', url, 'variant:', variant);
+
+  // Instantly close menu overlay (no animation) so it doesn't cover the transition
+  const menuOverlay = document.querySelector('.menu-overlay');
+  if (menuOverlay && menuOverlay.classList.contains('open')) {
+    menuOverlay.style.transition = 'none';
+    menuOverlay.classList.remove('open');
+    void menuOverlay.offsetHeight;
+    menuOverlay.style.transition = '';
+  }
+
   sessionStorage.setItem('pianoTransition', JSON.stringify({
-    from: currentPage,
-    to: url,
-    variant: variant,
-    timestamp: Date.now()
+    from: currentPage, to: url, variant: variant, timestamp: Date.now()
   }));
   sessionStorage.removeItem('pianoTransitionPlayed');
+  // Reverse circle-reveal: prevent entry animation on destination
+  if (variant === 'circle-reveal' && currentPage !== 'index.html') {
+    sessionStorage.setItem('pianoTransitionPlayed', 'true');
+  }
 
   const pageContent = document.querySelector(".page-content");
 
   if (variant === "circle-reveal") {
-    const ox = origin ? `${origin.x}px` : `calc(100% - 48px)`;
-    const oy = origin ? `${origin.y}px` : `48px`;
+    let ox, oy;
+    if (origin) {
+      ox = `${origin.x}px`; oy = `${origin.y}px`;
+    } else {
+      const stored = JSON.parse(sessionStorage.getItem('c3Origin') || '{}');
+      if (stored.x && stored.y) {
+        ox = stored.x; oy = stored.y;
+      } else {
+        const c3 = getC3Origin();
+        ox = c3.x; oy = c3.y;
+      }
+    }
+    sessionStorage.setItem('c3Origin', JSON.stringify({ x: ox, y: oy }));
 
-    // Old page content shrinks to origin
-    if (pageContent) {
-      pageContent.style.setProperty("--circle-origin", `${ox} ${oy}`);
-      pageContent.classList.add("exit-circle");
+    if (currentPage === 'index.html') {
+      // Forward: navigate immediately; CSS animation on destination .page reveals it
+      window.location.href = url;
+    } else {
+      // Reverse: shrink .page toward C3 using Web Animations API
+      console.log('[transition] circle-reveal REVERSE, origin:', ox, oy);
+      const page = document.querySelector('.page');
+      if (page) {
+        page.style.zIndex = '200';
+        page.animate([
+          { clipPath: 'circle(150% at ' + ox + ' ' + oy + ')' },
+          { clipPath: 'circle(0% at ' + ox + ' ' + oy + ')' }
+        ], {
+          duration: 800,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          fill: 'forwards'
+        });
+      }
+      setTimeout(() => { window.location.href = url; }, 900);
     }
 
-    // Warm background layer expands from origin behind it
-    const bgLayer = document.createElement('div');
-    bgLayer.className = 'reveal-circle-bg';
-    bgLayer.style.setProperty('--circle-origin', `${ox} ${oy}`);
-    document.body.appendChild(bgLayer);
-
-    requestAnimationFrame(() => {
-      bgLayer.classList.add('active');
-    });
-
-    setTimeout(() => { window.location.href = url; }, 800);
   } else if (variant === "curtain-wipe") {
     const overlay = document.querySelector(".transition-overlay");
-
-    // Start page exit animation
     const page = document.querySelector(".page");
     if (page) page.classList.add("curtain-exiting");
 
     if (overlay) {
-      // Build two curtain panels that close from edges to center
       const leftPanel = document.createElement("div");
       leftPanel.className = "wipe-half wipe-half--left";
       const rightPanel = document.createElement("div");
@@ -190,57 +185,69 @@ window.PianoApp.navigateWithTransition = function (url, variant, origin) {
       overlay.appendChild(leftPanel);
       overlay.appendChild(rightPanel);
 
-      // Create iframe reveal: two halves sliding in from edges
       const revealContainer = document.createElement("div");
       revealContainer.className = "iframe-reveal-container";
-
       const leftHalf = document.createElement("div");
       leftHalf.className = "iframe-reveal-half iframe-reveal-half--left";
       const leftIframe = document.createElement("iframe");
       leftIframe.src = url;
       leftHalf.appendChild(leftIframe);
-
       const rightHalf = document.createElement("div");
       rightHalf.className = "iframe-reveal-half iframe-reveal-half--right";
       const rightIframe = document.createElement("iframe");
       rightIframe.src = url;
       rightHalf.appendChild(rightIframe);
-
       revealContainer.appendChild(leftHalf);
       revealContainer.appendChild(rightHalf);
       document.body.appendChild(revealContainer);
 
-      // Start both curtain close and iframe reveal animations
       requestAnimationFrame(() => {
         overlay.classList.add("active", variant);
         revealContainer.classList.add("active");
       });
     }
+    setTimeout(() => { window.location.href = url; }, 2000);
 
-    // Navigate after animation completes
-    setTimeout(() => {
-      window.location.href = url;
-    }, 2000);
   } else if (variant === "slide-from-right") {
-    // Old page content slides out to left
+    // Determine direction & color based on TARGET page
+    const goingToIndex = url.includes('index.html');
+    console.log('[transition] slide-from-right, goingToIndex:', goingToIndex);
+    const targetBg = goingToIndex ? '#001A48' : '#F2ECE2';
+    const slideFrom = goingToIndex ? 'translateX(-100%)' : 'translateX(100%)';
+    const slideCurrent = goingToIndex ? 'translateX(15%)' : 'translateX(-15%)';
+
+    // Current page content slides out
     if (pageContent) {
-      pageContent.classList.add("exit-slide-left");
+      pageContent.style.transition = 'transform 0.9s cubic-bezier(0.4,0,0.2,1), opacity 0.9s ease';
+      pageContent.style.transform = slideCurrent;
+      pageContent.style.opacity = '0.5';
     }
 
-    // Warm background layer slides in from right
+    // Target-colored overlay slides in
     const bgLayer = document.createElement('div');
-    bgLayer.className = 'reveal-slide-bg';
+    bgLayer.style.cssText =
+      'position:fixed;inset:0;z-index:100;' +
+      'background:' + targetBg + ';' +
+      'transform:' + slideFrom + ';' +
+      'transition:transform 0.9s cubic-bezier(0.4,0,0.2,1);';
     document.body.appendChild(bgLayer);
 
-    requestAnimationFrame(() => {
-      bgLayer.classList.add('active');
-    });
+    // Prefetch target page for fast load
+    const prefetch = document.createElement('link');
+    prefetch.rel = 'prefetch';
+    prefetch.href = url;
+    document.head.appendChild(prefetch);
 
-    setTimeout(() => {
-      window.location.href = url;
-    }, 600);
+    sessionStorage.setItem('pianoTransitionPlayed', 'true');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bgLayer.style.transform = 'translateX(0)';
+      });
+    });
+    setTimeout(() => { window.location.href = url; }, 950);
+
   } else {
-    // fade
     if (pageContent) {
       pageContent.style.transition = 'opacity 0.5s ease';
       pageContent.style.opacity = '0';
@@ -249,120 +256,70 @@ window.PianoApp.navigateWithTransition = function (url, variant, origin) {
   }
 };
 
-// Clear overlay on bfcache restore (back/forward navigation)
-window.addEventListener("pageshow", (e) => {
-  if (e.persisted) {
-    // Clean up any leftover transition layers
-    document.querySelectorAll('.reveal-circle-bg, .reveal-slide-bg, .iframe-reveal-container, .curtain-stage').forEach(el => el.remove());
+// ─── Reverse animation (arriving at page) ─────────────
 
-    const overlay = document.querySelector(".transition-overlay");
-    if (overlay) {
-      overlay.classList.remove("active", "slide-left", "scale", "fade", "curtain-wipe");
-      overlay.innerHTML = "";
-    }
-    // Clear any stale page exit state
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("curtain-exiting", "curtain-entering"));
+function playReverseAnimation(trans) {
+  if (trans.variant === 'circle-reveal') {
+    revealPiano();
 
-    const trans = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
-    const currentPage = getPageName();
+  } else if (trans.variant === 'curtain-wipe') {
+    playCurtainOpen();
+
+  } else if (trans.variant === 'slide-from-right') {
     const pageContent = document.querySelector(".page-content");
-
-    // Play reverse transition animation when navigating back
-    if ((trans.from === currentPage || trans.to === currentPage) && !sessionStorage.getItem('pianoTransitionPlayed')) {
-      sessionStorage.setItem('pianoTransitionPlayed', 'true');
-
-      if (trans.variant === 'circle-reveal') {
-        // Old page layer shrinks to C3, new content emerges behind
-        const c3Key = document.querySelector('[data-note="C3"]');
-        let ox = 'calc(100% - 48px)', oy = '48px';
-        if (c3Key) {
-          const r = c3Key.getBoundingClientRect();
-          ox = `${r.left + r.width / 2}px`;
-          oy = `${r.top + r.height / 2}px`;
-        }
-
-        // New page content starts slightly scaled down
-        if (pageContent) {
-          pageContent.classList.remove("exit-circle", "exit-slide-left");
-          pageContent.style.setProperty("--circle-origin", `${ox} ${oy}`);
-          pageContent.classList.add("enter-circle");
-          setTimeout(() => {
-            pageContent.classList.remove("enter-circle");
-            pageContent.style.removeProperty("--circle-origin");
-          }, 1200);
-        }
-
-        // Old page layer shrinks to origin and fades
-        const layer = document.createElement('div');
-        layer.className = 'exit-circle-layer';
-        layer.style.setProperty('--circle-origin', `${ox} ${oy}`);
-        document.body.appendChild(layer);
-
-        requestAnimationFrame(() => {
-          layer.classList.add('active');
-        });
-
-        setTimeout(() => { layer.remove(); }, 1200);
-      } else if (trans.variant === 'slide-from-right') {
-        // Old page layer slides out to right, new content slides in from left
-        if (pageContent) {
-          pageContent.classList.remove("exit-circle", "exit-slide-left");
-          pageContent.classList.add("enter-slide-left");
-          setTimeout(() => {
-            pageContent.classList.remove("enter-slide-left");
-          }, 600);
-        }
-
-        // Old page layer slides out to right and fades
-        const layer = document.createElement('div');
-        layer.className = 'exit-slide-layer';
-        document.body.appendChild(layer);
-
-        requestAnimationFrame(() => {
-          layer.classList.add('active');
-        });
-
-        setTimeout(() => { layer.remove(); }, 600);
-      } else if (trans.variant === 'curtain-wipe') {
-        playCurtainOpen();
-      } else if (trans.variant === 'fade') {
-        if (pageContent) {
-          pageContent.style.opacity = "0";
-          requestAnimationFrame(() => {
-            pageContent.style.transition = "opacity 0.5s ease";
-            pageContent.style.opacity = "1";
-            setTimeout(() => {
-              pageContent.style.transition = "";
-              pageContent.style.opacity = "";
-            }, 500);
-          });
-        }
-      }
+    if (pageContent) {
+      pageContent.classList.add("enter-slide-left");
+      setTimeout(() => pageContent.classList.remove("enter-slide-left"), 600);
     }
+    const layer = document.createElement('div');
+    layer.className = 'exit-slide-layer';
+    document.body.appendChild(layer);
+    requestAnimationFrame(() => layer.classList.add('active'));
+    setTimeout(() => layer.remove(), 600);
 
-    // Force re-initialization of piano keyboard if empty (bfcache issue)
-    const keyboard = document.getElementById("piano-keyboard");
-    if (keyboard && keyboard.children.length === 0 && window.PianoApp.initPiano) {
-      window.PianoApp.initPiano();
+  } else if (trans.variant === 'fade') {
+    const pageContent = document.querySelector(".page-content");
+    if (pageContent) {
+      pageContent.style.opacity = "0";
+      requestAnimationFrame(() => {
+        pageContent.style.transition = "opacity 0.5s ease";
+        pageContent.style.opacity = "1";
+        setTimeout(() => { pageContent.style.transition = ""; pageContent.style.opacity = ""; }, 500);
+      });
     }
   }
+}
+
+// ─── bfcache restore (browser back button) ────────────
+
+window.addEventListener("pageshow", (e) => {
+  if (!e.persisted) return;
+
+  cleanupTransitionLayers();
+  revealPiano();
+
+  const trans = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
+  const currentPage = getPageName();
+
+  if (trans.from === currentPage || trans.to === currentPage) {
+    playReverseAnimation(trans);
+  }
+
+  // Force re-init piano keyboard if empty (bfcache issue)
+  const keyboard = document.getElementById("piano-keyboard");
+  if (keyboard && keyboard.children.length === 0 && window.PianoApp.initPiano) {
+    window.PianoApp.initPiano();
+  }
 });
+
+// ─── Curtain open (used by curtain-wipe reverse) ──────
 
 function playCurtainOpen() {
   const pianoWrapper = document.querySelector(".piano-wrapper");
   const page = document.querySelector(".page");
 
-  // Hide piano initially, it will reveal after curtains start opening
-  if (pianoWrapper) {
-    pianoWrapper.classList.remove("curtain-revealed");
-  }
+  if (page) page.classList.add("curtain-entering");
 
-  // Start page enter animation: dimmed and scaled, then recovers as curtains open
-  if (page) {
-    page.classList.add("curtain-entering");
-  }
-
-  // Create curtain stage with closed curtains
   const stage = document.createElement("div");
   stage.className = "curtain-stage";
   const leftCurtain = document.createElement("div");
@@ -373,12 +330,13 @@ function playCurtainOpen() {
   stage.appendChild(rightCurtain);
   document.body.prepend(stage);
 
-  // Reveal piano after curtains start opening
-  setTimeout(() => {
-    if (pianoWrapper) pianoWrapper.classList.add("curtain-revealed");
-  }, 200);
+  if (pianoWrapper) {
+    pianoWrapper.style.transition = "none";
+    pianoWrapper.classList.add("curtain-revealed");
+    pianoWrapper.offsetHeight;
+    pianoWrapper.style.transition = "";
+  }
 
-  // Clean up curtains and page enter state
   setTimeout(() => {
     stage.remove();
     if (page) page.classList.remove("curtain-entering");

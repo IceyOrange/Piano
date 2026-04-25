@@ -7,10 +7,29 @@
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=47">
+  <link href="https://fonts.googleapis.com/css2?family=Oranienbaum&family=Sintony:wght@400;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=55">
+  <link rel="preload" href="assets/fonts/SpecialElite.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
+<script>
+(function() {
+  var t = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
+  if (t.to === 'portfolio.html' && t.variant === 'circle-reveal' && !sessionStorage.getItem('pianoTransitionPlayed')) {
+    sessionStorage.setItem('pianoTransitionPlayed', 'true');
+    var s = JSON.parse(sessionStorage.getItem('c3Origin') || '{}');
+    var ox = s.x || '50%';
+    var oy = s.y || '50%';
+    // CSS animation on .page: starts clipped to 0, expands to 150%
+    // Body bg (dark navy) shows outside the circle — warm page reveals from C3
+    var st = document.createElement('style');
+    st.id = 'circle-entry';
+    st.textContent = '.page{animation:circleEntry .8s cubic-bezier(.4,0,.2,1) forwards}@keyframes circleEntry{from{clip-path:circle(0% at ' + ox + ' ' + oy + ')}to{clip-path:circle(150% at ' + ox + ' ' + oy + ')}}';
+    document.documentElement.appendChild(st);
+    setTimeout(function() { st.remove(); }, 1200);
+  }
+})();
+</script>
   <!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
 
@@ -41,29 +60,21 @@
   <!-- Portfolio Page -->
   <div class="page page-warm">
     <div class="page-content">
-      <!-- Header -->
-      <div class="portfolio-header animate-fade-in-up delay-1">
-        <h1 class="text-page-title">无用之用 Use of useless</h1>
+      <div class="container">
+        <h1 class="page-title animate-fade-in-up delay-1">Use of useless.</h1>
       </div>
 
-      <!-- Desktop Horizontal Scroller -->
-      <div id="portfolio-scroller" class="horizontal-scroller scrollbar-hide desktop-only"></div>
+      <!-- Portfolio Showcase -->
+      <div id="portfolio-showcase" class="portfolio-showcase"></div>
 
-      <!-- Mobile Vertical List -->
-      <div id="mobile-project-list" class="mobile-project-list mobile-only"></div>
-
-      <!-- Project Detail Modal -->
-      <div id="project-modal" class="project-modal">
-        <div id="project-modal-content" class="project-modal-content"></div>
-      </div>
+      <p class="portfolio-epilogue animate-fade-in-up delay-3">无用之用</p>
     </div>
   </div>
 
   <script src="js/data.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/transitions.js?v=34"></script>
+  <script src="js/transitions.js?v=60"></script>
   <script src="js/menu.js"></script>
-  <script src="js/scroller.js"></script>
   <script src="js/portfolio.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {

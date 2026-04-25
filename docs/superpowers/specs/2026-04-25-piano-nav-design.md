@@ -47,7 +47,7 @@ Replace the hidden hamburger menu on Portfolio, Experience, and About pages with
 - Gap between keys: 1px
 
 **Hover on accent line**
-- When a nav link is hovered, its corresponding position in the keyboard accent line shifts to `#D4A574` (accent-warm), creating a subtle synchronized glow effect.
+- When any nav link is hovered, the entire piano accent line brightens to `#D4A574` (accent-warm), creating a subtle synchronized glow effect.
 
 ### Responsive Behavior
 
