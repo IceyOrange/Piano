@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Experience — Piano</title>
+  <title>Portfolio — Piano</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="preload" href="assets/fonts/SpecialElite.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=47">
 </head>
 <body>
@@ -39,44 +38,38 @@
     </div>
   </div>
 
-  <!-- Experience Page -->
-  <div class="page experience-ariel">
-    <div class="container">
-      <h1 class="page-title">Exploration.</h1>
+  <!-- Portfolio Page -->
+  <div class="page page-warm">
+    <div class="page-content">
+      <!-- Header -->
+      <div class="portfolio-header animate-fade-in-up delay-1">
+        <h1 class="text-page-title">无用之用 Use of useless</h1>
+      </div>
 
-      <!-- Hero / Map Section -->
-      <section class="hero-section">
-        <div class="map-container" id="experience-map">
-          <div id="map-wrapper">
-            <!-- Journey map SVG -->
-            <svg class="world-map" viewBox="0 0 775 570" xmlns="http://www.w3.org/2000/svg">
-              <image href="assets/images/ChinaMap.svg" width="775" height="570"/>
-              <g id="map-markers"></g>
-            </svg>
-          </div>
-        </div>
-      </section>
+      <!-- Desktop Horizontal Scroller -->
+      <div id="portfolio-scroller" class="horizontal-scroller scrollbar-hide desktop-only"></div>
 
-      <!-- Experience List -->
-      <div id="experience-list" class="experience-list"></div>
+      <!-- Mobile Vertical List -->
+      <div id="mobile-project-list" class="mobile-project-list mobile-only"></div>
+
+      <!-- Project Detail Modal -->
+      <div id="project-modal" class="project-modal">
+        <div id="project-modal-content" class="project-modal-content"></div>
+      </div>
     </div>
   </div>
 
-  <script src="js/data.js?v=4"></script>
+  <script src="js/data.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/transitions.js?v=34"></script>
   <script src="js/menu.js"></script>
-  <script src="js/map.js?v=22"></script>
+  <script src="js/scroller.js"></script>
+  <script src="js/portfolio.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.PianoApp.initTransitions();
       window.PianoApp.initMenu();
-      try {
-        window.PianoApp.initMap();
-        console.log('[Piano] initMap completed');
-      } catch(e) {
-        console.error('[Piano] initMap error:', e);
-      }
+      window.PianoApp.initPortfolio();
     });
   </script>
 </body>

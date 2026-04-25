@@ -4,110 +4,134 @@ window.PianoApp.data = {
   projects: [
     {
       id: "1",
-      name: "Nocturne Dashboard",
-      description: "A real-time analytics platform for music streaming data.",
-      year: "2025",
+      name: "🎹 一个能弹琴的 Landing Page",
+      description: "灵感来自 Pinterest 的一张图片，设置真实琴键交互，并通过长按琴键绑定超链接跳转; 在留白处设计月之暗面同款乐谱，并安排一只小猫趴在上面用户自动演奏交互。",
+      year: "2026",
       category: "Web App",
       image: "assets/images/demo.jpg",
-      tech: ["Next.js", "TypeScript", "D3.js"],
-      link: "#",
+      tech: ["HTML", "CSS", "JavaScript", "Web Audio API"],
+      link: "https://www.lovegood.cool",
     },
     {
       id: "2",
-      name: "Symphony UI",
-      description: "Design system and component library for enterprise products.",
-      year: "2024",
-      category: "Design System",
+      name: "☁️ 蓝天白云 Blue Sky & White Cloud",
+      description: "灵感来自 X 上看到的一个有趣的交互，思路由原项目的池塘发散到天空，并引入落叶、微风、昼夜更替、星空、流星(雨)、彗星和星座连线等元素。",
+      year: "2026",
+      category: "Creative",
       image: "assets/images/demo.jpg",
-      tech: ["React", "Tailwind", "Storybook"],
+      tech: ["HTML", "CSS", "JavaScript", "Canvas"],
       link: "#",
-    },
-    {
-      id: "3",
-      name: "Resonance Audio",
-      description: "Spatial audio engine for web-based immersive experiences.",
-      year: "2024",
-      category: "Audio Tool",
-      image: "assets/images/demo.jpg",
-      tech: ["Web Audio API", "Canvas", "WASM"],
-      link: "#",
-    },
-    {
-      id: "4",
-      name: "Maestro Editor",
-      description: "Collaborative score editing tool for composers.",
-      year: "2023",
-      category: "Creative Tool",
-      image: "assets/images/demo.jpg",
-      tech: ["Vue.js", "Firebase", "Tone.js"],
-      link: "#",
-    },
-    {
-      id: "5",
-      name: "Aethelred Gallery",
-      description: "Curated digital art gallery with generative curation.",
-      year: "2023",
-      category: "Art Platform",
-      image: "assets/images/demo.jpg",
-      tech: ["Next.js", "GraphQL", "Three.js"],
-      link: "#",
-    },
+    }
   ],
 
   experiences: [
     {
       id: "1",
-      type: "work",
-      orgName: "爱为舞科技有限公司",
-      orgLabel: "独角兽",
-      orgLocation: "北京",
-      orgLogo: "",
-      position: "产品经理",
-      period: "2023 — Present",
-      startDate: "2023-03",
+      orgName: "北京师范大学",
+      orgLocation: "珠海",
+      tags: ["985", "双一流"],
+      position: "应用统计",
+      startDate: "2025-09",
       endDate: null,
-      description: "负责 AI 驱动的舞蹈教学产品设计，从 0 到 1 搭建产品体系，主导与多所艺术院校的合作项目。",
-      coords: { lon: 116.4074, lat: 39.9042 },
+      roles: [
+        {
+          titleZh: "学业表现",
+          titleEn: "Academic Performance",
+          description: "GPA 3.6/4.0，主要课程：深度学习、回归分析、多元统计分析、广义线性模型、教育测量、心理发展与教育、课程与教学。"
+        },
+        {
+          titleZh: "校园经历",
+          titleEn: "Campus Involvement",
+          description: "策划组织 2 场班级文艺晚会、世界阅读日读书分享等活动，提升班级凝聚力，有效带动校运会报名，参与人数达全班1/5"
+        }
+      ]
     },
     {
       id: "2",
-      type: "work",
-      orgName: "高露洁棕榄有限公司",
-      orgLabel: "世界 500 强",
-      orgLocation: "广州",
-      orgLogo: "",
-      position: "市场管培生",
-      period: "2021 — 2023",
-      startDate: "2021-07",
-      endDate: "2023-06",
-      description: "轮岗参与品牌管理、渠道运营和消费者洞察工作，协助完成年度营销预算制定与执行跟踪。",
-      coords: { lon: 113.2644, lat: 23.1291 },
+      orgName: "北京与爱为舞科技有限公司",
+      orgLocation: "北京",
+      tags: ["K12 AI 教育", "独角兽"],
+      position: "产品经理",
+      startDate: "2025-06",
+      endDate: "2025-09",
+      roles: [
+        {
+          titleZh: "C 端核心体验优化",
+          titleEn: "C-End Experience",
+          description: "产品上线初期，因交互认知偏差和音视频体验问题产生大量负面反馈。针对高频问题（如麦克风图标误触、数字人-视频切换生硬、退出重进后重复上课、音画不同步等），设计并推动上线辅助文字提示、蒙版遮罩过渡、断点续学机制、数字人推流优化等方案，相关用户反馈频次降低 90%；初步设计数据埋点、分析方案，为产品决策提供数据支撑。"
+        },
+        {
+          titleZh: "B 端运营效率工具建设",
+          titleEn: "B-End Efficiency",
+          description: "针对设计团队板书制作负担重问题，推动上线智能板书功能，提升设计团队生产效率；针对非技术背景销售排课系统学习成本高问题，对高频场景设计常用体验课排课模板，简化配课流程，提升销售工作效率。"
+        },
+        {
+          titleZh: "AI 技术选型与个性化策略",
+          titleEn: "AI & Personalization",
+          description: "<ul><li><strong>AI 生成板书</strong>：在智能板书的基础上，更近一步地构想通过 AI 赋能板书生成过程。搭建评估调研框架，对 Midjourney、可灵、Gemini Storybook 等 AI 图片生成工具的结构化板书生成效果进行系统评测。</li><li><strong>ASR 语音识别</strong>：针对数字人在交互时“答非所问”的情况，建立评估体系，评估自研、火山、MiniMax 等平台的 ASR 效果。</li><li><strong>个性化学习</strong>：为赋予 AI 数字人更科学、更有效的“千人千面，因材施教”个性化施教能力，从「学生测度、题目测度、知识图谱和推荐算法」四个维度进行调研，协助制定产品长远期个性化学习实现策略。</li></ul>"
+        }
+      ]
     },
     {
       id: "3",
-      type: "study",
-      orgName: "广州大学",
-      orgLabel: "一本",
+      orgName: "高露洁棕榄(中国)有限公司",
       orgLocation: "广州",
-      orgLogo: "",
-      position: "工商管理 · 本科",
-      period: "2017 — 2021",
-      startDate: "2017-09",
-      endDate: "2021-06",
-      description: "主修工商管理专业，GPA 3.8/4.0。担任学生会外联部部长，组织校级活动 10 余场。获得校级优秀毕业生称号。",
-      coords: { lon: 113.3745, lat: 23.0403 },
+      tags: ["世界 500 强", "快消"],
+      position: "数字化专员",
+      startDate: "2024-03",
+      endDate: "2024-09",
+      roles: [
+        {
+          titleZh: "HR 流程自动化与效能提升",
+          titleEn: "HR Automation",
+          description: "针对 HR 部门在招聘、入离职、档案管理等场景的重复性的手动操作（如跨平台复制候选人信息、员工资料核对与移动归档、开具证明等）设计 RPA 自动化解决方案，并基于 ShadowBot、Apps Script、Python 进行开发落地。覆盖一键生成证明、招聘端自动回复、候选人信息抓取，为部门同事节省时间成本日均 30min+。"
+        },
+        {
+          titleZh: "AI 赋能 HR 招聘流程",
+          titleEn: "AI empowers recruitment process",
+          description: "针对招聘流程中简历初筛效率低的问题，设计基于 RAG 的 AI 候选人评估辅助系统，并基于 Python 与大模型 API 接口开发，对候选人简历进行语义解析与岗位匹配度评估，实现自动筛选和生成评估建议，提升简历初筛效率."
+        }
+      ]
+    },
+    {
+      id: "4",
+      orgName: "广州大学",
+      orgLocation: "广州",
+      tags: null,
+      position: "统计学",
+      startDate: "2021-09",
+      endDate: "2025-06",
+      roles: [
+        {
+          titleZh: "学业表现",
+          titleEn: "Academic Performance",
+          description: "GPA 3.5/4.0，专业课《统计学概论》成绩专业第一。曾获校级一等、三等奖学金，校优秀学生、校优秀毕业生。主要课程：概率论与数理统计、机器学习、数据挖掘、数据可视化 (Tableau)、Python 程序设计、统计软件-R。"
+        },
+        {
+          titleZh: "校园经历",
+          titleEn: "Campus Involvement",
+          description: "<ul><li>担任<strong>广州大学学生天文爱好者协会执行会长</strong>：对接、组织校内外天文科普活动; 担任并培养校天象馆四季星空讲解员; 组织特殊天象(如流星雨、日月食、超级月亮等)观测；</li><li>担任<strong>广州大学学生软件技术应用协会会长</strong>：定期开展协会成员技术交流与培训; 定期开展讲座(如Windows、Office使用技巧等); 每周值班或上门为师生解决软件问题。</li></ul>"
+        },
+        {
+          titleZh: "竞赛与科研",
+          titleEn: "Competitions",
+          description: "挑战杯省赛二等奖 & 统计建模大赛省赛二等奖。使用 Python 爬虫抓取沪深上市公司 2010-2021 年报数据，构建企业数字化程度指标。成果转化为 ESCI 期刊 Green Finance (IF=5.5) 论文 <a href='https://www.aimspress.com/article/doi/10.3934/GF.2024019' target='_blank'>(Fu & Xu, 2024)</a>。"
+        }
+      ]
     },
   ],
 
   skills: [
-    "TypeScript",
-    "React",
-    "Next.js",
-    "Node.js",
-    "Tailwind CSS",
-    "Web Audio",
-    "Three.js",
-    "PostgreSQL",
+    "Python",
+    "R",
+    "JavaScript",
+    "HTML/CSS",
+    "深度学习",
+    "NLP",
+    "数据挖掘",
+    "数据可视化",
+    "RPA",
+    "产品规划",
   ],
 
   socialLinks: [

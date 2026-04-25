@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Piano — Personal Homepage
 
-## Getting Started
+A piano-inspired personal portfolio built with pure HTML, CSS, and JavaScript. No build tools, no frameworks — open directly in your browser.
 
-First, run the development server:
+## Pages
+
+- **Home** (`index.html`) — Interactive piano keyboard landing page with 14 white keys and 10 black keys spanning two octaves (F2–E4). Keys play synthesized audio via the Web Audio API. Long-press the labeled keys to navigate:
+  - **Portfolio** (A2 key)
+  - **Experience** (A3 key)
+  - **About** (B3 key)
+- **Portfolio** (`portfolio.html`) — Horizontal drag-scrolling project cards (desktop) or vertical card list (mobile). Click any card to open a detail modal.
+- **Experience** (`experience.html`) — Animated SVG map with a drawn route line and city markers (desktop) or vertical card list (mobile). Click a city to see role details.
+- **About** (`about.html`) — Avatar, bio, skill pills, and social links with staggered entrance animation.
+
+## Local Preview
+
+Since the site uses ES modules and the Web Audio API, open it via a local HTTP server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+python3 -m http.server 8080
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then visit [http://localhost:8080](http://localhost:8080).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Alternatively, with Node.js:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx serve .
+```
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+| File | Purpose |
+|------|---------|
+| `index.html` | Home page with piano keyboard |
+| `portfolio.html` | Portfolio page |
+| `experience.html` | Experience page |
+| `about.html` | About page |
+| `css/styles.css` | All styles: tokens, reset, layout, components, animations |
+| `js/data.js` | Projects, experiences, skills, social links |
+| `js/audio.js` | Web Audio API synthesis (triangle oscillator + ADSR envelope) |
+| `js/piano.js` | Piano keyboard rendering and interactions |
+| `js/transitions.js` | Page exit overlays and link interception |
+| `js/menu.js` | Fullscreen menu (clip-path circle animation) |
+| `js/scroller.js` | Horizontal infinite scroll (drag / wheel / touch) |
+| `js/portfolio.js` | Portfolio page: center detection, detail modal |
+| `js/map.js` | Experience SVG map + route draw animation |
+| `js/about.js` | About page: staggered entrance animations |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Design
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Colors**: Deep navy `#0A1929`, warm ivory `#F5F0E6`, accent warm `#D4A574`
+- **Fonts**: Inter (sans-serif) + Playfair Display (serif) via Google Fonts
+- **Responsive breakpoint**: 768px (mobile / desktop)
+- **Accessibility**: `prefers-reduced-motion` support, semantic HTML, ARIA labels

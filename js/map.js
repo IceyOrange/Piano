@@ -1,262 +1,222 @@
 window.PianoApp = window.PianoApp || {};
 
 window.PianoApp.initMap = function () {
-  const isMobile = window.innerWidth < 768;
-  const mapContainer = document.getElementById(
-    isMobile ? "experience-map-mobile" : "experience-map"
-  );
-  const cardsContainer = document.getElementById(
-    isMobile ? "experience-cards-mobile" : "experience-cards"
-  );
+  var mapContainer = document.getElementById("experience-map");
+  var listContainer = document.getElementById("experience-list");
 
-  if (!mapContainer || !cardsContainer) return;
+  if (!mapContainer || !listContainer) return;
 
-  const experiences = window.PianoApp.data.experiences.slice().sort(function (a, b) {
+  var experiences = window.PianoApp.data.experiences.slice().sort(function (a, b) {
     return b.startDate.localeCompare(a.startDate);
   });
 
-  let activeCardId = null;
-  const markerElements = {};
-  const cardElements = {};
+  // ——— lat/lon ⇌ SVG projection (保留供后续新增数据点使用) ———
+  // viewBox 0 0 775 570, 4 control points via least-squares:
+  //   Dali(100.30,25.68)->(334.9,469.4)  Fanjingshan(108.72,27.89)->(445.9,438.9)
+  //   Liuzhou(109.43,24.33)->(455.0,474.5)  Datong(113.37,40.10)->(504.9,250.6)
+  // function latLonToSvg(lon, lat) {
+  //   var x = 11.8294 * lon - 854.08;
+  //   var y = -15.0429 * lat + 867.23;
+  //   return { x: x, y: y };
+  // }
+  // function svgToLatLon(x, y) {
+  //   var lon = (x + 854.08) / 11.8294;
+  //   var lat = (867.23 - y) / 15.0429;
+  //   return { lon: lon, lat: lat };
+  // }
 
-  function lonLatToSvg(lon, lat) {
-    const x = 15 + ((lon - 73) / 62) * 735;
-    const y = 5 + ((53 - lat) / 35) * 560;
-    return { x, y };
-  }
+  var extraMarkers = [
+    { city: "珠海", x: 502.4, y: 514.5 },
+    { city: "北京", x: 549.9, y: 255.8 },
+    { city: "广州", x: 502.4, y: 503.5 },
+    { city: "兴宁", x: 532.5, y: 487.6 },
+    { city: "武汉", x: 516.7, y: 400.5 },
+    { city: "景德镇", x: 551.5, y: 416.4 },
+    { city: "大理", x: 334.6, y: 470.2 },
+    { city: "大同", x: 505.6, y: 251.0 },
+    { city: "天津", x: 554.7, y: 266.9 },
+    { city: "岳阳", x: 499.2, y: 419.5 },
+    { city: "梵净山", x: 448.6, y: 433.8 },
+    { city: "武功山", x: 518.2, y: 438.5 },
+    { city: "柳州", x: 454.9, y: 473.4 },
+    { city: "大红山", x: 488.2, y: 194.7 },
+    { city: "佛山", x: 496.1, y: 503.5 }
+];
 
-  function highlightMarker(id) {
-    Object.keys(markerElements).forEach(function (key) {
-      const g = markerElements[key];
-      if (key === id) {
-        g.classList.add("active");
-      } else {
-        g.classList.remove("active");
-      }
-    });
-  }
+  function renderMapMarkers() {
+    var markersGroup = document.getElementById("map-markers");
+    if (!markersGroup) return;
 
-  function collapseCard(id) {
-    const card = cardElements[id];
-    if (!card) return;
-    card.classList.remove("expanded");
-    if (activeCardId === id) {
-      activeCardId = null;
-    }
-  }
+    function createMarker(pos, label, isDraggable, markerType) {
+      var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("class", "svg-marker");
+      if (isDraggable) g.style.cursor = "move";
 
-  function expandCard(id) {
-    const card = cardElements[id];
-    if (!card) return;
-    card.classList.add("expanded");
-    activeCardId = id;
-    highlightMarker(id);
-    card.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+      // Outer pulse ring
+      var pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      pulse.setAttribute("cx", pos.x);
+      pulse.setAttribute("cy", pos.y);
+      pulse.setAttribute("r", 14);
+      pulse.setAttribute("fill", "none");
+      pulse.setAttribute("stroke", "#B8A99A");
+      pulse.setAttribute("stroke-width", "1");
+      pulse.setAttribute("class", "marker-pulse");
+      g.appendChild(pulse);
 
-  function toggleCard(id) {
-    if (activeCardId === id) {
-      collapseCard(id);
-      highlightMarker(null);
-    } else {
-      if (activeCardId !== null) {
-        collapseCard(activeCardId);
-      }
-      expandCard(id);
-    }
-  }
+      // Main dot
+      var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("cx", pos.x);
+      dot.setAttribute("cy", pos.y);
+      dot.setAttribute("r", 4);
+      dot.setAttribute("fill", "#F2ECE2");
+      dot.setAttribute("stroke", "#A68B6B");
+      dot.setAttribute("stroke-width", "1.5");
+      dot.setAttribute("class", "marker-dot");
+      g.appendChild(dot);
 
-  function activateCard(id) {
-    if (activeCardId !== null && activeCardId !== id) {
-      collapseCard(activeCardId);
-    }
-    expandCard(id);
-  }
+      // City label — hidden by default, shown on hover
+      var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", pos.x);
+      text.setAttribute("y", pos.y - 14);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", "#6B5E53");
+      text.setAttribute("font-size", "11");
+      text.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, sans-serif");
+      text.setAttribute("font-weight", "500");
+      text.setAttribute("class", "marker-label");
+      text.textContent = label;
+      g.appendChild(text);
 
-  function createCard(exp) {
-    const card = document.createElement("div");
-    card.className = "experience-card";
-    card.setAttribute("data-id", exp.id);
+      g.addEventListener("mouseenter", function () {
+        dot.setAttribute("r", "5.6");
+        dot.setAttribute("fill", "#A68B6B");
+        text.style.opacity = "1";
+      });
+      g.addEventListener("mouseleave", function () {
+        dot.setAttribute("r", "4");
+        dot.setAttribute("fill", "#F2ECE2");
+        text.style.opacity = "0";
+      });
 
-    const logoHtml = exp.orgLogo
-      ? '<img src="' + exp.orgLogo + '" alt="' + exp.orgName + '" class="org-logo">'
-      : '<div class="org-logo-placeholder">' + exp.orgName.charAt(0) + "</div>";
+      // Drag support
+      if (isDraggable) {
+        var dragging = false;
+        var svgEl = markersGroup.ownerSVGElement;
 
-    const typeLabel = exp.type === "work" ? "工作" : "学习";
-    const typeClass = exp.type === "work" ? "work" : "study";
-
-    const labelHtml = exp.orgLabel
-      ? '<span class="org-label">' + exp.orgLabel + "</span>"
-      : "";
-
-    card.innerHTML =
-      '<div class="card-header">' +
-        '<div class="card-logo">' + logoHtml + "</div>" +
-        '<div class="card-meta">' +
-          '<div class="card-top-row">' +
-            '<span class="card-type ' + typeClass + '">' + typeLabel + "</span>" +
-            '<span class="card-period">' + exp.period + "</span>" +
-          "</div>" +
-          '<div class="card-org">' + exp.orgName + "</div>" +
-          '<div class="card-position">' +
-            exp.position + " · " + exp.orgLocation +
-          "</div>" +
-          labelHtml +
-        "</div>" +
-        '<span class="expand-icon">&#9662;</span>' +
-      "</div>" +
-      '<div class="card-detail">' +
-        "<p>" + exp.description + "</p>" +
-      "</div>";
-
-    card.addEventListener("click", function (e) {
-      e.stopPropagation();
-      toggleCard(exp.id);
-    });
-
-    return card;
-  }
-
-  function renderCards() {
-    experiences.forEach(function (exp) {
-      const card = createCard(exp);
-      cardsContainer.appendChild(card);
-      cardElements[exp.id] = card;
-    });
-  }
-
-  function createMarker(exp) {
-    const pos = lonLatToSvg(exp.coords.lon, exp.coords.lat);
-    const color = exp.type === "work" ? "#D4A574" : "#5B8DEF";
-    const radius = exp.type === "work" ? 4 : 3;
-
-    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    g.setAttribute("class", "map-marker-group");
-    g.setAttribute("data-id", exp.id);
-    g.style.cursor = "pointer";
-
-    const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    ring.setAttribute("class", "marker-ring");
-    ring.setAttribute("cx", pos.x);
-    ring.setAttribute("cy", pos.y);
-    ring.setAttribute("r", String(radius + 4));
-    ring.setAttribute("fill", "none");
-    ring.setAttribute("stroke", color);
-    ring.setAttribute("stroke-width", "1");
-    ring.setAttribute("opacity", "0");
-    g.appendChild(ring);
-
-    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    dot.setAttribute("cx", pos.x);
-    dot.setAttribute("cy", pos.y);
-    dot.setAttribute("r", String(radius));
-    dot.setAttribute("fill", color);
-    dot.setAttribute("filter", "url(#marker-glow)");
-    g.appendChild(dot);
-
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", pos.x);
-    text.setAttribute("y", pos.y - radius - 5);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("fill", "rgba(245,240,230,0.9)");
-    text.setAttribute("font-size", "8");
-    text.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, sans-serif");
-    text.setAttribute("font-weight", "500");
-    text.textContent = exp.orgLocation;
-    g.appendChild(text);
-
-    g.addEventListener("click", function (e) {
-      e.stopPropagation();
-      activateCard(exp.id);
-    });
-
-    return g;
-  }
-
-  function loadMap() {
-    fetch("assets/images/ChinaMap.svg")
-      .then(function (r) {
-        return r.text();
-      })
-      .then(function (svgText) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgText, "image/svg+xml");
-        const svg = doc.documentElement;
-
-        svg.setAttribute("class", "china-map-svg");
-        svg.removeAttribute("width");
-        svg.removeAttribute("height");
-
-        let defs = svg.querySelector("defs");
-        if (!defs) {
-          defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-          svg.appendChild(defs);
+        function getSvgPoint(evt) {
+          var pt = svgEl.createSVGPoint();
+          pt.x = evt.clientX;
+          pt.y = evt.clientY;
+          return pt.matrixTransform(svgEl.getScreenCTM().inverse());
         }
 
-        const filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        filter.setAttribute("id", "marker-glow");
-        filter.innerHTML =
-          '<feGaussianBlur stdDeviation="1.5" result="blur"/>' +
-          "<feMerge>" +
-            '<feMergeNode in="blur"/>' +
-            '<feMergeNode in="SourceGraphic"/>' +
-          "</feMerge>";
-        defs.appendChild(filter);
+        function updatePos(sx, sy) {
+          pulse.setAttribute("cx", sx);
+          pulse.setAttribute("cy", sy);
+          dot.setAttribute("cx", sx);
+          dot.setAttribute("cy", sy);
+          text.setAttribute("x", sx);
+          text.setAttribute("y", sy - 14);
+        }
 
-        const markersGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        markersGroup.setAttribute("class", "map-markers");
-
-        experiences.forEach(function (exp) {
-          const marker = createMarker(exp);
-          markersGroup.appendChild(marker);
-          markerElements[exp.id] = marker;
+        g.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          dragging = true;
+          g.style.cursor = "grabbing";
         });
 
-        svg.appendChild(markersGroup);
-        mapContainer.innerHTML = "";
-        mapContainer.appendChild(document.importNode(svg, true));
-      })
-      .catch(function (err) {
-        console.error("Failed to load ChinaMap.svg:", err);
-      });
-  }
+        svgEl.addEventListener("mousemove", function (e) {
+          if (!dragging) return;
+          var p = getSvgPoint(e);
+          updatePos(p.x, p.y);
+        });
 
-  function setupIntersectionObserver() {
-    if (!window.IntersectionObserver) return;
+        svgEl.addEventListener("mouseup", function () {
+          if (!dragging) return;
+          dragging = false;
+          g.style.cursor = "move";
+        });
 
-    const observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute("data-id");
-            highlightMarker(id);
+        svgEl.addEventListener("mouseleave", function () {
+          if (dragging) {
+            dragging = false;
+            g.style.cursor = "move";
           }
         });
-      },
-      {
-        threshold: 0.6,
       }
-    );
 
-    Object.values(cardElements).forEach(function (card) {
-      observer.observe(card);
+      markersGroup.appendChild(g);
+    }
+
+    extraMarkers.forEach(function (m) {
+      createMarker({ x: m.x, y: m.y }, m.city, true, "extra");
     });
   }
 
-  function setupClickOutside() {
-    document.addEventListener("click", function (e) {
-      const target = e.target;
-      const isCard = target.closest(".experience-card");
-      const isMarker = target.closest(".map-marker-group");
-      if (!isCard && !isMarker && activeCardId !== null) {
-        collapseCard(activeCardId);
-        highlightMarker(null);
+  function renderExperienceList() {
+    listContainer.innerHTML = "";
+
+    experiences.forEach(function (exp) {
+      var item = document.createElement("div");
+      item.className = "experience-item";
+
+      function fmtDate(d) {
+        if (!d) return "Present";
+        var parts = d.split("-");
+        return parts[0] + "/" + parts[1];
       }
+      var dateHtml =
+        '<div class="col-dates">' +
+          '<span class="col-date-end">' + fmtDate(exp.endDate) + '</span>' +
+          '<span class="col-date-start">' + fmtDate(exp.startDate) + '</span>' +
+        "</div>";
+
+      var tagsHtml = "";
+      if (exp.tags && exp.tags.length > 0) {
+        exp.tags.forEach(function (t) {
+          tagsHtml += '<span class="tag">' + t + "</span>";
+        });
+        tagsHtml = '<div class="tag-row">' + tagsHtml + "</div>";
+      }
+
+      var companyHtml = '<div class="company-name">' + exp.orgName + '</div>';
+
+      var positionHtml = exp.position
+        ? '<div class="col-position">' + exp.position + '</div>'
+        : "";
+
+      var cityHtml = exp.orgLocation
+        ? '<div class="col-city">' + exp.orgLocation + '</div>'
+        : "";
+
+      var rolesHtml = "";
+      if (exp.roles && exp.roles.length > 0) {
+        exp.roles.forEach(function (role) {
+          rolesHtml +=
+            '<div class="job-item">' +
+              '<div class="job-desc"><div>' + (role.description || '').replace(/\n/g, '<br>') + "</div></div>" +
+              '<div class="job-role">' +
+                '<span class="role-zh">' + role.titleZh + "</span>" +
+                '<span class="role-en">' + role.titleEn + "</span>" +
+              "</div>" +
+            "</div>";
+        });
+      } else {
+        rolesHtml =
+          '<div class="job-item">' +
+            '<div class="job-desc"><div>' + (exp.description || '').replace(/\n/g, '<br>') + "</div></div>" +
+            '<div class="job-role"><span class="role-zh">' + exp.position + "</span></div>" +
+          "</div>";
+      }
+
+      item.innerHTML =
+        '<div class="col-left">' + dateHtml + tagsHtml + companyHtml + positionHtml + cityHtml + "</div>" +
+        '<div class="col-content">' + rolesHtml + "</div>";
+
+      listContainer.appendChild(item);
     });
   }
 
-  renderCards();
-  loadMap();
-  setupIntersectionObserver();
-  setupClickOutside();
+  renderMapMarkers();
+  renderExperienceList();
 };
