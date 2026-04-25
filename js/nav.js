@@ -6,10 +6,12 @@ window.PianoApp.initNav = function () {
   if (!nav || !accent) return;
 
   // Mark active page based on current URL
-  var currentPath = window.location.pathname.split('/').pop() || 'index.html';
+  var currentPath = window.location.pathname;
   nav.querySelectorAll('a').forEach(function (link) {
     var href = link.getAttribute('href');
-    if (href === currentPath) {
+    var normalizedHref = href.replace(/^\.?\//, '');
+    var normalizedCurrent = currentPath.replace(/^\/|\/$/g, '');
+    if (normalizedCurrent === normalizedHref || normalizedCurrent.endsWith('/' + normalizedHref)) {
       link.setAttribute('aria-current', 'page');
     }
   });
