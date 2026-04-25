@@ -1773,6 +1773,7 @@ body:has(.page-warm) .menu-btn:hover {
 }
 
 /* Push page content down to avoid being hidden under fixed header */
+/* Header height ~56px (20px top + 28px title + 8px bottom + 2px accent) + small buffer */
 body:has(.page-header) .page {
   padding-top: 64px;
 }
@@ -1886,6 +1887,7 @@ body:has(.page-header) .page {
     padding: 0 1rem;
   }
 
+  /* Mobile header taller due to vertical stacking: ~80px + buffer */
   body:has(.page-header) .page {
     padding-top: 88px;
   }
