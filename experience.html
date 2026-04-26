@@ -6,12 +6,25 @@
   <title>Experience — Piano</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Sora:wght@300;400;500;600;700&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="preload" href="assets/fonts/SpecialElite.ttf" as="font" type="font/ttf" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="css/styles.css?v=56">
+  <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
+  <link rel="stylesheet" href="css/styles.css?v=79">
 </head>
 <body>
+  <!-- Portrait Gate -->
+  <div class="portrait-gate" aria-hidden="true">
+    <div class="portrait-gate-inner">
+      <svg class="portrait-gate-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="22" y="8" width="20" height="48" rx="2.5"/>
+        <line x1="28" y1="51" x2="36" y2="51"/>
+        <circle cx="32" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+      </svg>
+      <p class="portrait-gate-text-zh">请横屏使用</p>
+      <p class="portrait-gate-text-en">Rotate to landscape</p>
+    </div>
+  </div>
+
   <!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
 
@@ -26,7 +39,6 @@
         <a href="about.html">About</a>
       </nav>
     </div>
-    <div class="piano-accent" aria-hidden="true"></div>
   </header>
 
   <!-- Experience Page -->
@@ -49,12 +61,14 @@
       <!-- Experience List -->
       <div id="experience-list" class="experience-list"></div>
     </div>
+
+    <p class="page-quote">此心安处，便是吾乡。 —— 苏轼</p>
   </div>
 
-  <script src="js/data.js?v=4"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/transitions.js?v=59"></script>
-  <script src="js/nav.js"></script>
+  <script src="js/data.js?v=6"></script>
+  <script src="js/transitions.js?v=71"></script>
+  <script src="js/nav.js?v=3"></script>
+
   <script src="js/map.js?v=22"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {

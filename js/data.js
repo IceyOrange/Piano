@@ -18,9 +18,9 @@ window.PianoApp.data = {
       description: "从池塘到天空的交互发散，Canvas 渲染落叶、微风、昼夜更替、星空、流星雨、彗星与星座连线。",
       year: "2026",
       category: "Creative",
-      image: "assets/images/BlueSkyWhiteCloud.png",
+      image: "assets/images/BlueSkyWhiteCloud.jpg",
       tech: ["HTML", "CSS", "JavaScript", "Canvas"],
-      link: "#",
+      link: "BlueSkyWhiteCloud.html",
     }
   ],
 
@@ -121,22 +121,33 @@ window.PianoApp.data = {
     },
   ],
 
-  skills: [
-    "Python",
-    "R",
-    "JavaScript",
-    "HTML/CSS",
-    "深度学习",
-    "NLP",
-    "数据挖掘",
-    "数据可视化",
-    "RPA",
-    "产品规划",
-  ],
-
-  socialLinks: [
-    { name: "GitHub", url: "https://github.com" },
-    { name: "LinkedIn", url: "https://linkedin.com" },
-    { name: "Twitter", url: "https://twitter.com" },
-  ],
+  about: {
+    name: "黄添成",
+    typewriter: "Here to create, learn, and explore.",
+    handwriting: "TianCheng Huang",
+    avatar: "assets/images/demo.jpg",
+    avatarAlt: "Profile",
+    bio: [
+      "A frontend engineer and designer who believes in the poetry of code. I craft digital experiences that feel like music — rhythmic, intentional, and emotionally resonant.",
+      "Currently building tools that help people create and connect. Previously led design systems at scale and explored the intersection of audio and the web.",
+    ],
+    socialLinks: [
+      { name: "小红书", url: "#" },
+      { name: "GitHub", url: "#" },
+      { name: "微信", url: "#" },
+      { name: "Email", url: "#" },
+    ],
+    photos: [
+      {
+        src: "assets/images/Piano.png",
+        alt: "Piano Project",
+        caption: "一个能弹琴的 Landing Page，真实琴键交互与 Web Audio API 音频合成。"
+      },
+      {
+        src: "assets/images/BlueSkyWhiteCloud.jpg",
+        alt: "Blue Sky White Cloud",
+        caption: "从池塘到天空的交互发散，Canvas 渲染落叶、微风、昼夜更替、星空与流星雨。"
+      },
+    ],
+  },
 };

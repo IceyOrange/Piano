@@ -7,10 +7,24 @@
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=56">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
+  <link rel="stylesheet" href="css/styles.css?v=80">
 </head>
 <body>
+  <!-- Portrait Gate -->
+  <div class="portrait-gate" aria-hidden="true">
+    <div class="portrait-gate-inner">
+      <svg class="portrait-gate-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="22" y="8" width="20" height="48" rx="2.5"/>
+        <line x1="28" y1="51" x2="36" y2="51"/>
+        <circle cx="32" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+      </svg>
+      <p class="portrait-gate-text-zh">请横屏使用</p>
+      <p class="portrait-gate-text-en">Rotate to landscape</p>
+    </div>
+  </div>
+
   <!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
 
@@ -25,64 +39,41 @@
         <a href="about.html" aria-current="page">About</a>
       </nav>
     </div>
-    <div class="piano-accent" aria-hidden="true"></div>
   </header>
 
   <!-- About Page -->
   <div class="page page-warm">
     <div class="page-content">
-      <div class="container">
-        <h1 class="page-title animate-fade-in-up delay-1">About.</h1>
-      </div>
-      <div id="about-container" class="about-container about-stagger">
-        <!-- Avatar -->
-        <div class="about-avatar">
-          <img src="assets/images/demo.jpg" alt="Profile">
+      <div id="about-container" class="about-container">
+        <!-- Hero: name / typewriter / handwriting / bio / social + avatar -->
+        <div class="about-hero about-stagger">
+          <div class="about-name"></div>
+          <div class="about-typewriter">
+            <span class="typewriter-text"></span>
+          </div>
+          <div class="about-handwriting">
+            <span class="handwriting-text"></span>
+          </div>
+          <div class="about-bio"></div>
+          <div class="about-social"></div>
+          <div class="about-avatar">
+            <img alt="">
+          </div>
         </div>
 
-        <!-- Name -->
-        <div class="about-name">Your Name</div>
-
-        <!-- Bio -->
-        <div class="about-bio">
-          <p>
-            A frontend engineer and designer who believes in the poetry of code.
-            I craft digital experiences that feel like music — rhythmic, intentional,
-            and emotionally resonant.
-          </p>
-          <p>
-            Currently building tools that help people create and connect.
-            Previously led design systems at scale and explored the intersection
-            of audio and the web.
-          </p>
-        </div>
-
-        <!-- Skills -->
-        <div class="about-skills">
-          <script>
-            document.write(window.PianoApp?.data?.skills?.map(s =>
-              `<span class="skill-pill">${s}</span>`
-            ).join('') || '');
-          </script>
-        </div>
-
-        <!-- Social -->
-        <div class="about-social">
-          <script>
-            document.write(window.PianoApp?.data?.socialLinks?.map(l =>
-              `<a href="${l.url}" target="_blank" rel="noopener">${l.name}</a>`
-            ).join('') || '');
-          </script>
+        <!-- Photo Gallery -->
+        <div class="about-photos">
+          <div class="about-photo-grid"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="js/data.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/transitions.js?v=59"></script>
-  <script src="js/nav.js"></script>
-  <script src="js/about.js"></script>
+  <script src="js/data.js?v=9"></script>
+  <script src="js/transitions.js?v=71"></script>
+  <script src="js/nav.js?v=3"></script>
+  <script src="js/scroll-reveal.js"></script>
+  <script src="js/about.js?v=8"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.PianoApp.initTransitions();

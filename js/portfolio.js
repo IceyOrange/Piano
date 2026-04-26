@@ -5,8 +5,9 @@ window.PianoApp.initPortfolio = function () {
   if (!showcaseEl) return;
 
   const projects = window.PianoApp.data.projects;
+  showcaseEl.classList.add('reveal-stagger');
   showcaseEl.innerHTML = projects.map((project, i) => `
-    <article class="project-piece ${i % 2 === 1 ? 'project-piece--mirrored' : ''} animate-fade-in-up delay-${Math.min(i + 1, 4)}">
+    <article class="project-piece ${i % 2 === 1 ? 'project-piece--mirrored' : ''} reveal-on-scroll">
       <div class="project-visual">
         <img src="${project.image}" alt="${project.name}" loading="lazy">
       </div>
@@ -28,4 +29,8 @@ window.PianoApp.initPortfolio = function () {
       </div>
     </article>
   `).join("");
+
+  if (window.PianoApp.initScrollReveal) {
+    window.PianoApp.initScrollReveal();
+  }
 };

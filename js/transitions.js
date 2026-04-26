@@ -1,21 +1,36 @@
 window.PianoApp = window.PianoApp || {};
 
-// Page transition variants for forward navigation
+// ─── Page ↔ Key mapping ───────────────────────────
+const pageKeyMap = {
+  "portfolio.html": "C3",
+  "experience.html": "G3",
+  "about.html": "B3",
+};
+
+// ─── Transition routing ────────────────────────────
 const transitionVariants = {
   "portfolio.html": "circle-reveal",
-  "experience.html": "curtain-wipe",
-  "about.html": "slide-from-right",
+  "experience.html": "circle-reveal",
+  "about.html": "circle-reveal",
   "index.html": "fade",
 };
 
-// Bidirectional page-pair variants
 const transitionPairs = {
-  "experience.html->index.html": "curtain-wipe",
-  "index.html->experience.html": "curtain-wipe",
-  "portfolio.html->index.html": "circle-reveal",
+  // index ↔ sub-pages: circle-reveal
   "index.html->portfolio.html": "circle-reveal",
-  "about.html->index.html": "slide-from-right",
-  "index.html->about.html": "slide-from-right",
+  "portfolio.html->index.html": "circle-reveal",
+  "index.html->experience.html": "circle-reveal",
+  "experience.html->index.html": "circle-reveal",
+  "index.html->about.html": "circle-reveal",
+  "about.html->index.html": "circle-reveal",
+
+  // sub-page ↔ sub-page: slide-from-right
+  "portfolio.html->experience.html": "slide-from-right",
+  "experience.html->portfolio.html": "slide-from-right",
+  "portfolio.html->about.html": "slide-from-right",
+  "about.html->portfolio.html": "slide-from-right",
+  "experience.html->about.html": "slide-from-right",
+  "about.html->experience.html": "slide-from-right",
 };
 
 function getPageName() {
@@ -27,20 +42,19 @@ function getTransitionVariant(from, to) {
   return transitionPairs[pairKey] || transitionVariants[to] || "fade";
 }
 
-// ─── Shared helpers ───────────────────────────────────
+// ─── Key position helpers ──────────────────────────
 
-function getC3Origin() {
-  const c3Key = document.querySelector('[data-note="C3"]');
-  if (c3Key) {
-    const r = c3Key.getBoundingClientRect();
-    return { x: `${r.left + r.width / 2}px`, y: `${r.top + r.height / 2}px` };
+function getKeyOrigin(note) {
+  const keyEl = document.querySelector(`[data-note="${note}"]`);
+  if (keyEl) {
+    const r = keyEl.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
-  return { x: 'calc(100% - 48px)', y: '48px' };
+  const origins = JSON.parse(sessionStorage.getItem('keyOrigins') || '{}');
+  if (origins[note]) return origins[note];
+  // Fallback: lower-center of viewport, roughly where piano keys sit
+  return { x: window.innerWidth * 0.5, y: window.innerHeight * 0.75 };
 }
-
-// Circle-reveal animation is handled via:
-// Forward: CSS animation on .page (injected by destination page's inline <style>)
-// Reverse: clip-path transition on .page (shrinks toward C3)
 
 function revealPiano() {
   const pw = document.querySelector(".piano-wrapper");
@@ -53,7 +67,12 @@ function revealPiano() {
 }
 
 function cleanupTransitionLayers() {
-  document.querySelectorAll('.circle-reveal-layer, .reveal-circle-bg, .reveal-slide-bg, .iframe-reveal-container, .slide-reveal-container').forEach(el => el.remove());
+  // Cancel any lingering Web Animations on body (fill:forwards survives bfcache)
+  if (document.body.getAnimations) {
+    document.body.getAnimations().forEach(a => a.cancel());
+  }
+
+  document.querySelectorAll('.circle-reveal-mask, .circle-reveal-layer, .reveal-circle-bg, .reveal-slide-bg, .iframe-reveal-container, .slide-reveal-container, .transition-underlay, .exit-slide-layer').forEach(el => el.remove());
   const overlay = document.querySelector(".transition-overlay");
   if (overlay) {
     overlay.classList.remove("active", "slide-left", "scale", "fade", "curtain-wipe");
@@ -67,17 +86,31 @@ function cleanupTransitionLayers() {
     el.style.transition = "";
     el.style.transformOrigin = "";
   });
+  document.querySelectorAll(".page-header .page-title").forEach(el => {
+    el.style.removeProperty("opacity");
+    el.style.removeProperty("transform");
+    el.style.removeProperty("transition");
+    el.style.removeProperty("animation");
+  });
   document.querySelectorAll(".page").forEach(p => {
     p.classList.remove("curtain-exiting", "curtain-entering");
     p.style.removeProperty("clip-path");
     p.style.removeProperty("transition");
   });
+  document.body.style.position = "";
+  document.body.style.zIndex = "";
+  document.body.style.opacity = "";
+  document.body.style.clipPath = "";
+  document.body.style.transition = "";
 }
 
-// ─── Init ─────────────────────────────────────────────
+// ─── Init ──────────────────────────────────────────
 
 window.PianoApp.initTransitions = function () {
   cleanupTransitionLayers();
+
+  const inIframe = window.self !== window.top;
+  if (inIframe) return;
 
   // Intercept internal links for animated exit
   document.querySelectorAll('a[href]').forEach((link) => {
@@ -88,151 +121,204 @@ window.PianoApp.initTransitions = function () {
       e.preventDefault();
       const currentPage = getPageName();
       const variant = getTransitionVariant(currentPage, href);
-      window.PianoApp.navigateWithTransition(href, variant);
+
+      // From index: resolve the corresponding key position as origin
+      let origin = null;
+      if (currentPage === 'index.html') {
+        const targetKey = pageKeyMap[href];
+        if (targetKey) origin = getKeyOrigin(targetKey);
+      }
+
+      window.PianoApp.navigateWithTransition(href, variant, origin);
     });
   });
 
-  // Piano visible instantly
   revealPiano();
 
   // Remove initial HTML curtains after animation (index first load)
   const curtainStage = document.querySelector(".curtain-stage");
   if (curtainStage) {
-    setTimeout(() => curtainStage.remove(), 2200);
+    if (sessionStorage.getItem('pianoTransitionPlayed') === 'true') {
+      curtainStage.remove();
+    } else {
+      setTimeout(() => curtainStage.remove(), 2200);
+    }
   }
 
-  // Reverse transition: play when landing on this page after a forward animation
+  // Reverse animation on arrival: only slide-from-right needs an entry animation;
+  // circle-reveal plays its effect entirely on the outgoing page.
   const trans = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
   const currentPage = getPageName();
   if (trans.to === currentPage && !sessionStorage.getItem('pianoTransitionPlayed')) {
     sessionStorage.setItem('pianoTransitionPlayed', 'true');
-    playReverseAnimation(trans);
+    if (trans.variant === 'slide-from-right') {
+      playReverseSlideAnimation();
+    }
+    // circle-reveal and fade do not need reverse entry animations
   }
 };
 
-// ─── Navigate (forward exit animation) ────────────────
+// ─── Navigate (forward exit animation) ──────────────
 
 window.PianoApp.navigateWithTransition = function (url, variant, origin) {
   const currentPage = getPageName();
   console.log('[transition] navigate:', currentPage, '->', url, 'variant:', variant);
 
-  // Instantly close menu overlay (no animation) so it doesn't cover the transition
-  const menuOverlay = document.querySelector('.menu-overlay');
-  if (menuOverlay && menuOverlay.classList.contains('open')) {
-    menuOverlay.style.transition = 'none';
-    menuOverlay.classList.remove('open');
-    void menuOverlay.offsetHeight;
-    menuOverlay.style.transition = '';
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) {
+    window.location.href = url;
+    return;
   }
 
   sessionStorage.setItem('pianoTransition', JSON.stringify({
     from: currentPage, to: url, variant: variant, timestamp: Date.now()
   }));
   sessionStorage.removeItem('pianoTransitionPlayed');
-  // Reverse circle-reveal: prevent entry animation on destination
-  if (variant === 'circle-reveal' && currentPage !== 'index.html') {
-    sessionStorage.setItem('pianoTransitionPlayed', 'true');
-  }
 
   const pageContent = document.querySelector(".page-content");
 
   if (variant === "circle-reveal") {
-    let ox, oy;
-    if (origin) {
-      ox = `${origin.x}px`; oy = `${origin.y}px`;
+    const goingToIndex = url.includes('index.html');
+    const targetKey = goingToIndex
+      ? (pageKeyMap[currentPage] || 'C3')
+      : (pageKeyMap[url] || 'C3');
+
+    if (!goingToIndex) {
+      // Forward: index → sub-page
+      // Light mask expands from the corresponding key position
+      let ox, oy;
+      if (origin) {
+        ox = origin.x; oy = origin.y;
+      } else {
+        const pos = getKeyOrigin(targetKey);
+        ox = pos.x; oy = pos.y;
+      }
+
+      // Save key position for reverse transition
+      const origins = JSON.parse(sessionStorage.getItem('keyOrigins') || '{}');
+      origins[targetKey] = { x: ox, y: oy };
+      sessionStorage.setItem('keyOrigins', JSON.stringify(origins));
+
+      // Use Web Animations API for reliable clip-path animation
+      const mask = document.createElement('div');
+      mask.className = 'circle-reveal-mask';
+      mask.style.cssText =
+        'position:fixed;inset:0;z-index:100;' +
+        'background:#F2ECE2;';
+      document.body.appendChild(mask);
+
+      mask.animate([
+        { clipPath: 'circle(0% at ' + ox + 'px ' + oy + 'px)' },
+        { clipPath: 'circle(150% at ' + ox + 'px ' + oy + 'px)' }
+      ], {
+        duration: 800,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'forwards'
+      });
+
+      setTimeout(() => { window.location.href = url; }, 720);
+
     } else {
-      const stored = JSON.parse(sessionStorage.getItem('c3Origin') || '{}');
-      if (stored.x && stored.y) {
+      // Reverse: sub-page → index
+      // Place an iframe of index.html beneath <body>, then shrink the entire body
+      // toward the corresponding key position so the iframe is revealed underneath.
+      const origins = JSON.parse(sessionStorage.getItem('keyOrigins') || '{}');
+      const stored = origins[targetKey];
+      let ox, oy;
+      if (stored) {
         ox = stored.x; oy = stored.y;
       } else {
-        const c3 = getC3Origin();
-        ox = c3.x; oy = c3.y;
+        const pos = getKeyOrigin(targetKey);
+        ox = pos.x; oy = pos.y;
       }
-    }
-    sessionStorage.setItem('c3Origin', JSON.stringify({ x: ox, y: oy }));
 
-    if (currentPage === 'index.html') {
-      // Forward: navigate immediately; CSS animation on destination .page reveals it
-      window.location.href = url;
-    } else {
-      // Reverse: shrink .page toward C3 using Web Animations API
-      console.log('[transition] circle-reveal REVERSE, origin:', ox, oy);
-      const page = document.querySelector('.page');
-      if (page) {
-        page.style.zIndex = '200';
-        page.animate([
-          { clipPath: 'circle(150% at ' + ox + ' ' + oy + ')' },
-          { clipPath: 'circle(0% at ' + ox + ' ' + oy + ')' }
+      // Build iframe preview inside <html> but before <body> so it sits underneath
+      const html = document.documentElement;
+      const previewWrap = document.createElement('div');
+      previewWrap.className = 'transition-underlay';
+      previewWrap.style.cssText = 'position:fixed;inset:0;z-index:0;';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.style.cssText = 'position:absolute;inset:0;border:none;width:100%;height:100%;';
+      previewWrap.appendChild(iframe);
+      html.insertBefore(previewWrap, html.firstChild);
+
+      // Bring body above the iframe layer
+      document.body.style.position = 'relative';
+      document.body.style.zIndex = '1';
+
+      let shrinkStarted = false;
+      function startShrink() {
+        if (shrinkStarted) return;
+        shrinkStarted = true;
+        // Shrink the *entire* body (header + content) toward the key
+        document.body.animate([
+          { clipPath: 'circle(200% at ' + ox + 'px ' + oy + 'px)', opacity: 1 },
+          { clipPath: 'circle(0% at ' + ox + 'px ' + oy + 'px)', opacity: 0 }
         ], {
           duration: 800,
-          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
           fill: 'forwards'
         });
+        setTimeout(() => { window.location.href = url; }, 850);
       }
-      setTimeout(() => { window.location.href = url; }, 900);
-    }
 
-  } else if (variant === "curtain-wipe") {
-    const overlay = document.querySelector(".transition-overlay");
-    const page = document.querySelector(".page");
-    if (page) page.classList.add("curtain-exiting");
-
-    if (overlay) {
-      const leftPanel = document.createElement("div");
-      leftPanel.className = "wipe-half wipe-half--left";
-      const rightPanel = document.createElement("div");
-      rightPanel.className = "wipe-half wipe-half--right";
-      overlay.appendChild(leftPanel);
-      overlay.appendChild(rightPanel);
-
-      const revealContainer = document.createElement("div");
-      revealContainer.className = "iframe-reveal-container";
-      const leftHalf = document.createElement("div");
-      leftHalf.className = "iframe-reveal-half iframe-reveal-half--left";
-      const leftIframe = document.createElement("iframe");
-      leftIframe.src = url;
-      leftHalf.appendChild(leftIframe);
-      const rightHalf = document.createElement("div");
-      rightHalf.className = "iframe-reveal-half iframe-reveal-half--right";
-      const rightIframe = document.createElement("iframe");
-      rightIframe.src = url;
-      rightHalf.appendChild(rightIframe);
-      revealContainer.appendChild(leftHalf);
-      revealContainer.appendChild(rightHalf);
-      document.body.appendChild(revealContainer);
-
-      requestAnimationFrame(() => {
-        overlay.classList.add("active", variant);
-        revealContainer.classList.add("active");
+      iframe.addEventListener('load', function() {
+        try {
+          var idoc = iframe.contentDocument || iframe.contentWindow.document;
+          var iwin = iframe.contentWindow;
+          if (idoc && idoc.head) {
+            var style = idoc.createElement('style');
+            style.textContent =
+              '.page-header{opacity:0!important;visibility:hidden!important}' +
+              '.animate-fade-in-up,.animate-fade-in-down,.animate-fade-in{animation:none!important;opacity:1!important;transform:none!important}' +
+              '.reveal-on-scroll{opacity:1!important;transform:none!important;transition:none!important}' +
+              '.curtain-stage{display:none!important}' +
+              '.transition-overlay{display:none!important}' +
+              '.piano-wrapper{opacity:1!important;transform:none!important}';
+            idoc.head.appendChild(style);
+          }
+          if (iwin && iwin.sessionStorage) {
+            iwin.sessionStorage.setItem('pianoTransitionPlayed', 'true');
+          }
+        } catch(e) {}
+        sessionStorage.setItem('pianoTransitionPlayed', 'true');
+        startShrink();
       });
+
+      // Fallback: start shrink even if iframe hasn't loaded within 300ms
+      setTimeout(startShrink, 300);
     }
-    setTimeout(() => { window.location.href = url; }, 2000);
 
   } else if (variant === "slide-from-right") {
-    // Determine direction & color based on TARGET page
-    const goingToIndex = url.includes('index.html');
-    console.log('[transition] slide-from-right, goingToIndex:', goingToIndex);
-    const targetBg = goingToIndex ? '#001A48' : '#F2ECE2';
-    const slideFrom = goingToIndex ? 'translateX(-100%)' : 'translateX(100%)';
-    const slideCurrent = goingToIndex ? 'translateX(15%)' : 'translateX(-15%)';
+    // Sub-page → sub-page: light warm overlay, stays below page-header (z-index 89)
+    const slideFrom = 'translateX(100%)';
+    const slideCurrent = 'translateX(-15%)';
 
-    // Current page content slides out
     if (pageContent) {
-      pageContent.style.transition = 'transform 0.9s cubic-bezier(0.4,0,0.2,1), opacity 0.9s ease';
+      pageContent.style.transition = 'transform 0.9s cubic-bezier(0.22,1,0.36,1), opacity 0.9s ease';
       pageContent.style.transform = slideCurrent;
       pageContent.style.opacity = '0.5';
     }
 
-    // Target-colored overlay slides in
+    // Fade out the title text so it doesn't snap on the new page
+    const pageTitle = document.querySelector('.page-header .page-title');
+    if (pageTitle) {
+      pageTitle.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      pageTitle.style.opacity = '0';
+      pageTitle.style.transform = 'translateY(-6px)';
+    }
+
     const bgLayer = document.createElement('div');
+    bgLayer.className = 'reveal-slide-bg';
     bgLayer.style.cssText =
-      'position:fixed;inset:0;z-index:100;' +
-      'background:' + targetBg + ';' +
+      'position:fixed;inset:0;z-index:89;' +  // below page-header (z-index: 90)
+      'background:#F2ECE2;' +
       'transform:' + slideFrom + ';' +
-      'transition:transform 0.9s cubic-bezier(0.4,0,0.2,1);';
+      'transition:transform 0.9s cubic-bezier(0.22,1,0.36,1);';
     document.body.appendChild(bgLayer);
 
-    // Prefetch target page for fast load
     const prefetch = document.createElement('link');
     prefetch.rel = 'prefetch';
     prefetch.href = url;
@@ -248,6 +334,7 @@ window.PianoApp.navigateWithTransition = function (url, variant, origin) {
     setTimeout(() => { window.location.href = url; }, 950);
 
   } else {
+    // fade
     if (pageContent) {
       pageContent.style.transition = 'opacity 0.5s ease';
       pageContent.style.opacity = '0';
@@ -256,41 +343,41 @@ window.PianoApp.navigateWithTransition = function (url, variant, origin) {
   }
 };
 
-// ─── Reverse animation (arriving at page) ─────────────
+// ─── Reverse slide animation (arrival) ─────────────
 
-function playReverseAnimation(trans) {
-  if (trans.variant === 'circle-reveal') {
-    revealPiano();
-
-  } else if (trans.variant === 'curtain-wipe') {
-    playCurtainOpen();
-
-  } else if (trans.variant === 'slide-from-right') {
-    const pageContent = document.querySelector(".page-content");
-    if (pageContent) {
-      pageContent.classList.add("enter-slide-left");
-      setTimeout(() => pageContent.classList.remove("enter-slide-left"), 600);
-    }
-    const layer = document.createElement('div');
-    layer.className = 'exit-slide-layer';
-    document.body.appendChild(layer);
-    requestAnimationFrame(() => layer.classList.add('active'));
-    setTimeout(() => layer.remove(), 600);
-
-  } else if (trans.variant === 'fade') {
-    const pageContent = document.querySelector(".page-content");
-    if (pageContent) {
-      pageContent.style.opacity = "0";
-      requestAnimationFrame(() => {
-        pageContent.style.transition = "opacity 0.5s ease";
-        pageContent.style.opacity = "1";
-        setTimeout(() => { pageContent.style.transition = ""; pageContent.style.opacity = ""; }, 500);
-      });
-    }
+function playReverseSlideAnimation() {
+  const pageContent = document.querySelector(".page-content");
+  if (pageContent) {
+    pageContent.classList.add("enter-slide-left");
+    setTimeout(() => pageContent.classList.remove("enter-slide-left"), 600);
   }
+
+  // Fade in the new page title with a slight delay for a smooth handoff
+  const pageTitle = document.querySelector('.page-header .page-title');
+  if (pageTitle) {
+    pageTitle.style.opacity = '0';
+    pageTitle.style.transform = 'translateY(8px)';
+    pageTitle.style.transition = 'none';
+    // Override the animate-fade-in-up so we control the timing ourselves
+    pageTitle.style.animation = 'none';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        pageTitle.style.transition = 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)';
+        pageTitle.style.opacity = '1';
+        pageTitle.style.transform = 'translateY(0)';
+      });
+    });
+  }
+
+  const layer = document.createElement('div');
+  layer.className = 'exit-slide-layer';
+  layer.style.background = '#F2ECE2';
+  document.body.appendChild(layer);
+  requestAnimationFrame(() => layer.classList.add('active'));
+  setTimeout(() => layer.remove(), 600);
 }
 
-// ─── bfcache restore (browser back button) ────────────
+// ─── bfcache restore (browser back button) ───────────
 
 window.addEventListener("pageshow", (e) => {
   if (!e.persisted) return;
@@ -302,43 +389,13 @@ window.addEventListener("pageshow", (e) => {
   const currentPage = getPageName();
 
   if (trans.from === currentPage || trans.to === currentPage) {
-    playReverseAnimation(trans);
+    if (trans.variant === 'slide-from-right') {
+      playReverseSlideAnimation();
+    }
   }
 
-  // Force re-init piano keyboard if empty (bfcache issue)
   const keyboard = document.getElementById("piano-keyboard");
   if (keyboard && keyboard.children.length === 0 && window.PianoApp.initPiano) {
     window.PianoApp.initPiano();
   }
 });
-
-// ─── Curtain open (used by curtain-wipe reverse) ──────
-
-function playCurtainOpen() {
-  const pianoWrapper = document.querySelector(".piano-wrapper");
-  const page = document.querySelector(".page");
-
-  if (page) page.classList.add("curtain-entering");
-
-  const stage = document.createElement("div");
-  stage.className = "curtain-stage";
-  const leftCurtain = document.createElement("div");
-  leftCurtain.className = "curtain curtain-left";
-  const rightCurtain = document.createElement("div");
-  rightCurtain.className = "curtain curtain-right";
-  stage.appendChild(leftCurtain);
-  stage.appendChild(rightCurtain);
-  document.body.prepend(stage);
-
-  if (pianoWrapper) {
-    pianoWrapper.style.transition = "none";
-    pianoWrapper.classList.add("curtain-revealed");
-    pianoWrapper.offsetHeight;
-    pianoWrapper.style.transition = "";
-  }
-
-  setTimeout(() => {
-    stage.remove();
-    if (page) page.classList.remove("curtain-entering");
-  }, 2200);
-}

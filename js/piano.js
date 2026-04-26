@@ -64,8 +64,8 @@ const navKeys = [
 
 const navTransitionVariants = {
   "portfolio.html": "circle-reveal",
-  "experience.html": "curtain-wipe",
-  "about.html": "slide-from-right",
+  "experience.html": "circle-reveal",
+  "about.html": "circle-reveal",
 };
 
 const LONG_PRESS_DURATION = 2000;
@@ -618,6 +618,10 @@ window.PianoApp.initPiano = function () {
           if (ohCat) ohCat.style.cursor = show ? "none" : "pointer";
           if (vinylCursor) vinylCursor.style.opacity = show ? "1" : "0";
           document.body.classList.toggle("vinyl-cursor-active", show);
+          const svgEl = vinylCursor ? vinylCursor.querySelector("svg") : null;
+          if (svgEl) {
+            svgEl.style.animationPlayState = s.playingCanon ? "running" : "paused";
+          }
         };
 
         document.addEventListener("mousemove", (e) => {

@@ -81,7 +81,7 @@ window.PianoApp.initMap = function () {
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("fill", "#6B5E53");
       text.setAttribute("font-size", "11");
-      text.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, sans-serif");
+      text.setAttribute("font-family", "system-ui, sans-serif");
       text.setAttribute("font-weight", "500");
       text.setAttribute("class", "marker-label");
       text.textContent = label;
@@ -155,7 +155,6 @@ window.PianoApp.initMap = function () {
 
   function renderExperienceList() {
     listContainer.innerHTML = "";
-
     experiences.forEach(function (exp) {
       var item = document.createElement("div");
       item.className = "experience-item";
@@ -219,4 +218,8 @@ window.PianoApp.initMap = function () {
 
   renderMapMarkers();
   renderExperienceList();
+
+  if (window.PianoApp.initScrollReveal) {
+    window.PianoApp.initScrollReveal();
+  }
 };

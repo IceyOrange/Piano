@@ -7,29 +7,25 @@
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oranienbaum&family=Sintony:wght@400;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=56">
+  <link href="https://fonts.googleapis.com/css2?family=Sintony:wght@400;700&family=LXGW+WenKai&display=swap" rel="stylesheet">
+  <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
+  <link rel="stylesheet" href="css/styles.css?v=79">
   <link rel="preload" href="assets/fonts/SpecialElite.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
-<script>
-(function() {
-  var t = JSON.parse(sessionStorage.getItem('pianoTransition') || '{}');
-  if (t.to === 'portfolio.html' && t.variant === 'circle-reveal' && !sessionStorage.getItem('pianoTransitionPlayed')) {
-    sessionStorage.setItem('pianoTransitionPlayed', 'true');
-    var s = JSON.parse(sessionStorage.getItem('c3Origin') || '{}');
-    var ox = s.x || '50%';
-    var oy = s.y || '50%';
-    // CSS animation on .page: starts clipped to 0, expands to 150%
-    // Body bg (dark navy) shows outside the circle — warm page reveals from C3
-    var st = document.createElement('style');
-    st.id = 'circle-entry';
-    st.textContent = '.page{animation:circleEntry .8s cubic-bezier(.4,0,.2,1) forwards}@keyframes circleEntry{from{clip-path:circle(0% at ' + ox + ' ' + oy + ')}to{clip-path:circle(150% at ' + ox + ' ' + oy + ')}}';
-    document.documentElement.appendChild(st);
-    setTimeout(function() { st.remove(); }, 1200);
-  }
-})();
-</script>
+  <!-- Portrait Gate -->
+  <div class="portrait-gate" aria-hidden="true">
+    <div class="portrait-gate-inner">
+      <svg class="portrait-gate-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="22" y="8" width="20" height="48" rx="2.5"/>
+        <line x1="28" y1="51" x2="36" y2="51"/>
+        <circle cx="32" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+      </svg>
+      <p class="portrait-gate-text-zh">请横屏使用</p>
+      <p class="portrait-gate-text-en">Rotate to landscape</p>
+    </div>
+  </div>
+
   <!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
 
@@ -44,7 +40,6 @@
         <a href="about.html">About</a>
       </nav>
     </div>
-    <div class="piano-accent" aria-hidden="true"></div>
   </header>
 
   <!-- Portfolio Page -->
@@ -57,10 +52,10 @@
     </div>
   </div>
 
-  <script src="js/data.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/transitions.js?v=61"></script>
-  <script src="js/nav.js"></script>
+  <script src="js/data.js?v=6"></script>
+  <script src="js/transitions.js?v=71"></script>
+  <script src="js/nav.js?v=3"></script>
+  <script src="js/scroll-reveal.js"></script>
   <script src="js/portfolio.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {

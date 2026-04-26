@@ -3,20 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <title>Piano — Personal Homepage</title>
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=53">
+  <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
+  <link rel="stylesheet" href="css/styles.css?v=70">
 </head>
 <body>
+  <!-- Portrait Gate -->
+  <div class="portrait-gate" aria-hidden="true">
+    <div class="portrait-gate-inner">
+      <svg class="portrait-gate-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="22" y="8" width="20" height="48" rx="2.5"/>
+        <line x1="28" y1="51" x2="36" y2="51"/>
+        <circle cx="32" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+      </svg>
+      <p class="portrait-gate-text-zh">请横屏使用</p>
+      <p class="portrait-gate-text-en">Rotate to landscape</p>
+    </div>
+  </div>
+
   <!-- Curtain Reveal -->
   <div class="curtain-stage">
     <div class="curtain curtain-left"></div>
     <div class="curtain curtain-right"></div>
   </div>
+  <script>if(sessionStorage.getItem('pianoTransitionPlayed')==='true'){var cs=document.querySelector('.curtain-stage');if(cs)cs.remove();document.documentElement.classList.add('piano-revealed');}</script>
 
   <!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
@@ -31,11 +45,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=2"></script>
+  <script src="js/data.js?v=6"></script>
   <script src="js/audio.js?v=11"></script>
-  <script src="js/transitions.js?v=58"></script>
-  <script src="js/menu.js?v=2"></script>
-  <script src="js/piano.js?v=45"></script>
+  <script src="js/transitions.js?v=71"></script>
+  <script src="js/piano.js?v=46"></script>
   <script src="js/canon_data.js?v=1"></script>
   <script src="js/sequencer.js?v=7"></script>
   <script>
