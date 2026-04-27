@@ -3,30 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio — Piano</title>
+  <title>Portfolio</title>
+  <meta name="description" content="无用之用，方为大用">
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sintony:wght@400;700&family=LXGW+WenKai&display=swap" rel="stylesheet">
   <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
-  <link rel="stylesheet" href="css/styles.css?v=79">
+  <link rel="stylesheet" href="css/styles.css?v=116">
   <link rel="preload" href="assets/fonts/SpecialElite.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
-  <!-- Portrait Gate -->
-  <div class="portrait-gate" aria-hidden="true">
-    <div class="portrait-gate-inner">
-      <svg class="portrait-gate-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="22" y="8" width="20" height="48" rx="2.5"/>
-        <line x1="28" y1="51" x2="36" y2="51"/>
-        <circle cx="32" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
-      </svg>
-      <p class="portrait-gate-text-zh">请横屏使用</p>
-      <p class="portrait-gate-text-en">Rotate to landscape</p>
-    </div>
-  </div>
-
-  <!-- Page Transition Overlay -->
+<!-- Page Transition Overlay -->
   <div class="transition-overlay"></div>
 
   <!-- Page Header -->
@@ -44,7 +32,7 @@
 
   <!-- Portfolio Page -->
   <div class="page page-warm">
-    <div class="page-content">
+    <div class="page-content" role="main" aria-label="Portfolio showcase">
       <!-- Portfolio Showcase -->
       <div id="portfolio-showcase" class="portfolio-showcase"></div>
 
@@ -52,15 +40,12 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=6"></script>
-  <script src="js/transitions.js?v=71"></script>
-  <script src="js/nav.js?v=3"></script>
-  <script src="js/scroll-reveal.js"></script>
-  <script src="js/portfolio.js"></script>
+  <script src="js/data.js?v=116"></script>
+  <script src="js/transitions.js?v=116"></script>
+  <script src="js/pages.js?v=116"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.PianoApp.initTransitions();
-      window.PianoApp.initNav();
       window.PianoApp.initPortfolio();
     });
   </script>

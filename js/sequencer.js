@@ -15,7 +15,9 @@ window.PianoApp.Sequencer = {
   start() {
     if (this.isPlaying) return;
     if (!window.PianoApp.canonSequence) {
-      console.error("Canon sequence not loaded");
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.error("Canon sequence not loaded");
+      }
       return;
     }
 

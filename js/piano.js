@@ -55,18 +55,13 @@ const keyIdMap = {
   "E4": "E4",
 };
 
-// Navigation keys mapped to page links
-const navKeys = [
-  { note: "C3", label: "portfolio", href: "portfolio.html" },
-  { note: "G3", label: "experience", href: "experience.html" },
-  { note: "B3", label: "about", href: "about.html" },
-];
-
-const navTransitionVariants = {
-  "portfolio.html": "circle-reveal",
-  "experience.html": "circle-reveal",
-  "about.html": "circle-reveal",
-};
+// Navigation keys loaded from data.js
+function getNavKeys() {
+  return (window.PianoApp.data && window.PianoApp.data.navMappings && window.PianoApp.data.navMappings.keys) || [];
+}
+function getNavVariants() {
+  return (window.PianoApp.data && window.PianoApp.data.navMappings && window.PianoApp.data.navMappings.variants) || {};
+}
 
 const LONG_PRESS_DURATION = 2000;
 const PREVIEW_ANIMATION_DURATION = LONG_PRESS_DURATION - 500;
@@ -212,6 +207,13 @@ window.PianoApp.initPiano = function () {
 
       svg.appendChild(content);
       container.appendChild(svg);
+
+      // Cache key element references to avoid repeated querySelector
+      const keyElements = new Map();
+      [...whiteKeys, ...blackKeys].forEach(k => {
+        const el = svg.querySelector(`[data-note="${k.note}"]`);
+        if (el) keyElements.set(k.note, el);
+      });
 
       // ─── Interactions ────────────────────────
       const existingVisualSvg = container.querySelector(".piano-svg.piano-visual");
@@ -408,8 +410,8 @@ window.PianoApp.initPiano = function () {
       }
 
       function handleDown(note) {
-        const nav = navKeys.find((n) => n.note === note);
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const nav = getNavKeys().find((n) => n.note === note);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.add("pressed");
         setVisualState(note, "pressed", true);
 
@@ -430,7 +432,7 @@ window.PianoApp.initPiano = function () {
             cancelPreviewAnimation();
             window.PianoApp.navigateWithTransition(
               nav.href,
-              navTransitionVariants[nav.href] || "fade",
+              getNavVariants()[nav.href] || "fade",
               group ? (() => { const r = group.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })() : null
             );
           }, LONG_PRESS_DURATION);
@@ -442,7 +444,7 @@ window.PianoApp.initPiano = function () {
       }
 
       function handleUp(note) {
-        const nav = navKeys.find((n) => n.note === note);
+        const nav = getNavKeys().find((n) => n.note === note);
         if (nav) {
           if (longPressTimer && longPressNote === note) {
             clearTimeout(longPressTimer);
@@ -450,12 +452,12 @@ window.PianoApp.initPiano = function () {
             longPressNote = null;
           }
           cancelPreviewAnimation();
-          const group = svg.querySelector(`[data-note="${note}"]`);
+          const group = keyElements.get(note);
           if (group && !isBlackKey(note)) group.classList.remove("pressed");
           setVisualState(note, "pressed", false);
           return;
         }
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.remove("pressed");
         setVisualState(note, "pressed", false);
         pressedNote = null;
@@ -463,7 +465,7 @@ window.PianoApp.initPiano = function () {
 
       function handleLeave() {
         if (!pressedNote && !longPressNote) return;
-        const nav = navKeys.find((n) => n.note === (pressedNote || longPressNote));
+        const nav = getNavKeys().find((n) => n.note === (pressedNote || longPressNote));
         if (nav) {
           if (longPressTimer && longPressNote === nav.note) {
             clearTimeout(longPressTimer);
@@ -471,20 +473,20 @@ window.PianoApp.initPiano = function () {
             longPressNote = null;
           }
           cancelPreviewAnimation();
-          const group = svg.querySelector(`[data-note="${nav.note}"]`);
+          const group = keyElements.get(nav.note);
           if (group && !isBlackKey(nav.note)) group.classList.remove("pressed");
           setVisualState(nav.note, "pressed", false);
           return;
         }
         if (!pressedNote) return;
-        const group = svg.querySelector(`[data-note="${pressedNote}"]`);
+        const group = keyElements.get(pressedNote);
         if (group && !isBlackKey(pressedNote)) group.classList.remove("pressed");
         setVisualState(pressedNote, "pressed", false);
         pressedNote = null;
       }
 
       [...whiteKeys, ...blackKeys].forEach((k) => {
-        const group = svg.querySelector(`[data-note="${k.note}"]`);
+        const group = keyElements.get(k.note);
         if (!group) return;
 
         group.addEventListener("pointerdown", (e) => {
@@ -508,13 +510,13 @@ window.PianoApp.initPiano = function () {
 
       // ─── Auto-play Visual Helpers ──────────────────
       window.PianoApp.pressKeyVisual = function (note) {
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.add("pressed");
         setVisualState(note, "pressed", true);
       };
 
       window.PianoApp.releaseKeyVisual = function (note) {
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.remove("pressed");
         setVisualState(note, "pressed", false);
       };
@@ -656,13 +658,13 @@ window.PianoApp.initPiano = function () {
 
       function pressNote(note) {
         window.PianoApp.playNote(note);
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.add("pressed");
         setVisualState(note, "pressed", true);
       }
 
       function releaseNote(note) {
-        const group = svg.querySelector(`[data-note="${note}"]`);
+        const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.remove("pressed");
         setVisualState(note, "pressed", false);
       }
@@ -740,6 +742,8 @@ window.PianoApp.initPiano = function () {
       });
     })
     .catch((err) => {
-      console.error("Failed to load keyboard SVG:", err);
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.error("Failed to load keyboard SVG:", err);
+      }
     });
 };

@@ -5,21 +5,21 @@ window.PianoApp.data = {
     {
       id: "1",
       name: "一个能弹琴的 Landing Page",
-      description: "真实琴键交互与 Web Audio API 音频合成，长按琴键触发页面跳转；月之暗面风格动态乐谱，搭配自动演奏的小猫角色。",
+      description: "灵感源自 Pinterest 上看到的<a href='https://pin.it/FAAK2mtJ5' target='_blank'>钢琴</a>和<a href='https://pin.it/5Ww8Bq78A' target='_blank'>曲谱小猫</a>，以及 Kimi <a href='https://www.kimi.com/membership/pricing' target='_blank'>会员订阅页</a>底部的曲谱。设计真实钢琴演奏交互；通过长按琴键触发子页面跳转；还有致敬 Beatles 的动画；乐谱上的小猫会弹钢琴哦，点击试试吧。",
       year: "2026",
-      category: "Web App",
+      category: "Creative",
       image: "assets/images/Piano.png",
-      tech: ["HTML", "CSS", "JavaScript", "Web Audio API"],
+      tech: ["Vibe Coding", "音乐", "乐队"],
       link: "https://www.lovegood.cool",
     },
     {
       id: "2",
       name: "Blue Sky & White Cloud",
-      description: "从池塘到天空的交互发散，Canvas 渲染落叶、微风、昼夜更替、星空、流星雨、彗星与星座连线。",
+      description: "灵感源于 @baothiento 的<a href='https://x.com/baothiento/status/2033203600298488136?s=20' target='_blank'>池塘</a>和张悬的<a href='https://music.163.com/#/song?id=326697' target='_blank'>《蓝天白云》</a><br>向下滚动由白天滑入星空——白天点击放飞飞鸟、微风落叶；夜晚点击流星触发漫天星雨，探索星座连线，还有机会看见稀有的彗星！",
       year: "2026",
       category: "Creative",
       image: "assets/images/BlueSkyWhiteCloud.jpg",
-      tech: ["HTML", "CSS", "JavaScript", "Canvas"],
+      tech: ["Vibe Coding", "星空", "自然"],
       link: "BlueSkyWhiteCloud.html",
     }
   ],
@@ -30,7 +30,7 @@ window.PianoApp.data = {
       orgName: "北京师范大学",
       orgLocation: "珠海",
       tags: ["985", "双一流"],
-      position: "应用统计",
+      position: "应用统计 · 硕士",
       startDate: "2025-09",
       endDate: null,
       roles: [
@@ -51,7 +51,7 @@ window.PianoApp.data = {
       orgName: "北京与爱为舞科技有限公司",
       orgLocation: "北京",
       tags: ["K12 AI 教育", "独角兽"],
-      position: "产品经理",
+      position: "产品经理 · 实习",
       startDate: "2025-06",
       endDate: "2025-09",
       roles: [
@@ -77,7 +77,7 @@ window.PianoApp.data = {
       orgName: "高露洁棕榄(中国)有限公司",
       orgLocation: "广州",
       tags: ["世界 500 强", "快消"],
-      position: "数字化专员",
+      position: "数字化专员 · 实习",
       startDate: "2024-03",
       endDate: "2024-09",
       roles: [
@@ -97,8 +97,8 @@ window.PianoApp.data = {
       id: "4",
       orgName: "广州大学",
       orgLocation: "广州",
-      tags: null,
-      position: "统计学",
+      tags: ["111 计划"],
+      position: "统计学 · 本科",
       startDate: "2021-09",
       endDate: "2025-06",
       roles: [
@@ -123,31 +123,45 @@ window.PianoApp.data = {
 
   about: {
     name: "黄添成",
-    typewriter: "Here to create, learn, and explore.",
-    handwriting: "TianCheng Huang",
-    avatar: "assets/images/demo.jpg",
-    avatarAlt: "Profile",
+    typewriter: [
+      "为什么想要成为一名产品经理？",
+      "产品会影响人们的生活。而好的产品不是让人离不开它，而是帮人把时间和精力省出来，去享受更重要的事。", 
+      "我想做的就是设计这样的产品：它存在的意义，是让人们忘记它，把更多精力还给生活本身。",
+      "这也是我想做产品经理的原因：在技术发展迅速的时代，希望自己做的东西，能帮人们给生活多留一些时间 ：）"
+    ],
+    avatar: "assets/images/avatar.png",
+    avatarAlt: "大明星的个人头像",
     bio: [
-      "A frontend engineer and designer who believes in the poetry of code. I craft digital experiences that feel like music — rhythmic, intentional, and emotionally resonant.",
-      "Currently building tools that help people create and connect. Previously led design systems at scale and explored the intersection of audio and the web.",
+      "目前正在北师大攻读应用统计硕士学位，同时也在寻找下一份实习，希望能够参与到像 <a href='https://www.granola.ai/' target='_blank'>Granola</a>  (我最喜欢的 AI 产品)这样的产品团队中，遇见志同道合的人！",
+      "曾在与爱为舞参与其 AI 教育产品的打磨工作，非常开心看到自己参与打磨的产品让更多的孩子能够与教师 1 对 1 地交流，受到老师的鼓励与夸赞。",
+      "曾在高露洁帮助团队做 HR 重复性事务的自动化，也探索了 AI 在招聘流程中的应用，养成了受用一生的好习惯：好好写邮件（的正文和主题）！",
+      "非常幸运在过往两段实习中都遇到了特别 Nice 的同事和上司，感谢这一路上遇见的所有人！"
     ],
     socialLinks: [
-      { name: "小红书", url: "#" },
-      { name: "GitHub", url: "#" },
-      { name: "微信", url: "#" },
-      { name: "Email", url: "#" },
+      { name: "微信", type: "tooltip", tooltipType: "text", tooltipContent: "Lovego_od" },
+      { name: "MBTI", type: "tooltip", tooltipType: "text", tooltipContent: "ENTP" },
+      { name: "GitHub", type: "link", url: "https://github.com/IceyOrange" },
+      { name: "Email", type: "link", url: "mailto:uasgwr@gmail.com" },
+      // { name: "bilibili", type: "link", url: ""},
+      { name: "小红书", type: "tooltip", tooltipType: "image", tooltipContent: "assets/images/xiaohongshu-qr.jpg", tooltipDirection: "right" }
     ],
-    photos: [
-      {
-        src: "assets/images/Piano.png",
-        alt: "Piano Project",
-        caption: "一个能弹琴的 Landing Page，真实琴键交互与 Web Audio API 音频合成。"
-      },
-      {
-        src: "assets/images/BlueSkyWhiteCloud.jpg",
-        alt: "Blue Sky White Cloud",
-        caption: "从池塘到天空的交互发散，Canvas 渲染落叶、微风、昼夜更替、星空与流星雨。"
-      },
+  },
+
+  navMappings: {
+    keys: [
+      { note: "C3", label: "portfolio", href: "portfolio.html" },
+      { note: "G3", label: "experience", href: "experience.html" },
+      { note: "B3", label: "about", href: "about.html" },
     ],
+    pageToNote: {
+      "portfolio.html": "C3",
+      "experience.html": "G3",
+      "about.html": "B3",
+    },
+    variants: {
+      "portfolio.html": "circle-reveal",
+      "experience.html": "circle-reveal",
+      "about.html": "circle-reveal",
+    },
   },
 };

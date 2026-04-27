@@ -84,14 +84,18 @@ window.PianoApp._ensureSoundfont = function () {
         "C5","D5","E5","F5","G5","A5","B5","C6","D6","E6","F6","G6","C7",
       ]);
     } else {
-      console.warn(
-        "SoundFont script loaded but acoustic_grand_piano data not found"
-      );
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.warn(
+          "SoundFont script loaded but acoustic_grand_piano data not found"
+        );
+      }
     }
   };
   script.onerror = function () {
     window.PianoApp._sf.loading = false;
-    console.warn("SoundFont failed to load");
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      console.warn("SoundFont failed to load");
+    }
   };
   document.head.appendChild(script);
 };
@@ -325,15 +329,17 @@ window.PianoApp._toSfNote = function (note) {
     .replace("A#", "Bb");
 };
 
-// ─── Public API ──────────────────────────────────────────────────────────────
+// ─── Internal play dispatcher ────────────────────────────────────────────────
 
-window.PianoApp.playNote = function (note) {
+window.PianoApp._play = function (sfNote, freq, durationMs, when, velocity) {
   window.PianoApp.initAudio();
   const ctx = window.PianoApp.audioCtx;
-  const sfNote = window.PianoApp._toSfNote(note);
+  const start = when || ctx.currentTime;
+  const dur = Math.max((durationMs != null ? durationMs : 1400) / 1000, 0.05);
+  const vel = velocity != null ? velocity : 0.9;
 
   if (window.PianoApp._sf.buffers[sfNote]) {
-    return window.PianoApp._playSample(sfNote, ctx.currentTime, 1.4, 0.45);
+    return window.PianoApp._playSample(sfNote, start, dur, vel);
   }
 
   if (
@@ -344,32 +350,20 @@ window.PianoApp.playNote = function (note) {
     window.PianoApp._decodeSample(sfNote);
   }
 
-  const freq = window.PianoApp.noteFrequencies[note];
   if (!freq) return null;
-  return window.PianoApp._buildVoice(freq, ctx.currentTime, 1.4, 0.45);
+  return window.PianoApp._buildVoice(freq, start, dur, vel);
+};
+
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+window.PianoApp.playNote = function (note) {
+  const sfNote = window.PianoApp._toSfNote(note);
+  const freq = window.PianoApp.noteFrequencies[note];
+  return window.PianoApp._play(sfNote, freq, 1400, null, 0.9);
 };
 
 window.PianoApp.playNoteMidi = function (midi, durationMs, when, velocity) {
-  window.PianoApp.initAudio();
-  const ctx = window.PianoApp.audioCtx;
   const note = window.PianoApp.midiToNote(midi);
-
-  const start = when || ctx.currentTime;
-  const dur = Math.max(durationMs / 1000, 0.05);
-  const vel = velocity != null ? velocity : 0.45;
-
-  if (window.PianoApp._sf.buffers[note]) {
-    return window.PianoApp._playSample(note, start, dur, vel);
-  }
-
-  if (
-    window.PianoApp._sf.loaded &&
-    window.PianoApp._sf.data &&
-    window.PianoApp._sf.data[note]
-  ) {
-    window.PianoApp._decodeSample(note);
-  }
-
   const freq = 440 * Math.pow(2, (midi - 69) / 12);
-  return window.PianoApp._buildVoice(freq, start, dur, vel);
+  return window.PianoApp._play(note, freq, durationMs, when, velocity);
 };

@@ -99,22 +99,6 @@ img {
   flex-direction: column;
 }
 
-/* Page exit during curtain close transition (forward) */
-.page.curtain-exiting {
-  opacity: 0.35;
-  transform: scale(0.96);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-/* Page enter during curtain open transition (reverse) */
-.page.curtain-entering {
-  animation: curtainEnter 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-@keyframes curtainEnter {
-  0%   { opacity: 1; transform: scale(0.98); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 /* ─── Typography ────────────────────────────── */
 .text-logo {
   font-size: 0.875rem;
@@ -245,59 +229,6 @@ img {
 @keyframes pageEnterSlideLeft {
   0%   { transform: translateX(-3%); }
   100% { transform: translateX(0); }
-}
-
-/* ─── Curtain Reveal ────────────────────────── */
-.curtain-stage {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* Top valance bar */
-.curtain-stage::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 8px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.05) 60%, transparent);
-  z-index: 101;
-  pointer-events: none;
-}
-
-.curtain {
-  position: absolute;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  pointer-events: none;
-  background: #001A48;
-}
-
-.curtain-left {
-  left: 0;
-  box-shadow: inset -30px 0 50px -15px rgba(0,0,0,0.5);
-  animation: curtainOpenLeft 2.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.curtain-right {
-  right: 0;
-  box-shadow: inset 30px 0 50px -15px rgba(0,0,0,0.5);
-  animation: curtainOpenRight 2.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes curtainOpenLeft {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-110%); }
-}
-
-@keyframes curtainOpenRight {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(110%); }
 }
 
 /* ─── Fade In Animations ────────────────────── */
@@ -517,6 +448,16 @@ img {
   gap: 0.5rem;
 }
 
+.project-info p a {
+  color: var(--accent-warm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease;
+}
+.project-info p a:hover {
+  color: var(--warm-ivory);
+}
+
 .project-link {
   display: inline-flex;
   align-items: center;
@@ -552,7 +493,7 @@ img {
 .about-hero {
   display: grid;
   grid-template-columns: 1fr 250px;
-  gap: 0.5rem 4rem;
+  gap: 1.25rem 4rem;
   align-items: start;
   max-width: 1200px;
   width: 100%;
@@ -579,20 +520,20 @@ img {
   grid-row: 1 / span 3;
   align-self: start;
   justify-self: center;
-  width: 250px;
-  height: 250px;
+  width: 200px;
+  height: auto;
   border-radius: 0;
   border: none;
-  box-shadow: 0 8px 32px rgba(28, 25, 22, 0.12);
+  box-shadow: none;
+  margin-top: -0.5rem;
   margin-bottom: 0;
 }
 
 /* Lower section: bio + social, full width */
 .about-hero > .about-bio {
   grid-column: 1 / span 2;
-  max-width: 720px;
-  margin-top: 2.5rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0;
 }
 .about-hero > .about-bio p {
   text-align: left;
@@ -607,8 +548,6 @@ img {
   height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--warm-ivory-ghost);
-  box-shadow: 0 0 30px rgba(254, 246, 228, 0.1);
   margin-bottom: 2rem;
 }
 .about-avatar img {
@@ -618,20 +557,27 @@ img {
 }
 .about-name {
   font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   font-weight: 400;
   color: var(--warm-ivory);
-  margin-bottom: 2rem;
+  margin-bottom: 3.5rem;
 }
 .about-bio {
-  max-width: 600px;
   margin-bottom: 2rem;
 }
 .about-bio p {
   font-size: 1rem;
   color: var(--warm-ivory-dim);
-  line-height: 1.8;
-  margin-bottom: 1rem;
+  line-height: 1.85;
+  margin-bottom: 1.25rem;
+}
+.about-bio a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about-bio a:hover {
+  opacity: 0.8;
 }
 .about-skills {
   display: flex;
@@ -664,76 +610,70 @@ img {
 .about-social a:hover {
   color: var(--warm-ivory);
 }
-
-/* Photo gallery */
-.about-photos {
-  max-width: 1200px;
-  width: 100%;
-  margin: 3rem auto 0;
-}
-.about-photo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-.about-photo-item {
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
+.social-item {
   position: relative;
-  border-radius: 6px;
-  box-shadow: 0 2px 12px rgba(28, 25, 22, 0.1);
-  cursor: pointer;
+  cursor: default;
+  font-size: 0.875rem;
+  color: var(--warm-ivory-faint);
+  transition: color 0.3s ease;
 }
-.about-photo-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease;
+.social-item:hover {
+  color: var(--warm-ivory);
 }
-.about-photo-item:hover img {
-  transform: scale(1.04);
-}
-.about-photo-overlay {
+.social-tooltip {
   position: absolute;
-  inset: 0;
-  background-color: rgba(242, 236, 226, 0.92);
-  color: #001A48;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
-  padding: 1.5rem;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
   opacity: 0;
-  transition: opacity 0.5s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  z-index: 2;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  pointer-events: none;
+  z-index: 10;
 }
-.about-photo-item:hover .about-photo-overlay {
+.social-item:hover .social-tooltip {
   opacity: 1;
+  visibility: visible;
+}
+.social-tooltip.tooltip-right {
+  left: 100%;
+  bottom: auto;
+  top: 50%;
+  right: auto;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  margin-bottom: 0;
+}
+.social-tooltip img {
+  display: block;
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: 8px;
+}
+.social-tooltip span {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--warm-ivory);
 }
 
 /* Typewriter */
 .about-typewriter {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.85rem;
+  font-size: 1rem;
+  line-height: 2.2;
   letter-spacing: 0.08em;
   color: var(--warm-ivory-dim);
 }
 .typewriter-text {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
+  display: inline;
   border-right: 2px solid transparent;
-  width: 0;
 }
 
 /* Handwriting */
 .handwriting-text {
   font-family: 'Dancing Script', 'STXingkai', '华文行楷', 'KaiTi', '楷体', 'Brush Script MT', cursive;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: var(--accent-warm);
   display: inline-block;
   white-space: nowrap;
@@ -774,7 +714,7 @@ img {
 
 /* ─── Mobile / Desktop Display ──────────────── */
 .desktop-only { display: none; }
-@media (min-width: 768px) {
+@media (min-width: 641px) {
   .desktop-only { display: flex; }
   .mobile-only { display: none; }
 }
@@ -907,20 +847,7 @@ img {
   flex-shrink: 0;
   position: relative;
   margin-top: auto;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.9s ease-out, transform 0.9s ease-out;
 }
-.piano-wrapper.curtain-revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-.piano-revealed .piano-wrapper {
-  opacity: 1 !important;
-  transform: none !important;
-  transition: none !important;
-}
-
 /* ─── Vinyl Cursor ──────────────────────────── */
 @keyframes vinylSpin {
   from { transform: rotate(0deg); }
@@ -1233,15 +1160,15 @@ body.vinyl-cursor-active * {
   display: block;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+/* Responsive - Tablet (640px - 1024px) */
+@media (max-width: 1024px) {
   .experience-ariel .job-item {
     grid-template-columns: 1fr 150px;
     gap: 20px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .page-title {
     font-size: 36px;
   }
@@ -1301,11 +1228,11 @@ body.vinyl-cursor-active * {
   --warm-ivory-dim: #574D44;
   --warm-ivory-faint: rgba(28, 25, 22, 0.35);
   --warm-ivory-ghost: rgba(28, 25, 22, 0.12);
-  --accent-warm: #9E6347;
+  --accent-warm: #2A7B72;
   background: #F2ECE2;
   color: #1C1916;
 }
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .page-title {
     font-size: 28px;
   }
@@ -1327,7 +1254,7 @@ body.vinyl-cursor-active * {
   color: #574D44;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .project-piece {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -1358,13 +1285,9 @@ body.vinyl-cursor-active * {
     width: 200px;
     height: 200px;
   }
-  .about-photo-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .about-hero {
     display: flex;
     flex-direction: column;
@@ -1390,16 +1313,9 @@ body.vinyl-cursor-active * {
     margin-bottom: 0.5rem;
     order: -1;
   }
-  .about-photo-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
 }
 
-@media (max-width: 480px) {
-  .about-photo-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 640px) {
   .experience-ariel .map-container {
     height: 300px;
     background-position: center center;
@@ -1468,7 +1384,7 @@ body:has(.page-header) .page {
 }
 
 .page-nav a:hover {
-  color: #D4A574;
+  color: #2A7B72;
 }
 
 .page-nav a[aria-current="page"] {
@@ -1483,7 +1399,7 @@ body:has(.page-header) .page {
 }
 
 /* Mobile */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .page-header-inner {
     flex-direction: column;
     align-items: flex-start;
@@ -1520,92 +1436,33 @@ body:has(.page-header) .page {
   opacity: 0.6;
 }
 
-/* ─── Portrait Gate ─────────────────────────── */
-/* On narrow portrait screens, swap the entire site for a "rotate to landscape" message.
-   The piano keyboard, journey map, and BSWC experience are all horizontal compositions —
-   portrait mobile is not a supported viewport. */
+/* ─── Portrait Gate (deprecated) ─────────────── */
+/* The piano keyboard, journey map, and BSWC experience are all horizontal compositions.
+   On portrait mobile we no longer block the site — instead we rotate the entire body 90deg
+   so the horizontal layout fills the screen without forcing the user to physically rotate. */
 .portrait-gate {
   display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: var(--deep-navy);
-  color: var(--warm-ivory);
-  align-items: center;
-  justify-content: center;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-.portrait-gate-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.75rem;
-  text-align: center;
-  max-width: 280px;
-}
-
-.portrait-gate-icon {
-  width: 64px;
-  height: 64px;
-  color: var(--accent-warm);
-  transform-origin: 32px 32px;
-  animation: portraitGatePhone 4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-@keyframes portraitGatePhone {
-  0%, 18% {
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-  50%, 78% {
-    transform: rotate(-90deg);
-    opacity: 1;
-  }
-  88% {
-    transform: rotate(-90deg);
-    opacity: 0;
-  }
-  89% {
-    transform: rotate(0deg);
-    opacity: 0;
-  }
-  100% {
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-}
-
-.portrait-gate-text-zh {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  margin: 0;
-}
-
-.portrait-gate-text-en {
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 400;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--warm-ivory-dim);
-  margin: 0;
-}
-
-@media (max-width: 900px) and (orientation: portrait) {
-  .portrait-gate {
-    display: flex;
+@media (max-width: 1024px) and (orientation: portrait) {
+  /* Rotate the document so a portrait mobile viewport renders the horizontal layout. */
+  html {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
   }
   body {
-    overflow: hidden;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .portrait-gate-icon {
-    animation: none;
-    transform: rotate(-45deg);
+    /* Swap dimensions: body lays out as a landscape canvas (vh wide, vw tall). */
+    width: 100vh;
+    height: 100vw;
+    /* Center body geometrically inside the portrait viewport, then rotate around its center. */
+    position: fixed;
+    top: calc((100vh - 100vw) / 2);
+    left: calc((100vw - 100vh) / 2);
+    transform-origin: center center;
+    transform: rotate(90deg);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }

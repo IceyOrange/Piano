@@ -1,5 +1,214 @@
 window.PianoApp = window.PianoApp || {};
 
+window.PianoApp.initPortfolio = function () {
+  const showcaseEl = document.getElementById("portfolio-showcase");
+  if (!showcaseEl) return;
+
+  const projects = window.PianoApp.data.projects;
+  showcaseEl.innerHTML = projects.map((project, i) => `
+    <article class="project-piece ${i % 2 === 1 ? 'project-piece--mirrored' : ''}">
+      <div class="project-visual">
+        <img src="${project.image}" alt="${project.name}" loading="lazy">
+      </div>
+      <div class="project-info">
+        <div class="project-meta">${project.year} · ${project.category}</div>
+        <h2>${project.name}</h2>
+        <p>${project.description}</p>
+        <div class="project-tech">
+          ${project.tech.map(t => `<span class="tag-pill">${t}</span>`).join("")}
+        </div>
+        ${project.link && project.link !== "#" ? `
+          <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="project-link">
+            View Project
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 13L13 1M13 1H4M13 1V10" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </a>
+        ` : ""}
+      </div>
+    </article>
+  `).join("");
+};
+
+window.PianoApp.initAbout = function () {
+  const container = document.getElementById("about-container");
+  if (!container) return;
+
+  var about = (window.PianoApp.data && window.PianoApp.data.about) || {};
+
+  // Name
+  var nameEl = container.querySelector('.about-name');
+  if (nameEl && about.name) {
+    nameEl.textContent = about.name;
+  }
+
+  // Typewriter (supports single string or array of strings)
+  var typewriterContainer = container.querySelector('.about-typewriter');
+  if (typewriterContainer && about.typewriter) {
+    var lines = Array.isArray(about.typewriter) ? about.typewriter : [about.typewriter];
+    typewriterContainer.innerHTML = '';
+
+    var BASE_SPEED = 100;    // base milliseconds per character
+    var SPEED_VARIANCE = 80; // random variance (±80ms)
+    var LINE_GAP = 400;     // pause between lines (ms)
+    var INITIAL_DELAY = 400; // initial delay before typing starts (ms)
+
+    // Helper to get random typing delay for each character
+    function getRandomDelay() {
+      return BASE_SPEED + (Math.random() * SPEED_VARIANCE * 2 - SPEED_VARIANCE);
+    }
+
+    // Type each line with random character delays
+    var currentLine = 0;
+    var currentChar = 0;
+    var startTime = null;
+
+    function typeCharacter() {
+      if (currentLine >= lines.length) return;
+
+      var line = lines[currentLine];
+
+      // Create span for current line if not exists
+      var lineSpan = typewriterContainer.children[currentLine * 2]; // each line has span + possible br
+      if (!lineSpan) {
+        lineSpan = document.createElement('span');
+        lineSpan.className = 'typewriter-text';
+        lineSpan.style.borderRight = '2px solid var(--accent-warm)';
+        typewriterContainer.appendChild(lineSpan);
+      }
+
+      // Add current character
+      lineSpan.textContent += line[currentChar];
+      currentChar++;
+
+      // Schedule next character
+      if (currentChar < line.length) {
+        setTimeout(typeCharacter, getRandomDelay());
+      } else {
+        // Line complete, add blink caret
+        lineSpan.style.animation = 'blink-caret 0.75s step-end infinite';
+
+        // Schedule next line or finish
+        setTimeout(function() {
+          if (currentLine < lines.length - 1) {
+            // Remove caret from current line
+            lineSpan.style.animation = 'none';
+            lineSpan.style.borderRight = 'none';
+
+            // Add line break
+            var br = document.createElement('br');
+            typewriterContainer.appendChild(br);
+
+            // Move to next line
+            currentLine++;
+            currentChar = 0;
+            typeCharacter();
+          }
+        }, LINE_GAP);
+      }
+    }
+
+    // Start typing after initial delay
+    setTimeout(typeCharacter, INITIAL_DELAY);
+  }
+
+  // Handwriting — hide if no content
+  var handwritingWrap = container.querySelector('.about-handwriting');
+  if (handwritingWrap) {
+    if (about.handwriting) {
+      var handwritingText = handwritingWrap.querySelector('.handwriting-text');
+      if (handwritingText) handwritingText.textContent = about.handwriting;
+    } else {
+      handwritingWrap.style.display = 'none';
+    }
+  }
+
+  // Bio (array of paragraphs)
+  var bioEl = container.querySelector('.about-bio');
+  if (bioEl && Array.isArray(about.bio)) {
+    bioEl.innerHTML = '';
+    about.bio.forEach(function (text) {
+      var p = document.createElement('p');
+      p.innerHTML = text;
+      bioEl.appendChild(p);
+    });
+  }
+
+  // Preload tooltip images so they're ready on hover
+  if (about.socialLinks) {
+    about.socialLinks.forEach(function (l) {
+      if (l.type === 'tooltip' && l.tooltipType === 'image' && l.tooltipContent) {
+        var preload = new Image();
+        preload.src = l.tooltipContent;
+      }
+    });
+  }
+
+  // Social links
+  var socialEl = container.querySelector('.about-social');
+  if (socialEl && about.socialLinks) {
+    socialEl.innerHTML = about.socialLinks.map(function (l) {
+      if (l.type === 'tooltip') {
+        var tooltipBody = l.tooltipType === 'image'
+          ? '<img src="' + l.tooltipContent + '" alt="' + l.name + '">'
+          : '<span>' + l.tooltipContent + '</span>';
+        var dirClass = l.tooltipDirection ? ' tooltip-' + l.tooltipDirection : '';
+        return '<span class="social-item">' + l.name + '<div class="social-tooltip' + dirClass + '">' + tooltipBody + '</div></span>';
+      }
+      return '<a class="social-item" href="' + l.url + '" target="_blank" rel="noopener">' + l.name + '</a>';
+    }).join('');
+
+    // Attach load/error handlers to tooltip images after DOM insertion
+    socialEl.querySelectorAll('.social-tooltip img').forEach(function (img) {
+      img.onload = function () {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.log('[About] Tooltip image loaded:', this.src, 'naturalSize:', this.naturalWidth, 'x', this.naturalHeight);
+        }
+      };
+      img.onerror = function () {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.error('[About] Tooltip image failed:', this.src);
+        }
+        this.style.display = 'none';
+        var fallback = document.createElement('span');
+        fallback.textContent = '图片加载失败';
+        fallback.style.cssText = 'color:var(--accent-warm);font-size:10px;padding:4px;';
+        this.parentNode.appendChild(fallback);
+      };
+    });
+  }
+
+  // Avatar
+  var avatarImg = container.querySelector('.about-avatar img');
+  if (avatarImg && about.avatar) {
+    avatarImg.src = about.avatar;
+    avatarImg.alt = about.avatarAlt || '';
+  }
+
+  // Stagger animation for hero section
+  var hero = container.querySelector('.about-hero');
+  if (!hero) return;
+
+  // Respect reduced motion / back-forward nav: show immediately
+  if (document.documentElement.classList.contains('prefers-no-animation') ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    hero.classList.add("active");
+    return;
+  }
+
+  // Trigger stagger animation when scrolled into view
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        hero.classList.add("active");
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -32px 0px' });
+
+  observer.observe(hero);
+};
+
 window.PianoApp.initMap = function () {
   var mapContainer = document.getElementById("experience-map");
   var listContainer = document.getElementById("experience-list");
@@ -218,8 +427,4 @@ window.PianoApp.initMap = function () {
 
   renderMapMarkers();
   renderExperienceList();
-
-  if (window.PianoApp.initScrollReveal) {
-    window.PianoApp.initScrollReveal();
-  }
 };
