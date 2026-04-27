@@ -8,7 +8,7 @@ window.PianoApp.data = {
       description: "灵感源自 Pinterest 上看到的<a href='https://pin.it/FAAK2mtJ5' target='_blank'>钢琴</a>和<a href='https://pin.it/5Ww8Bq78A' target='_blank'>曲谱小猫</a>，以及 Kimi <a href='https://www.kimi.com/membership/pricing' target='_blank'>会员订阅页</a>底部的曲谱。设计真实钢琴演奏交互；通过长按琴键触发子页面跳转；还有致敬 Beatles 的动画；乐谱上的小猫会弹钢琴哦，点击试试吧。",
       year: "2026",
       category: "Creative",
-      image: "assets/images/Piano.png",
+      image: "assets/images/piano.png",
       tech: ["Vibe Coding", "音乐", "乐队"],
       link: "https://www.lovegood.cool",
     },
