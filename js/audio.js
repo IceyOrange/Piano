@@ -39,7 +39,11 @@ window.PianoApp.initAudio = function () {
   if (!window.PianoApp._reverbNode && window.PianoApp.audioCtx) {
     window.PianoApp._reverbNode = window.PianoApp._createReverb();
   }
-  window.PianoApp._ensureSoundfont();
+  window.PianoApp._ensureSoundfont().then(function () {
+    if (window.PianoApp.canonSequence && window.PianoApp.Sequencer) {
+      window.PianoApp.Sequencer._predecodeSamples();
+    }
+  });
 };
 
 window.PianoApp._createReverb = function () {
@@ -172,9 +176,19 @@ window.PianoApp._decodeSample = function (note) {
 };
 
 window.PianoApp._preloadSamples = function (notes) {
-  notes.forEach(function (note) {
-    window.PianoApp._decodeSample(note);
-  });
+  var index = 0;
+  function nextBatch() {
+    var batch = 0;
+    while (batch < 3 && index < notes.length) {
+      window.PianoApp._decodeSample(notes[index]);
+      index++;
+      batch++;
+    }
+    if (index < notes.length) {
+      setTimeout(nextBatch, 0);
+    }
+  }
+  nextBatch();
 };
 
 // ─── Sample Player ───────────────────────────────────────────────────────────

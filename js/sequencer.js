@@ -299,10 +299,19 @@ window.PianoApp.Sequencer = {
     } else {
       this._humanSeed = Math.random() * 10000;
       this.elapsedMs = 0;
-      this._predecodeSamples().then(
-        () => this.start(),
-        () => this.start()
-      );
+      const self = this;
+      function begin() {
+        self._predecodeSamples().then(
+          () => self.start(),
+          () => self.start()
+        );
+      }
+      const ctx = window.PianoApp.audioCtx;
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume().then(begin);
+      } else {
+        begin();
+      }
     }
   },
 
