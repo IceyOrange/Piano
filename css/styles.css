@@ -1602,7 +1602,7 @@ body:has(.page-header) .page {
     left: calc((100vw - 100vh) / 2);
     transform-origin: center center;
     transform: rotate(90deg);
-    overflow: hidden;
+    overflow: clip;
   }
   body.landscape-page .page,
   body.landscape-page .page-content {
