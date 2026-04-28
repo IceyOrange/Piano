@@ -326,7 +326,7 @@ img {
 }
 @media (max-width: 1024px) {
   .key-preview-animation svg {
-    transform: scale(0.6);
+    transform: scale(0.5);
     transform-origin: bottom center;
   }
 }
