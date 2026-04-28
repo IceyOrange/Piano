@@ -653,8 +653,7 @@ window.PianoApp.initPiano = function () {
         catTooltipLink.style.cssText = `
           display: block;
           color: rgba(245, 240, 230, 0.7);
-          text-decoration: underline;
-          text-underline-offset: 3px;
+          text-decoration: none;
           font-size: 13px;
           white-space: nowrap;
           pointer-events: auto;
