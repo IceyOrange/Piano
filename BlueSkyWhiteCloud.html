@@ -313,6 +313,16 @@
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
+            /* BlueSkyWhiteCloud: disable rotation, keep portrait layout for canvas */
+            body.landscape-page:has(.sky-frame) {
+                width: 100vw;
+                height: 100vh;
+                position: static;
+                top: auto;
+                left: auto;
+                transform: none;
+                overflow: hidden;
+            }
         }
     </style>
 </head>

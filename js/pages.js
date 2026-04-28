@@ -176,6 +176,24 @@ window.PianoApp.initAbout = function () {
         this.parentNode.appendChild(fallback);
       };
     });
+
+    // Mobile: tap to toggle tooltip
+    socialEl.querySelectorAll('.social-item').forEach(function (item) {
+      if (item.tagName.toLowerCase() === 'a') return;
+      item.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isActive = item.classList.contains('active');
+        socialEl.querySelectorAll('.social-item').forEach(function (si) {
+          si.classList.remove('active');
+        });
+        if (!isActive) item.classList.add('active');
+      });
+    });
+    document.addEventListener('click', function () {
+      socialEl.querySelectorAll('.social-item').forEach(function (si) {
+        si.classList.remove('active');
+      });
+    });
   }
 
   // Avatar
@@ -255,10 +273,14 @@ window.PianoApp.initMap = function () {
   function renderMapMarkers() {
     var markersGroup = document.getElementById("map-markers");
     if (!markersGroup) return;
+    var svgEl = markersGroup.ownerSVGElement;
 
+    var markerIdx = 0;
     function createMarker(pos, label, isDraggable, markerType) {
       var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "svg-marker");
+      g.style.animationDelay = (markerIdx * 0.18 + Math.random() * 0.08).toFixed(2) + "s";
+      markerIdx++;
       if (isDraggable) g.style.cursor = "move";
 
       // Outer pulse ring
@@ -283,7 +305,7 @@ window.PianoApp.initMap = function () {
       dot.setAttribute("class", "marker-dot");
       g.appendChild(dot);
 
-      // City label — hidden by default, shown on hover
+      // City label — hidden by default, shown on hover / tap
       var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", pos.x);
       text.setAttribute("y", pos.y - 14);
@@ -296,26 +318,36 @@ window.PianoApp.initMap = function () {
       text.textContent = label;
       g.appendChild(text);
 
-      g.addEventListener("mouseenter", function () {
+      function showLabel() {
         dot.setAttribute("r", "5.6");
         dot.setAttribute("fill", "#A68B6B");
         text.style.opacity = "1";
-      });
-      g.addEventListener("mouseleave", function () {
+      }
+      function hideLabel() {
         dot.setAttribute("r", "4");
         dot.setAttribute("fill", "#F2ECE2");
         text.style.opacity = "0";
-      });
+      }
+
+      g.addEventListener("mouseenter", showLabel);
+      g.addEventListener("mouseleave", hideLabel);
 
       // Drag support
       if (isDraggable) {
         var dragging = false;
-        var svgEl = markersGroup.ownerSVGElement;
 
         function getSvgPoint(evt) {
           var pt = svgEl.createSVGPoint();
-          pt.x = evt.clientX;
-          pt.y = evt.clientY;
+          var cx = evt.clientX, cy = evt.clientY;
+          if (evt.touches && evt.touches.length > 0) {
+            cx = evt.touches[0].clientX;
+            cy = evt.touches[0].clientY;
+          } else if (evt.changedTouches && evt.changedTouches.length > 0) {
+            cx = evt.changedTouches[0].clientX;
+            cy = evt.changedTouches[0].clientY;
+          }
+          pt.x = cx;
+          pt.y = cy;
           return pt.matrixTransform(svgEl.getScreenCTM().inverse());
         }
 
@@ -352,14 +384,52 @@ window.PianoApp.initMap = function () {
             g.style.cursor = "move";
           }
         });
+
+        // Touch: tap to show label, drag to move
+        g.addEventListener("touchstart", function (e) {
+          e.preventDefault();
+          dragging = true;
+          showLabel();
+        }, { passive: false });
+
+        g.addEventListener("touchmove", function (e) {
+          if (!dragging) return;
+          e.preventDefault();
+          var p = getSvgPoint(e);
+          updatePos(p.x, p.y);
+        }, { passive: false });
+
+        g.addEventListener("touchend", function () {
+          if (!dragging) return;
+          dragging = false;
+        });
       }
 
       markersGroup.appendChild(g);
     }
 
-    extraMarkers.forEach(function (m) {
+    var shuffled = extraMarkers.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+    }
+    shuffled.forEach(function (m) {
       createMarker({ x: m.x, y: m.y }, m.city, true, "extra");
     });
+
+    // Mobile: tap blank area to hide all marker labels
+    if (svgEl) {
+      svgEl.addEventListener("touchstart", function (e) {
+        if (e.target.closest(".svg-marker")) return;
+        markersGroup.querySelectorAll(".marker-label").forEach(function (t) {
+          t.style.opacity = "0";
+        });
+        markersGroup.querySelectorAll(".marker-dot").forEach(function (d) {
+          d.setAttribute("r", "4");
+          d.setAttribute("fill", "#F2ECE2");
+        });
+      }, { passive: true });
+    }
   }
 
   function renderExperienceList() {
