@@ -33,6 +33,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html {
@@ -552,7 +553,7 @@
             // -------- 星空配置 --------
             stars: {
                 // 背景小星
-                backgroundCount: 721,   // 背景星星数量 (100-1000)
+                backgroundCount: Math.min(window.innerWidth, window.innerHeight) < 768 ? 300 : 721,
                 sizeDistribution: {     // 大小分布阈值 (0-1)
                     large: 0.94,        // >0.94: 大星
                     medium: 0.82,       // >0.82: 中星
@@ -674,7 +675,7 @@
         // touch drag into a 0→1 progress value that feeds the day/night transition.
         let _touchScrollProgress = 0;          // 0 = top (day), 1 = bottom (night)
         let _touchScrollActive = false;
-        let _touchScrollStartY = 0;
+        let _touchScrollStartX = 0;
         let _touchScrollStartProgress = 0;
 
         function isRotatedMobile() {
@@ -685,18 +686,18 @@
         function _onTouchScrollStart(e) {
             if (!isRotatedMobile()) return;
             _touchScrollActive = true;
-            _touchScrollStartY = e.touches[0].clientY;
+            _touchScrollStartX = e.touches[0].clientX;
             _touchScrollStartProgress = _touchScrollProgress;
         }
 
         function _onTouchScrollMove(e) {
             if (!_touchScrollActive) return;
-            const y = e.touches[0].clientY;
-            // Drag down → increase progress (toward night).
-            // Use the visual height (screen width in rotated mode) as the drag range
-            // so dragging the full screen height covers 0→1.
-            const visualH = window.innerWidth;  // In portrait, screen width = visual height
-            const deltaProgress = (y - _touchScrollStartY) / visualH;
+            const x = e.touches[0].clientX;
+            // Swipe left → increase progress (toward night).
+            // CSS rotate(90deg) puts original-top(day) on the RIGHT, original-bottom(night) on the LEFT.
+            // Visual width in landscape = physical screen height in portrait.
+            const visualW = window.innerHeight;
+            const deltaProgress = (_touchScrollStartX - x) / visualW;
             _touchScrollProgress = Math.max(0, Math.min(1, _touchScrollStartProgress + deltaProgress));
             e.preventDefault();  // Prevent pull-to-refresh / bounce
         }
@@ -2953,7 +2954,7 @@
             };
             const constellationGlobalScale = 2.159;
 
-            const targetCount = 17;
+            const targetCount = Math.min(window.innerWidth, window.innerHeight) < 768 ? 8 : 17;
 
             // 固定成对彩蛋
             const buddyPairs = [
