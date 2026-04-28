@@ -75,6 +75,7 @@ const navKeyAnimations = {
 let longPressTimer = null;
 let longPressNote = null;
 let previewState = null;
+const svgCache = {};
 
 // ─── Render ──────────────────────────────────
 window.PianoApp.initPiano = function () {
@@ -256,9 +257,7 @@ window.PianoApp.initPiano = function () {
         container.appendChild(animContainer);
         previewState.container = animContainer;
 
-        fetch(config.svg)
-          .then((r) => r.text())
-          .then((svgText) => {
+        function applySvgText(svgText) {
             if (!previewState || previewState.cancelled || previewState.note !== note) return;
 
             const parser = new DOMParser();
@@ -372,7 +371,18 @@ window.PianoApp.initPiano = function () {
             });
 
             animContainer.appendChild(svg);
-          });
+        }
+
+        if (svgCache[config.svg]) {
+          applySvgText(svgCache[config.svg]);
+        } else {
+          fetch(config.svg)
+            .then((r) => r.text())
+            .then((text) => {
+              svgCache[config.svg] = text;
+              applySvgText(text);
+            });
+        }
       }
 
       function cancelPreviewAnimation() {
@@ -753,4 +763,11 @@ window.PianoApp.initPiano = function () {
         console.error("Failed to load keyboard SVG:", err);
       }
     });
+
+  // Preload nav key SVGs
+  Object.entries(navKeyAnimations).forEach(([, config]) => {
+    fetch(config.svg)
+      .then((r) => r.text())
+      .then((text) => { svgCache[config.svg] = text; });
+  });
 };
