@@ -631,11 +631,10 @@ window.PianoApp.initPiano = function () {
         document.body.appendChild(vinylCursor);
 
         function positionVinylAtCat() {
-          if (!ohCat || !vinylCursor) return;
-          const rect = ohCat.getBoundingClientRect();
+          if (!vinylCursor) return;
           const size = 44;
-          vinylCursor.style.left = (rect.right + 6) + "px";
-          vinylCursor.style.top = (rect.top + (rect.height - size) / 2) + "px";
+          vinylCursor.style.left = (window.innerWidth - size) / 2 + "px";
+          vinylCursor.style.top = (window.innerHeight - size) / 2 - 15 + "px";
         }
 
         window.PianoApp.vinylCursor = vinylCursor;
@@ -654,7 +653,7 @@ window.PianoApp.initPiano = function () {
         };
 
         if (isMobile) {
-          // On mobile, position vinyl at cat's bottom-left; update on resize/scroll
+          // On mobile, position vinyl at screen center; update on resize/scroll
           window.addEventListener("resize", positionVinylAtCat);
           window.addEventListener("scroll", positionVinylAtCat, true);
           ohCat.addEventListener("touchstart", () => {

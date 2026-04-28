@@ -9,7 +9,7 @@
     <meta property="og:title" content="蓝天白云">
     <meta property="og:description" content="某个练完鼓的下午，在通向海边沙滩的小路上，耳机里响起了张悬的《蓝天白云》。">
     <meta name="theme-color" content="#87ceeb">
-    <link id="gfont" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link id="gfont" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&family=LXGW+WenKai&display=swap" rel="stylesheet">
     <script>
         // Google Fonts 国内镜像回退
         (function() {
@@ -693,11 +693,11 @@
         function _onTouchScrollMove(e) {
             if (!_touchScrollActive) return;
             const x = e.touches[0].clientX;
-            // Swipe left → increase progress (toward night).
+            // Swipe right → increase progress (toward night).
             // CSS rotate(90deg) puts original-top(day) on the RIGHT, original-bottom(night) on the LEFT.
             // Visual width in landscape = physical screen height in portrait.
             const visualW = window.innerHeight;
-            const deltaProgress = (_touchScrollStartX - x) / visualW;
+            const deltaProgress = (x - _touchScrollStartX) / visualW;
             _touchScrollProgress = Math.max(0, Math.min(1, _touchScrollStartProgress + deltaProgress));
             e.preventDefault();  // Prevent pull-to-refresh / bounce
         }
@@ -3997,7 +3997,7 @@
             // 显示星座名称（童话绘本风：手写体、柔和 pastel、温润不刺眼）
             if (intensity > 0.3 && nearestConstellation.labelStar) {
                 starsCtx.save();
-                starsCtx.font = '500 18px "Ma Shan Zheng", "Noto Serif SC", serif';
+                starsCtx.font = '500 18px "LXGW WenKai", "Noto Serif SC", serif';
                 starsCtx.fillStyle = `rgba(255, 248, 235, ${intensity * 0.9})`;
                 starsCtx.textAlign = 'center';
                 starsCtx.shadowColor = 'rgba(180, 140, 100, 0.3)';

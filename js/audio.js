@@ -171,9 +171,16 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity) {
   const gain = ctx.createGain();
   const v = Math.max(0, Math.min(1, velocity || 0.45));
 
+  const dur = Math.max(duration || 1.4, 0.05);
+  const releaseStart = startTime + dur - 0.12;
+  const stopTime = startTime + dur + 0.15;
+
   // Ultra-short attack to avoid clicks while preserving natural sample attack
   gain.gain.setValueAtTime(0, startTime);
   gain.gain.linearRampToValueAtTime(v, startTime + 0.003);
+  // Sustain then smooth release to prevent indefinite ringing
+  gain.gain.setValueAtTime(v, Math.max(releaseStart, startTime + 0.004));
+  gain.gain.exponentialRampToValueAtTime(0.001, releaseStart + 0.12);
 
   const dry = ctx.createGain();
   dry.gain.value = 0.85;
@@ -187,9 +194,7 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity) {
   }
 
   source.start(startTime);
-  // Let the sample decay naturally — do NOT schedule an artificial stop.
-  // The piano sample already contains authentic ADSR envelope.
-  // This allows notes to ring and overlap like a real piano with sustain.
+  source.stop(stopTime);
 
   return {
     stop: function (when) {
@@ -197,8 +202,8 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity) {
       try {
         gain.gain.cancelScheduledValues(t);
         gain.gain.setValueAtTime(gain.gain.value, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        source.stop(t + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        source.stop(t + 0.08);
       } catch (e) {}
     },
   };
