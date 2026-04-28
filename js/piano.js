@@ -634,6 +634,54 @@ window.PianoApp.initPiano = function () {
 
         document.body.appendChild(vinylCursor);
 
+        // ─── Cat Hover Tooltip ─────────────────
+        const catTooltip = document.createElement("div");
+        catTooltip.className = "cat-tooltip";
+        const catTooltipLink = document.createElement("a");
+        catTooltipLink.href = "https://www.bilibili.com/read/cv4079944/?opus_fallback=1";
+        catTooltipLink.target = "_blank";
+        catTooltipLink.rel = "noopener noreferrer";
+        catTooltipLink.textContent = "曲谱来源";
+        catTooltip.appendChild(catTooltipLink);
+        catTooltip.style.cssText = `
+          position: fixed;
+          z-index: 1001;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          pointer-events: none;
+        `;
+        catTooltipLink.style.cssText = `
+          display: block;
+          color: rgba(245, 240, 230, 0.7);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          font-size: 13px;
+          white-space: nowrap;
+          pointer-events: auto;
+          transition: color 0.15s ease;
+        `;
+        document.body.appendChild(catTooltip);
+
+        let tooltipHovered = false;
+        let tooltipHideTimer = null;
+
+        catTooltipLink.addEventListener("mouseenter", () => {
+          clearTimeout(tooltipHideTimer);
+          tooltipHovered = true;
+        });
+        catTooltipLink.addEventListener("mouseleave", () => {
+          tooltipHovered = false;
+          catTooltip.style.opacity = "0";
+        });
+
+        function positionCatTooltip() {
+          if (!ohCat) return;
+          const rect = ohCat.getBoundingClientRect();
+          const tw = catTooltip.offsetWidth;
+          catTooltip.style.left = (rect.left + rect.width / 2 - tw / 2) + "px";
+          catTooltip.style.top = (rect.top - catTooltip.offsetHeight - 8) + "px";
+        }
+
         function positionVinylAtCat() {
           if (!vinylCursor) return;
           const size = 44;
@@ -681,10 +729,16 @@ window.PianoApp.initPiano = function () {
           ohCat.addEventListener("mouseenter", () => {
             window.PianoApp.vinylCursorState.catHover = true;
             window.PianoApp.updateVinylCursor();
+            clearTimeout(tooltipHideTimer);
+            catTooltip.style.opacity = "1";
+            positionCatTooltip();
           });
           ohCat.addEventListener("mouseleave", () => {
             window.PianoApp.vinylCursorState.catHover = false;
             window.PianoApp.updateVinylCursor();
+            tooltipHideTimer = setTimeout(() => {
+              if (!tooltipHovered) catTooltip.style.opacity = "0";
+            }, 100);
           });
         }
       }
