@@ -633,8 +633,11 @@ window.PianoApp.initPiano = function () {
         function positionVinylAtCat() {
           if (!vinylCursor) return;
           const size = 44;
-          vinylCursor.style.left = (window.innerWidth - size) / 2 + "px";
-          vinylCursor.style.top = (window.innerHeight - size) / 2 - 15 + "px";
+          const isLandscape = document.body.classList.contains("landscape-page");
+          const vw = isLandscape ? window.innerHeight : window.innerWidth;
+          const vh = isLandscape ? window.innerWidth : window.innerHeight;
+          vinylCursor.style.left = (vw - size) / 2 + "px";
+          vinylCursor.style.top = (vh - size) / 2 - 15 + "px";
         }
 
         window.PianoApp.vinylCursor = vinylCursor;
