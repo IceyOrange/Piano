@@ -10,7 +10,7 @@ window.PianoApp.Sequencer = {
   nextAudioIndex: 0,
   scheduleTimer: null,
   _humanSeed: 0,
-  MAX_VOICES: 24,
+  MAX_VOICES: 28,
   _chordCache: null,
   _chordCacheIndex: -1,
 
@@ -106,37 +106,74 @@ window.PianoApp.Sequencer = {
     return chord;
   },
 
+  _getNoteRole(note, chordNotes) {
+    // Bass: Canon's ground bass (ostinato) — D, A, B, F#, G, etc. in lower register
+    if (note.midi < 55) return "bass";
+    // Melody: the highest voice in the upper register, carrying the main theme
+    if (chordNotes.length > 1) {
+      const maxMidi = Math.max(...chordNotes.map((n) => n.midi));
+      if (note.midi === maxMidi && note.midi >= 67) return "melody";
+    }
+    // Inner voices: harmonic filler between bass and melody
+    return "inner";
+  },
+
+  _getPhraseDynamics(timeMs) {
+    // Breathing-like dynamics: swell and fade over ~6-second phrases
+    const phraseLen = 6000;
+    const pos = (timeMs % phraseLen) / phraseLen;
+    // Start gentle, build to a peak near the middle, ease off toward the end
+    return Math.sin(pos * Math.PI) * 0.07 - 0.015;
+  },
+
+  _getRubato(timeMs) {
+    // Subtle time stretching at phrase boundaries — like a living performer
+    const phraseLen = 6000;
+    const pos = (timeMs % phraseLen) / phraseLen;
+    // Slight push at phrase start, gentle pull back at phrase end
+    if (pos > 0.88) {
+      return ((pos - 0.88) / 0.12) * 10; // ritardando: up to +10ms
+    }
+    if (pos < 0.08) {
+      return -(pos / 0.08) * 4; // slight push: up to -4ms
+    }
+    return 0;
+  },
+
   _rand(i) {
     const x = Math.sin(this._humanSeed * 12.9898 + i * 78.233) * 43758.5453;
     return x - Math.floor(x);
   },
 
   _humanize(index) {
-    return (this._rand(index) * 20) - 10;
+    const note = window.PianoApp.canonSequence[index];
+    const range = note.midi >= 60 ? 20 : 8;
+    return (this._rand(index) * range * 2) - range;
   },
 
   _arpeggioOffset(note, chordNotes) {
     if (chordNotes.length <= 1) return 0;
     const sorted = chordNotes.slice().sort((a, b) => a.midi - b.midi);
     const rank = sorted.findIndex((n) => n.midi === note.midi);
-    return rank * 8;
+    return rank * 12;
   },
 
-  _calculateVelocity(note, chordNotes) {
-    if (chordNotes.length <= 1) {
-      return 0.45 + this._rand(note.midi) * 0.06;
-    }
-    const sorted = chordNotes.slice().sort((a, b) => b.midi - a.midi);
-    const rank = sorted.findIndex((n) => n.midi === note.midi);
-    const total = sorted.length;
+  _calculateVelocity(note, chordNotes, index) {
+    const role = this._getNoteRole(note, chordNotes);
+    const phraseDyn = this._getPhraseDynamics(note.time);
+    const rand = this._rand(note.midi + index);
 
-    if (rank === 0) {
-      return 0.54 + this._rand(note.midi) * 0.08;
+    if (role === "bass") {
+      // Ground bass: steady, warm, slightly behind the beat feel
+      // Narrow dynamic range for the repeating ostinato pattern
+      return Math.min(0.88, 0.44 + phraseDyn * 0.6 + rand * 0.07);
     }
-    if (rank === total - 1) {
-      return 0.28 + this._rand(note.midi) * 0.08;
+    if (role === "melody") {
+      // Melody: most expressive, wider dynamic swells, singing quality
+      return Math.min(0.95, 0.62 + phraseDyn + rand * 0.16);
     }
-    return 0.40 + this._rand(note.midi) * 0.06;
+    // Inner voices: supportive, blend into the harmonic texture
+    return Math.min(0.82, 0.36 + phraseDyn * 0.7 + rand * 0.09);
   },
 
   _purgeStoppedSounds() {
@@ -177,18 +214,35 @@ window.PianoApp.Sequencer = {
       }
 
       const chordNotes = this._getChordNotes(seq, this.nextAudioIndex);
-      const velocity = this._calculateVelocity(note, chordNotes);
+      const role = this._getNoteRole(note, chordNotes);
+      const velocity = this._calculateVelocity(note, chordNotes, this.nextAudioIndex);
       const humanizedOffset = this._humanize(this.nextAudioIndex);
       const arpeggioOffset = this._arpeggioOffset(note, chordNotes);
+      const rubato = this._getRubato(note.time);
 
       const audioDelay = note.time / 1000 +
-        (humanizedOffset + arpeggioOffset) / 1000;
+        (humanizedOffset + arpeggioOffset + rubato) / 1000;
+
+      // Bass notes and inner harmony get longer sustain (pedal effect);
+      // melody notes keep tighter duration for articulation
+      let sustainedDuration;
+      if (role === "bass") {
+        sustainedDuration = note.duration * 1.45;
+      } else if (role === "inner") {
+        sustainedDuration = note.duration * 1.25;
+      } else {
+        sustainedDuration = note.duration * 1.10;
+      }
+
+      // Sustain pedal simulation for bass ostinato and rich inner voices
+      const isSustain = role === "bass" || (role === "inner" && chordNotes.length > 2);
 
       const sound = window.PianoApp.playNoteMidi(
         note.midi,
-        note.duration,
+        sustainedDuration,
         this.baseTime + audioDelay,
-        velocity
+        velocity,
+        { sustain: isSustain }
       );
       if (sound) {
         sound._stopped = false;

@@ -160,7 +160,7 @@ window.PianoApp._preloadSamples = function (notes) {
 
 // ─── Sample Player ───────────────────────────────────────────────────────────
 
-window.PianoApp._playSample = function (note, startTime, duration, velocity) {
+window.PianoApp._playSample = function (note, startTime, duration, velocity, options) {
   const ctx = window.PianoApp.audioCtx;
   const buffer = window.PianoApp._sf.buffers[note];
   if (!buffer) return null;
@@ -171,16 +171,34 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity) {
   const gain = ctx.createGain();
   const v = Math.max(0, Math.min(1, velocity || 0.45));
 
-  const dur = Math.max(duration || 1.4, 0.05);
-  const releaseStart = startTime + dur - 0.12;
-  const stopTime = startTime + dur + 0.15;
+  const isSustain = options && options.sustain;
+  const perceptualDur = Math.max(duration || 1.4, 0.05);
 
-  // Ultra-short attack to avoid clicks while preserving natural sample attack
-  gain.gain.setValueAtTime(0, startTime);
-  gain.gain.linearRampToValueAtTime(v, startTime + 0.003);
-  // Sustain then smooth release to prevent indefinite ringing
-  gain.gain.setValueAtTime(v, Math.max(releaseStart, startTime + 0.004));
-  gain.gain.exponentialRampToValueAtTime(0.001, releaseStart + 0.12);
+  let stopTime;
+
+  if (isSustain) {
+    // Sustain pedal mode: let the sample decay naturally for rich resonance
+    const maxDuration = Math.min(buffer.duration, 4.5);
+    const decayStart = startTime + perceptualDur * 0.65;
+    const decayEnd = startTime + maxDuration;
+    stopTime = decayEnd + 0.1;
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(v, startTime + 0.003);
+    gain.gain.setValueAtTime(v, Math.max(decayStart, startTime + 0.004));
+    // Slow natural decay — like a piano with sustain pedal
+    gain.gain.exponentialRampToValueAtTime(0.001, decayEnd);
+  } else {
+    // Normal (melody) mode: clean articulation with gentle release
+    const releaseStart = startTime + perceptualDur - 0.10;
+    const releaseEnd = releaseStart + 0.18;
+    stopTime = releaseEnd + 0.05;
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(v, startTime + 0.003);
+    gain.gain.setValueAtTime(v, Math.max(releaseStart, startTime + 0.004));
+    gain.gain.exponentialRampToValueAtTime(0.001, releaseEnd);
+  }
 
   const dry = ctx.createGain();
   dry.gain.value = 0.85;
@@ -336,7 +354,7 @@ window.PianoApp._toSfNote = function (note) {
 
 // ─── Internal play dispatcher ────────────────────────────────────────────────
 
-window.PianoApp._play = function (sfNote, freq, durationMs, when, velocity) {
+window.PianoApp._play = function (sfNote, freq, durationMs, when, velocity, options) {
   window.PianoApp.initAudio();
   const ctx = window.PianoApp.audioCtx;
   const start = when || ctx.currentTime;
@@ -344,7 +362,7 @@ window.PianoApp._play = function (sfNote, freq, durationMs, when, velocity) {
   const vel = velocity != null ? velocity : 0.9;
 
   if (window.PianoApp._sf.buffers[sfNote]) {
-    return window.PianoApp._playSample(sfNote, start, dur, vel);
+    return window.PianoApp._playSample(sfNote, start, dur, vel, options);
   }
 
   if (
@@ -367,8 +385,8 @@ window.PianoApp.playNote = function (note) {
   return window.PianoApp._play(sfNote, freq, 1400, null, 0.9);
 };
 
-window.PianoApp.playNoteMidi = function (midi, durationMs, when, velocity) {
+window.PianoApp.playNoteMidi = function (midi, durationMs, when, velocity, options) {
   const note = window.PianoApp.midiToNote(midi);
   const freq = 440 * Math.pow(2, (midi - 69) / 12);
-  return window.PianoApp._play(note, freq, durationMs, when, velocity);
+  return window.PianoApp._play(note, freq, durationMs, when, velocity, options);
 };
