@@ -596,6 +596,7 @@ window.PianoApp.initPiano = function () {
         });
 
         // ─── Shared Vinyl Cursor ─────────────────
+        const isMobile = window.matchMedia("(pointer: coarse)").matches;
         const vinylCursor = document.createElement("div");
         vinylCursor.className = "vinyl-cursor";
         vinylCursor.style.cssText = `
@@ -606,7 +607,7 @@ window.PianoApp.initPiano = function () {
           z-index: 1000;
           opacity: 0;
           transition: opacity 0.15s ease;
-          transform: translate(-50%, -50%);
+          ${isMobile ? "transform: translate(-110%, -10%);" : "transform: translate(-50%, -50%);"}
         `;
 
         fetch("assets/images/Player.svg?v=3")
@@ -629,13 +630,21 @@ window.PianoApp.initPiano = function () {
 
         document.body.appendChild(vinylCursor);
 
+        function positionVinylAtCat() {
+          if (!ohCat || !vinylCursor) return;
+          const rect = ohCat.getBoundingClientRect();
+          vinylCursor.style.left = rect.left + "px";
+          vinylCursor.style.top = rect.bottom + "px";
+        }
+
         window.PianoApp.vinylCursor = vinylCursor;
         window.PianoApp.vinylCursorState = { catHover: false, playingCanon: false };
         window.PianoApp.updateVinylCursor = function () {
           const s = window.PianoApp.vinylCursorState;
           const show = s.catHover || s.playingCanon;
-          if (ohCat) ohCat.style.cursor = show ? "none" : "pointer";
+          if (!isMobile && ohCat) ohCat.style.cursor = show ? "none" : "pointer";
           if (vinylCursor) vinylCursor.style.opacity = show ? "1" : "0";
+          if (isMobile && show) positionVinylAtCat();
           document.body.classList.toggle("vinyl-cursor-active", show);
           const svgEl = vinylCursor ? vinylCursor.querySelector("svg") : null;
           if (svgEl) {
@@ -643,22 +652,34 @@ window.PianoApp.initPiano = function () {
           }
         };
 
-        document.addEventListener("mousemove", (e) => {
-          if (vinylCursor) {
-            vinylCursor.style.left = e.clientX + "px";
-            vinylCursor.style.top = e.clientY + "px";
-          }
-        });
-
-        ohCat.addEventListener("mouseenter", () => {
-          window.PianoApp.vinylCursorState.catHover = true;
-          window.PianoApp.updateVinylCursor();
-        });
-
-        ohCat.addEventListener("mouseleave", () => {
-          window.PianoApp.vinylCursorState.catHover = false;
-          window.PianoApp.updateVinylCursor();
-        });
+        if (isMobile) {
+          // On mobile, position vinyl at cat's bottom-left; update on resize/scroll
+          window.addEventListener("resize", positionVinylAtCat);
+          window.addEventListener("scroll", positionVinylAtCat, true);
+          ohCat.addEventListener("touchstart", () => {
+            window.PianoApp.vinylCursorState.catHover = true;
+            window.PianoApp.updateVinylCursor();
+          });
+          ohCat.addEventListener("touchend", () => {
+            window.PianoApp.vinylCursorState.catHover = false;
+            window.PianoApp.updateVinylCursor();
+          });
+        } else {
+          document.addEventListener("mousemove", (e) => {
+            if (vinylCursor) {
+              vinylCursor.style.left = e.clientX + "px";
+              vinylCursor.style.top = e.clientY + "px";
+            }
+          });
+          ohCat.addEventListener("mouseenter", () => {
+            window.PianoApp.vinylCursorState.catHover = true;
+            window.PianoApp.updateVinylCursor();
+          });
+          ohCat.addEventListener("mouseleave", () => {
+            window.PianoApp.vinylCursorState.catHover = false;
+            window.PianoApp.updateVinylCursor();
+          });
+        }
       }
 
       // ─── Keyboard Note Mapping (1–7) ─────────────
