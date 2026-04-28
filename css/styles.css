@@ -1439,6 +1439,15 @@ body.vinyl-cursor-active * {
     display: inline-flex;
     align-items: center;
   }
+  .social-tooltip.tooltip-right {
+    left: 50%;
+    bottom: 100%;
+    top: auto;
+    right: auto;
+    transform: translateX(-50%);
+    margin-left: 0;
+    margin-bottom: 6px;
+  }
 }
 
 @media (max-width: 640px) {
