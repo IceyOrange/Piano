@@ -553,7 +553,7 @@
             // -------- 星空配置 --------
             stars: {
                 // 背景小星
-                backgroundCount: Math.min(window.innerWidth, window.innerHeight) < 768 ? 300 : 721,
+                backgroundCount: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 180 : 721,
                 sizeDistribution: {     // 大小分布阈值 (0-1)
                     large: 0.94,        // >0.94: 大星
                     medium: 0.82,       // >0.82: 中星
@@ -2954,7 +2954,7 @@
             };
             const constellationGlobalScale = 2.159;
 
-            const targetCount = Math.min(window.innerWidth, window.innerHeight) < 768 ? 8 : 17;
+            const targetCount = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 5 : 17;
 
             // 固定成对彩蛋
             const buddyPairs = [
