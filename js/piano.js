@@ -424,6 +424,13 @@ window.PianoApp.initPiano = function () {
           prefetchLink.rel = 'prefetch';
           prefetchLink.href = nav.href;
           document.head.appendChild(prefetchLink);
+          // Preload heavy assets for target page after 0.5s
+          setTimeout(() => {
+            if (nav.href === 'experience.html') {
+              const img = new Image();
+              img.src = 'assets/images/ChinaMap.svg';
+            }
+          }, 500);
           longPressTimer = setTimeout(() => {
             longPressTimer = null;
             longPressNote = null;

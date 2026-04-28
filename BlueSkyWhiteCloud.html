@@ -294,9 +294,29 @@
             to   { opacity: 0; }
         }
 
+        /* ─── Mobile Landscape Rotation ─────────── */
+        @media (max-width: 1024px) and (orientation: portrait) {
+            html:has(body.landscape-page) {
+                overflow: hidden;
+                height: 100%;
+                width: 100%;
+            }
+            body.landscape-page {
+                width: 100vh;
+                height: 100vw;
+                position: fixed;
+                top: calc((100vh - 100vw) / 2);
+                left: calc((100vw - 100vh) / 2);
+                transform-origin: center center;
+                transform: rotate(90deg);
+                overflow-x: hidden;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="landscape-page">
     <div id="page-intro" aria-hidden="true"></div>
 
     <!-- 天空全屏画框 -->
