@@ -508,10 +508,14 @@ window.PianoApp.initPiano = function () {
 
         group.addEventListener("pointerdown", (e) => {
           e.preventDefault();
+          group.setPointerCapture(e.pointerId);
           handleDown(k.note);
         });
         group.addEventListener("pointerup", (e) => {
           e.preventDefault();
+          handleUp(k.note);
+        });
+        group.addEventListener("pointercancel", (e) => {
           handleUp(k.note);
         });
         group.addEventListener("pointerleave", handleLeave);
