@@ -1592,5 +1592,6 @@ body:has(.page-header) .page {
   body.landscape-page .page-content {
     min-height: auto;
     height: 100%;
+    overflow: visible;
   }
 }

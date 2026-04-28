@@ -143,7 +143,7 @@ window.PianoApp.data = {
       { name: "GitHub", type: "link", url: "https://github.com/IceyOrange" },
       { name: "Email", type: "link", url: "mailto:uasgwr@gmail.com" },
       // { name: "bilibili", type: "link", url: ""},
-      { name: "小红书", type: "tooltip", tooltipType: "image", tooltipContent: "assets/images/xiaohongshu-qr.jpg", tooltipDirection: "right" }
+      { name: "小红书", type: "tooltip", tooltipType: "image", tooltipContent: "assets/images/xiaohongshu-qr.jpg" }
     ],
   },
 
