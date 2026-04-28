@@ -87,7 +87,7 @@ window.PianoApp.data = {
           description: "针对 HR 部门在招聘、入离职、档案管理等场景的重复性的手动操作（如跨平台复制候选人信息、员工资料核对与移动归档、开具证明等）设计 RPA 自动化解决方案，并基于 ShadowBot、Apps Script、Python 进行开发落地。覆盖一键生成证明、招聘端自动回复、候选人信息抓取，为部门同事节省时间成本日均 30min+。"
         },
         {
-          titleZh: "AI 赋能 HR 招聘流程",
+          titleZh: "AI 赋能招聘流程",
           titleEn: "AI empowers recruitment process",
           description: "针对招聘流程中简历初筛效率低的问题，设计基于 RAG 的 AI 候选人评估辅助系统，并基于 Python 与大模型 API 接口开发，对候选人简历进行语义解析与岗位匹配度评估，实现自动筛选和生成评估建议，提升简历初筛效率."
         }
