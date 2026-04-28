@@ -400,6 +400,19 @@
         // 1. 工具函数
         // ============================================
 
+        // 横屏旋转适配：当 body.landscape-page 在竖屏设备上通过 CSS rotate(90deg)
+        // 模拟横屏时，window.innerWidth/Height 报告的是竖屏尺寸，但视觉上是横屏。
+        // 此函数返回实际视觉尺寸（宽 > 高）。
+        function getVisualDimensions() {
+            const iw = window.innerWidth;
+            const ih = window.innerHeight;
+            // CSS rotate(90deg) 仅在竖屏时激活
+            if (document.body.classList.contains('landscape-page') && iw < ih) {
+                return { w: ih, h: iw };
+            }
+            return { w: iw, h: ih };
+        }
+
         // 鼠标位置追踪（用于视差效果）
         const mousePos = { x: 0.5, y: 0.5 };
         const targetMousePos = { x: 0.5, y: 0.5 };
@@ -656,10 +669,17 @@
         }
 
         function updateTargetMouseFromEvent(x, y) {
-            const vw = window.innerWidth || 1;
-            const vh = window.innerHeight || 1;
-            targetMousePos.x = x / vw;
-            targetMousePos.y = y / vh;
+            const iw = window.innerWidth || 1;
+            const ih = window.innerHeight || 1;
+            // CSS rotate(90deg) 激活时，clientX/Y 仍为竖屏坐标，
+            // 需要转换为横屏归一化坐标：X→Y, Y→(1-X)
+            if (document.body.classList.contains('landscape-page') && iw < ih) {
+                targetMousePos.x = y / ih;
+                targetMousePos.y = 1 - x / iw;
+            } else {
+                targetMousePos.x = x / iw;
+                targetMousePos.y = y / ih;
+            }
             if (!TimeState.isDay) {
                 mouseEnteredStars = true;
             } else {
@@ -1273,8 +1293,7 @@
 
         // 调整星空画布尺寸和位置
         function resizeStarsCanvas() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const { w, h } = getVisualDimensions();
             if (!w || !h || w <= 0 || h <= 0) return false;
             const changed = starsCanvas.width !== w || starsCanvas.height !== h;
             if (changed) { starsCanvas.width = w; starsCanvas.height = h; }
@@ -1287,7 +1306,7 @@
         const skyCanvas = document.getElementById('sky-canvas');
         const scene = new THREE.Scene();
 
-        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        const camera = new THREE.PerspectiveCamera(50, (() => { const d = getVisualDimensions(); return d.w / d.h; })(), 0.1, 100);
         camera.position.z = 12;
 
         const renderer = new THREE.WebGLRenderer({
@@ -1306,8 +1325,7 @@
         const birdsDpr = Math.min(window.devicePixelRatio || 1, 2);
 
         function resizeBirdsCanvas() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const { w, h } = getVisualDimensions();
             birdsCanvas.width = Math.round(w * birdsDpr);
             birdsCanvas.height = Math.round(h * birdsDpr);
             birdsCtx.setTransform(birdsDpr, 0, 0, birdsDpr, 0, 0);
@@ -1380,8 +1398,7 @@
 
         const SKY_RES_SCALE = 0.6;
         function resizeRenderer() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const { w, h } = getVisualDimensions();
             renderer.setPixelRatio(1);
             renderer.setSize(w * SKY_RES_SCALE, h * SKY_RES_SCALE, false);
             renderer.setViewport(0, 0, w * SKY_RES_SCALE, h * SKY_RES_SCALE);
@@ -1404,8 +1421,7 @@
         const windLeafDpr = Math.min(window.devicePixelRatio || 1, 2);
         let windLeafCssW = 0, windLeafCssH = 0;
         function resizeWindLeafCanvas() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const { w, h } = getVisualDimensions();
             windLeafCssW = w;
             windLeafCssH = h;
             windLeafCanvas.width = Math.round(w * windLeafDpr);
@@ -1415,8 +1431,7 @@
 
         const surroundDpr = Math.min(window.devicePixelRatio || 1, 2);
         function resizeSurroundCanvas() {
-            const cssW = window.innerWidth;
-            const cssH = window.innerHeight;
+            const { w: cssW, h: cssH } = getVisualDimensions();
             const newWidth = Math.round(cssW * surroundDpr);
             const newHeight = Math.round(cssH * surroundDpr);
 
@@ -4409,7 +4424,7 @@
 
                 // 深度影响
                 this.depthScale = 1.0 + this.z / 400;
-                const depthFade = Math.max(0.3, Math.min(1.0, this.depthScale));                const w = window.innerWidth, h = window.innerHeight;
+                const depthFade = Math.max(0.3, Math.min(1.0, this.depthScale));                const { w, h } = getVisualDimensions();
                 const fm = this.canFlyOutOfFrame ? CONFIG.bird.fadeMargin : 0;
                 const fw = CONFIG.bird.fadeWidth;
                 let fade = 1;
@@ -4488,8 +4503,7 @@
                 if (now - lastSpawn.shower >= COOLDOWN.shower) {
                     lastSpawn.shower = now;
                     activeShowers.push(new MeteorShower(
-                        window.innerWidth / 2,
-                        window.innerHeight / 2
+                        ...(() => { const d = getVisualDimensions(); return [d.w / 2, d.h / 2]; })()
                     ));
                 }
                 return;
@@ -4499,13 +4513,12 @@
                 const now = performance.now();
                 if (TimeState.isDay) {
                     const canFlyOutOfFrame = Math.random() < CONFIG.bird.flyOutProb;
-                    addBird({ x: window.innerWidth / 2, y: window.innerHeight / 2 }, canFlyOutOfFrame);
+                    addBird((() => { const d = getVisualDimensions(); return { x: d.w / 2, y: d.h / 2 }; })(), canFlyOutOfFrame);
                 } else {
                     if (now - lastSpawn.meteor >= COOLDOWN.meteor) {
                         lastSpawn.meteor = now;
                         meteors.push(meteorPool.acquire(
-                            window.innerWidth / 2,
-                            window.innerHeight / 2
+                            ...(() => { const d = getVisualDimensions(); return [d.w / 2, d.h / 2]; })()
                         ));
                     }
                 }
@@ -4580,10 +4593,10 @@
             if (now - lastInteraction < 6000) return; // 活跃时不打扰
             if (TimeState.isDay && birds.length === 0 && Math.random() < 0.003) {
                 // 自动提示生成的鸟儿默认不会飞出框外
-                addBird({
-                    x: Math.random() * window.innerWidth,
-                    y: window.innerHeight * 0.1 + Math.random() * window.innerHeight * 0.6
-                }, false);
+                addBird((() => {
+                    const { w, h } = getVisualDimensions();
+                    return { x: Math.random() * w, y: h * 0.1 + Math.random() * h * 0.6 };
+                })(), false);
             } else if (!TimeState.isDay && meteors.length === 0 && Math.random() < 0.003) {
                 meteors.push(meteorPool.acquire());
             }
@@ -4828,8 +4841,7 @@
                     if (now - autoSpawn.wind >= CONFIG.wind.autoInterval) {
                         autoSpawn.wind = now;
                         if (Math.random() < CONFIG.wind.autoChance && mouseWindTrails.length < CONFIG.wind.maxTrails) {
-                            const ww = window.innerWidth;
-                            const hh = window.innerHeight;
+                            const { w: ww, h: hh } = getVisualDimensions();
                             mouseWindTrails.push({
                                 cx: Math.random() * ww,
                                 cy: hh * 0.2 + Math.random() * hh * 0.6,
@@ -4878,8 +4890,7 @@
                     if (now - autoSpawn.bird >= autoSpawn.birdNextInterval) {
                         // 按概率生成
                         if (Math.random() < CONFIG.bird.autoSpawnChance) {
-                            const w = window.innerWidth;
-                            const h = window.innerHeight;
+                            const { w, h } = getVisualDimensions();
                             // 从屏幕边缘随机位置生成
                             const edge = Math.floor(Math.random() * 4); // 0=上 1=右 2=下 3=左
                             const spawnFns = [
@@ -4926,7 +4937,7 @@
             // 始终渲染天空（GPU 开销小，避免夜间残留最后一帧亮色）
             renderer.render(scene, camera);
             // Canvas 2D 鸟儿渲染
-            birdsCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            birdsCtx.clearRect(0, 0, ...(() => { const d = getVisualDimensions(); return [d.w, d.h]; })());
             for (let i = 0; i < birds.length; i++) {
                 drawBird(birdsCtx, birds[i]);
             }

@@ -299,7 +299,7 @@ img {
   transform: translateY(3px);
 }
 .piano-visual {
-  contain: paint;
+  contain: layout style;
 }
 .piano-interaction-layer {
   position: absolute;
