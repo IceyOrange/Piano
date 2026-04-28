@@ -22,6 +22,8 @@ window.PianoApp._sf = {
   data: null,
   buffers: {},
   decoding: new Set(),
+  _decodeWaiters: {},
+  _loadPromise: null,
 };
 
 // ─── Audio Context & Reverb ──────────────────────────────────────────────────
@@ -63,41 +65,50 @@ window.PianoApp._createReverb = function () {
 // ─── SoundFont Loader ────────────────────────────────────────────────────────
 
 window.PianoApp._ensureSoundfont = function () {
-  if (window.PianoApp._sf.loading || window.PianoApp._sf.loaded) return;
-  window.PianoApp._sf.loading = true;
+  const sf = window.PianoApp._sf;
+  if (sf._loadPromise) return sf._loadPromise;
+  if (sf.loaded) return Promise.resolve();
 
-  const script = document.createElement("script");
-  script.src = "assets/soundfonts/acoustic_grand_piano-mp3.js";
-  script.onload = function () {
-    window.PianoApp._sf.loading = false;
-    const sf =
-      window.MIDI &&
-      window.MIDI.Soundfont &&
-      window.MIDI.Soundfont.acoustic_grand_piano;
-    if (sf) {
-      window.PianoApp._sf.loaded = true;
-      window.PianoApp._sf.data = sf;
-      window.PianoApp._preloadSamples([
-        "C2","D2","E2","F2","Gb2","G2","Ab2","A2","Bb2","B2",
-        "C3","Db3","D3","Eb3","E3","F3","Gb3","G3","Ab3","A3","Bb3","B3",
-        "C4","Db4","D4","Eb4","E4","F4","Gb4","G4","Ab4","A4","Bb4","B4",
-        "C5","D5","E5","F5","G5","A5","B5","C6","D6","E6","F6","G6","C7",
-      ]);
-    } else {
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.warn(
-          "SoundFont script loaded but acoustic_grand_piano data not found"
-        );
+  sf._loadPromise = new Promise(function (resolve, reject) {
+    sf.loading = true;
+    const script = document.createElement("script");
+    script.src = "assets/soundfonts/acoustic_grand_piano-mp3.js";
+    script.onload = function () {
+      sf.loading = false;
+      const sfData =
+        window.MIDI &&
+        window.MIDI.Soundfont &&
+        window.MIDI.Soundfont.acoustic_grand_piano;
+      if (sfData) {
+        sf.loaded = true;
+        sf.data = sfData;
+        window.PianoApp._preloadSamples([
+          "C2","D2","E2","F2","Gb2","G2","Ab2","A2","Bb2","B2",
+          "C3","Db3","D3","Eb3","E3","F3","Gb3","G3","Ab3","A3","Bb3","B3",
+          "C4","Db4","D4","Eb4","E4","F4","Gb4","G4","Ab4","A4","Bb4","B4",
+          "C5","D5","E5","F5","G5","A5","B5","C6","D6","E6","F6","G6","C7",
+        ]);
+        resolve();
+      } else {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.warn(
+            "SoundFont script loaded but acoustic_grand_piano data not found"
+          );
+        }
+        reject(new Error("SoundFont data not found"));
       }
-    }
-  };
-  script.onerror = function () {
-    window.PianoApp._sf.loading = false;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      console.warn("SoundFont failed to load");
-    }
-  };
-  document.head.appendChild(script);
+    };
+    script.onerror = function () {
+      sf.loading = false;
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.warn("SoundFont failed to load");
+      }
+      reject(new Error("SoundFont failed to load"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return sf._loadPromise;
 };
 
 window.PianoApp._decodeSample = function (note) {
@@ -112,7 +123,8 @@ window.PianoApp._decodeSample = function (note) {
       return;
     }
     if (sf.decoding.has(note)) {
-      resolve(null);
+      const waiters = sf._decodeWaiters[note] || (sf._decodeWaiters[note] = []);
+      waiters.push(resolve);
       return;
     }
 
@@ -123,6 +135,16 @@ window.PianoApp._decodeSample = function (note) {
     }
 
     sf.decoding.add(note);
+
+    function finish(result) {
+      sf.decoding.delete(note);
+      resolve(result);
+      const waiters = sf._decodeWaiters[note];
+      if (waiters) {
+        waiters.forEach(function (cb) { cb(result); });
+        delete sf._decodeWaiters[note];
+      }
+    }
 
     try {
       const base64 = dataUri.split(",")[1];
@@ -137,17 +159,14 @@ window.PianoApp._decodeSample = function (note) {
         bytes.buffer,
         function (buffer) {
           sf.buffers[note] = buffer;
-          sf.decoding.delete(note);
-          resolve(buffer);
+          finish(buffer);
         },
         function () {
-          sf.decoding.delete(note);
-          resolve(null);
+          finish(null);
         }
       );
     } catch (e) {
-      sf.decoding.delete(note);
-      resolve(null);
+      finish(null);
     }
   });
 };

@@ -17,17 +17,19 @@ window.PianoApp.Sequencer = {
   _predecodeSamples() {
     const seq = window.PianoApp.canonSequence;
     if (!seq) return Promise.resolve();
-    const uniqueNotes = new Set();
-    seq.forEach((n) => uniqueNotes.add(window.PianoApp.midiToNote(n.midi)));
-    const promises = [];
-    uniqueNotes.forEach((note) => {
-      const sfNote = window.PianoApp._toSfNote(note);
-      if (!window.PianoApp._sf.buffers[sfNote]) {
-        const p = window.PianoApp._decodeSample(sfNote);
-        if (p) promises.push(p);
-      }
+    return window.PianoApp._ensureSoundfont().then(function () {
+      const uniqueNotes = new Set();
+      seq.forEach((n) => uniqueNotes.add(window.PianoApp.midiToNote(n.midi)));
+      const promises = [];
+      uniqueNotes.forEach((note) => {
+        const sfNote = window.PianoApp._toSfNote(note);
+        if (!window.PianoApp._sf.buffers[sfNote]) {
+          const p = window.PianoApp._decodeSample(sfNote);
+          if (p) promises.push(p);
+        }
+      });
+      return promises.length > 0 ? Promise.all(promises) : Promise.resolve();
     });
-    return promises.length > 0 ? Promise.all(promises) : Promise.resolve();
   },
 
   start() {
@@ -297,7 +299,10 @@ window.PianoApp.Sequencer = {
     } else {
       this._humanSeed = Math.random() * 10000;
       this.elapsedMs = 0;
-      this._predecodeSamples().then(() => this.start());
+      this._predecodeSamples().then(
+        () => this.start(),
+        () => this.start()
+      );
     }
   },
 
