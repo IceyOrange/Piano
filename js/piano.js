@@ -98,7 +98,7 @@ window.PianoApp.initPiano = function () {
       visualSvg.removeAttribute("width");
       visualSvg.removeAttribute("height");
       visualSvg.setAttribute("class", "piano-svg piano-visual");
-      visualSvg.setAttribute("preserveAspectRatio", "xMidYMax meet");
+      visualSvg.setAttribute("preserveAspectRatio", "xMinYMax meet");
 
       // Remove background rect so page background shows through
       const bgRect = visualSvg.querySelector('rect[fill="#001A38"]');
@@ -120,7 +120,7 @@ window.PianoApp.initPiano = function () {
       // alignment while fully decoupling them from keyboard animations.
       const overlaySvg = document.createElementNS(svgNS, "svg");
       overlaySvg.setAttribute("viewBox", "0 559 1452 341");
-      overlaySvg.setAttribute("preserveAspectRatio", "xMidYMax meet");
+      overlaySvg.setAttribute("preserveAspectRatio", "xMinYMax meet");
       overlaySvg.setAttribute("class", "piano-svg");
       overlaySvg.style.cssText = "position:absolute;top:0;left:0;width:100%;pointer-events:none;z-index:10;overflow:visible;transform:translateZ(0);will-change:transform;";
 
@@ -164,7 +164,7 @@ window.PianoApp.initPiano = function () {
       // ─── Interaction Layer ───────────────────
       const svg = document.createElementNS(svgNS, "svg");
       svg.setAttribute("viewBox", "0 0 1452 341");
-      svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
+      svg.setAttribute("preserveAspectRatio", "xMinYMax meet");
       svg.setAttribute("class", "piano-svg piano-interaction-layer");
 
       const content = document.createElementNS(svgNS, "g");
@@ -607,7 +607,7 @@ window.PianoApp.initPiano = function () {
           z-index: 1000;
           opacity: 0;
           transition: opacity 0.15s ease;
-          ${isMobile ? "transform: translate(-110%, -10%);" : "transform: translate(-50%, -50%);"}
+          ${isMobile ? "transform: translate(0, 0);" : "transform: translate(-50%, -50%);"}
         `;
 
         fetch("assets/images/Player.svg?v=3")
@@ -633,8 +633,9 @@ window.PianoApp.initPiano = function () {
         function positionVinylAtCat() {
           if (!ohCat || !vinylCursor) return;
           const rect = ohCat.getBoundingClientRect();
-          vinylCursor.style.left = rect.left + "px";
-          vinylCursor.style.top = rect.bottom + "px";
+          const size = 44;
+          vinylCursor.style.left = (rect.right + 6) + "px";
+          vinylCursor.style.top = (rect.top + (rect.height - size) / 2) + "px";
         }
 
         window.PianoApp.vinylCursor = vinylCursor;

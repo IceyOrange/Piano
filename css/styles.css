@@ -49,7 +49,7 @@ body:has(.page-warm) {
   background: #F2ECE2;
 }
 body:has(.experience-ariel) {
-  background: #001A48;
+  background: #F2ECE2;
 }
 
 a {
@@ -299,7 +299,7 @@ img {
   transform: translateY(3px);
 }
 .piano-visual {
-  contain: layout style;
+  will-change: transform;
 }
 .piano-interaction-layer {
   position: absolute;

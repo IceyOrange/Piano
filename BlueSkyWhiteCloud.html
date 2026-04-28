@@ -668,6 +668,48 @@
             _cachedMaxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
         }
 
+        // ─── Touch scroll proxy for CSS-rotated mobile landscape ───
+        // When body.landscape-page has position:fixed + overflow:hidden,
+        // native scrolling is impossible. This proxy translates vertical
+        // touch drag into a 0→1 progress value that feeds the day/night transition.
+        let _touchScrollProgress = 0;          // 0 = top (day), 1 = bottom (night)
+        let _touchScrollActive = false;
+        let _touchScrollStartY = 0;
+        let _touchScrollStartProgress = 0;
+
+        function isRotatedMobile() {
+            return document.body.classList.contains('landscape-page') &&
+                   (window.innerWidth || 1) < (window.innerHeight || 1);
+        }
+
+        function _onTouchScrollStart(e) {
+            if (!isRotatedMobile()) return;
+            _touchScrollActive = true;
+            _touchScrollStartY = e.touches[0].clientY;
+            _touchScrollStartProgress = _touchScrollProgress;
+        }
+
+        function _onTouchScrollMove(e) {
+            if (!_touchScrollActive) return;
+            const y = e.touches[0].clientY;
+            // Drag down → increase progress (toward night).
+            // Use the visual height (screen width in rotated mode) as the drag range
+            // so dragging the full screen height covers 0→1.
+            const visualH = window.innerWidth;  // In portrait, screen width = visual height
+            const deltaProgress = (y - _touchScrollStartY) / visualH;
+            _touchScrollProgress = Math.max(0, Math.min(1, _touchScrollStartProgress + deltaProgress));
+            e.preventDefault();  // Prevent pull-to-refresh / bounce
+        }
+
+        function _onTouchScrollEnd() {
+            _touchScrollActive = false;
+        }
+
+        document.addEventListener('touchstart', _onTouchScrollStart, { passive: true });
+        document.addEventListener('touchmove', _onTouchScrollMove, { passive: false });
+        document.addEventListener('touchend', _onTouchScrollEnd, { passive: true });
+        document.addEventListener('touchcancel', _onTouchScrollEnd, { passive: true });
+
         function updateTargetMouseFromEvent(x, y) {
             const iw = window.innerWidth || 1;
             const ih = window.innerHeight || 1;
@@ -768,11 +810,14 @@
             _hasRefreshedLeavesAtBottom: false,
 
             update() {
-                const maxScroll = _cachedMaxScroll;
-                const scrollTop = window.scrollY;
-
-                // 计算进度 (0 到 1)
-                this.progress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+                // Unified scroll source: touch proxy when CSS-rotated, native scroll otherwise
+                if (isRotatedMobile()) {
+                    this.progress = Math.max(0, Math.min(1, _touchScrollProgress));
+                } else {
+                    const maxScroll = _cachedMaxScroll;
+                    const scrollTop = window.scrollY;
+                    this.progress = Math.max(0, Math.min(1, scrollTop / maxScroll));
+                }
 
                 // 模式切换逻辑（基于位置阈值，不依赖方向）
                 // 滑到底部(>=0.95) → 切换为日出模式
@@ -4489,7 +4534,21 @@
             if (TimeState.isDay) {
                 if (prefersReducedMotion) return;
                 const canFlyOutOfFrame = Math.random() < CONFIG.bird.flyOutProb;
-                addBird({ x: e.clientX, y: e.clientY }, canFlyOutOfFrame);
+                // Transform coordinates when CSS rotation is active:
+                // Birds render in visual (rotated) space, but click coords are screen space.
+                if (isRotatedMobile()) {
+                    const { w: visualW, h: visualH } = getVisualDimensions();
+                    const iw = window.innerWidth || 1;
+                    const ih = window.innerHeight || 1;
+                    // Same transform as updateTargetMouseFromEvent but in pixel space:
+                    // screen X → visual Y (inverted), screen Y → visual X
+                    addBird({
+                        x: e.clientY * (visualW / ih),
+                        y: (iw - e.clientX) * (visualH / iw)
+                    }, canFlyOutOfFrame);
+                } else {
+                    addBird({ x: e.clientX, y: e.clientY }, canFlyOutOfFrame);
+                }
             }
         });
 
