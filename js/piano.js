@@ -94,7 +94,7 @@ window.PianoApp.initPiano = function () {
       const visualSvg = doc.documentElement;
 
       // Crop to keyboard area (y: 559 – 900)
-      visualSvg.setAttribute("viewBox", "0 559 1440 341");
+      visualSvg.setAttribute("viewBox", "0 559 1452 341");
       visualSvg.removeAttribute("width");
       visualSvg.removeAttribute("height");
       visualSvg.setAttribute("class", "piano-svg piano-visual");
@@ -119,7 +119,7 @@ window.PianoApp.initPiano = function () {
       // Moving them to a sibling SVG with the same viewBox keeps pixel-perfect
       // alignment while fully decoupling them from keyboard animations.
       const overlaySvg = document.createElementNS(svgNS, "svg");
-      overlaySvg.setAttribute("viewBox", "0 559 1440 341");
+      overlaySvg.setAttribute("viewBox", "0 559 1452 341");
       overlaySvg.setAttribute("preserveAspectRatio", "xMidYMax meet");
       overlaySvg.setAttribute("class", "piano-svg");
       overlaySvg.style.cssText = "position:absolute;top:0;left:0;width:100%;pointer-events:none;z-index:10;overflow:visible;transform:translateZ(0);will-change:transform;";
@@ -163,7 +163,7 @@ window.PianoApp.initPiano = function () {
 
       // ─── Interaction Layer ───────────────────
       const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("viewBox", "0 0 1440 341");
+      svg.setAttribute("viewBox", "0 0 1452 341");
       svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
       svg.setAttribute("class", "piano-svg piano-interaction-layer");
 

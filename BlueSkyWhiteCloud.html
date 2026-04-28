@@ -304,24 +304,24 @@
             body.landscape-page {
                 width: 100vh;
                 height: 100vw;
+                min-height: 100vw !important;
                 position: fixed;
                 top: calc((100vh - 100vw) / 2);
                 left: calc((100vw - 100vh) / 2);
                 transform-origin: center center;
                 transform: rotate(90deg);
-                overflow-x: hidden;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            /* BlueSkyWhiteCloud: disable rotation, keep portrait layout for canvas */
-            body.landscape-page:has(.sky-frame) {
-                width: 100vw;
-                height: 100vh;
-                position: static;
-                top: auto;
-                left: auto;
-                transform: none;
                 overflow: hidden;
+            }
+            /* Fix canvas dimensions for landscape rotation:
+               viewport units (100vw/100vh) don't match the rotated body,
+               override to body-relative units instead */
+            body.landscape-page .sky-frame,
+            body.landscape-page #surroundings-canvas,
+            body.landscape-page #wind-leaf-canvas,
+            body.landscape-page #birds-canvas,
+            body.landscape-page #stars-canvas {
+                width: 100% !important;
+                height: 100% !important;
             }
         }
     </style>

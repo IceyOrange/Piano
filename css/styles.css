@@ -284,6 +284,7 @@ img {
 }
 .piano-key-group {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .piano-key-visual {
   transition: opacity 0.12s ease-out, transform 0.12s ease-out;
