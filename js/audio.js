@@ -70,7 +70,6 @@ window.PianoApp._createReverb = function () {
 
 window.PianoApp._ensureSoundfont = function () {
   const sf = window.PianoApp._sf;
-  if (sf._loadPromise) return sf._loadPromise;
   if (sf.loaded) return Promise.resolve();
 
   sf._loadPromise = new Promise(function (resolve, reject) {
@@ -94,6 +93,7 @@ window.PianoApp._ensureSoundfont = function () {
         ]);
         resolve();
       } else {
+        sf._loadPromise = null;
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
           console.warn(
             "SoundFont script loaded but acoustic_grand_piano data not found"
@@ -104,6 +104,7 @@ window.PianoApp._ensureSoundfont = function () {
     };
     script.onerror = function () {
       sf.loading = false;
+      sf._loadPromise = null;
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         console.warn("SoundFont failed to load");
       }
@@ -260,102 +261,6 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity, opt
   };
 };
 
-// ─── Synthesized Voice (fallback) ────────────────────────────────────────────
-
-window.PianoApp._buildVoice = function (freq, startTime, dur, velocity) {
-  const ctx = window.PianoApp.audioCtx;
-  const gain = velocity || 0.45;
-
-  const dry = ctx.createGain();
-  dry.gain.value = 0.85;
-  dry.connect(ctx.destination);
-
-  if (window.PianoApp._reverbNode) {
-    dry.connect(window.PianoApp._reverbNode);
-  }
-
-  const harmonics = [
-    { ratio: 1, amp: 1.0 },
-    { ratio: 2, amp: 0.38 },
-    { ratio: 3, amp: 0.15 },
-    { ratio: 4, amp: 0.08 },
-    { ratio: 5, amp: 0.04 },
-  ];
-
-  const oscNodes = [];
-  const gainNodes = [];
-
-  harmonics.forEach(function (h) {
-    const osc = ctx.createOscillator();
-    const detune = h.ratio === 1 ? 0 : (Math.random() - 0.5) * 3;
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq * h.ratio, startTime);
-    osc.detune.setValueAtTime(detune, startTime);
-
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0, startTime);
-    g.gain.linearRampToValueAtTime(gain * h.amp, startTime + 0.008);
-    const decayTime = 0.8 / h.ratio;
-    const sustainLevel = gain * h.amp * (h.ratio === 1 ? 0.5 : 0.2 / h.ratio);
-    g.gain.exponentialRampToValueAtTime(
-      Math.max(sustainLevel, 0.001),
-      startTime + decayTime
-    );
-    g.gain.exponentialRampToValueAtTime(0.001, startTime + dur - 0.04);
-    g.gain.linearRampToValueAtTime(0, startTime + dur);
-
-    osc.connect(g);
-    g.connect(dry);
-    oscNodes.push(osc);
-    gainNodes.push(g);
-  });
-
-  const noiseLen = Math.floor(ctx.sampleRate * 0.025);
-  const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
-  const noiseData = noiseBuf.getChannelData(0);
-  for (let i = 0; i < noiseLen; i++) {
-    noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseLen);
-  }
-  const noise = ctx.createBufferSource();
-  noise.buffer = noiseBuf;
-  const noiseGain = ctx.createGain();
-  noiseGain.gain.setValueAtTime(0, startTime);
-  noiseGain.gain.linearRampToValueAtTime(gain * 0.12, startTime + 0.003);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.04);
-  const bp = ctx.createBiquadFilter();
-  bp.type = "bandpass";
-  bp.frequency.setValueAtTime(freq * 4, startTime);
-  bp.Q.setValueAtTime(1.5, startTime);
-  noise.connect(bp);
-  bp.connect(noiseGain);
-  noiseGain.connect(dry);
-
-  oscNodes.forEach(function (o) {
-    o.start(startTime);
-    o.stop(startTime + dur + 0.01);
-  });
-  noise.start(startTime);
-  noise.stop(startTime + 0.05);
-
-  return {
-    stop: function (when) {
-      const t = when || ctx.currentTime;
-      oscNodes.forEach(function (o) {
-        try {
-          o.stop(t + 0.01);
-        } catch (e) {}
-      });
-      gainNodes.forEach(function (g) {
-        try {
-          g.gain.cancelScheduledValues(t);
-          g.gain.setValueAtTime(g.gain.value, t);
-          g.gain.linearRampToValueAtTime(0, t + 0.05);
-        } catch (e) {}
-      });
-    },
-  };
-};
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 window.PianoApp.noteToMidi = function (note) {
@@ -406,8 +311,7 @@ window.PianoApp._play = function (sfNote, freq, durationMs, when, velocity, opti
     window.PianoApp._decodeSample(sfNote);
   }
 
-  if (!freq) return null;
-  return window.PianoApp._buildVoice(freq, start, dur, vel);
+  return null;
 };
 
 // ─── Public API ──────────────────────────────────────────────────────────────

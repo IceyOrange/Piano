@@ -33,7 +33,7 @@ const transitionPairs = {
 };
 
 function getPageName() {
-  return window.location.pathname.split('/').pop() || 'index.html';
+  return (window.location.pathname.split('/').pop() || 'index.html').split('?')[0].split('#')[0];
 }
 
 function getTransitionVariant(from, to) {
@@ -297,10 +297,13 @@ window.PianoApp.navigateWithTransition = function (url, variant, origin) {
       'transition:transform 0.9s cubic-bezier(0.22,1,0.36,1);';
     document.body.appendChild(bgLayer);
 
-    const prefetch = document.createElement('link');
-    prefetch.rel = 'prefetch';
-    prefetch.href = url;
-    document.head.appendChild(prefetch);
+    const prefetchSelector = 'link[rel="prefetch"][href="' + url + '"]';
+    if (!document.head.querySelector(prefetchSelector)) {
+      const prefetch = document.createElement('link');
+      prefetch.rel = 'prefetch';
+      prefetch.href = url;
+      document.head.appendChild(prefetch);
+    }
 
     sessionStorage.setItem('pianoTransitionPlayed', 'true');
 

@@ -580,7 +580,7 @@ img {
   margin-bottom: 1.25rem;
 }
 .about-bio a {
-  color: var(--accent);
+  color: var(--accent-warm);
   text-decoration: underline;
   text-underline-offset: 2px;
 }

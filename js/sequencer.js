@@ -99,9 +99,9 @@ window.PianoApp.Sequencer = {
     const targetTime = seq[index].time;
     const chord = [];
     let start = index;
-    while (start > 0 && targetTime - seq[start - 1].time <= 8) start--;
+    while (start > 0 && seq[start - 1].time === targetTime) start--;
     let end = index;
-    while (end < seq.length - 1 && seq[end + 1].time - targetTime <= 8) end++;
+    while (end < seq.length - 1 && seq[end + 1].time === targetTime) end++;
     for (let i = start; i <= end; i++) chord.push(seq[i]);
     this._chordCache = chord;
     this._chordCacheIndex = index;
@@ -112,10 +112,8 @@ window.PianoApp.Sequencer = {
     // Bass: Canon's ground bass (ostinato) — D, A, B, F#, G, etc. in lower register
     if (note.midi < 55) return "bass";
     // Melody: the highest voice in the upper register, carrying the main theme
-    if (chordNotes.length > 1) {
-      const maxMidi = Math.max(...chordNotes.map((n) => n.midi));
-      if (note.midi === maxMidi && note.midi >= 67) return "melody";
-    }
+    const maxMidi = Math.max(...chordNotes.map((n) => n.midi));
+    if (note.midi === maxMidi && note.midi >= 67) return "melody";
     // Inner voices: harmonic filler between bass and melody
     return "inner";
   },
@@ -134,10 +132,10 @@ window.PianoApp.Sequencer = {
     const pos = (timeMs % phraseLen) / phraseLen;
     // Slight push at phrase start, gentle pull back at phrase end
     if (pos > 0.88) {
-      return ((pos - 0.88) / 0.12) * 10; // ritardando: up to +10ms
+      return ((pos - 0.88) / 0.12) * 5; // ritardando: up to +5ms
     }
     if (pos < 0.08) {
-      return -(pos / 0.08) * 4; // slight push: up to -4ms
+      return -(pos / 0.08) * 2; // slight push: up to -2ms
     }
     return 0;
   },
@@ -148,8 +146,22 @@ window.PianoApp.Sequencer = {
   },
 
   _humanize(index) {
-    const note = window.PianoApp.canonSequence[index];
-    const range = note.midi >= 60 ? 20 : 8;
+    const seq = window.PianoApp.canonSequence;
+    const note = seq[index];
+    const baseRange = note.midi >= 60 ? 20 : 8;
+
+    // Detect local density: shorter intervals = tighter humanize
+    let localInterval = 1000;
+    if (index > 0) localInterval = Math.min(localInterval, note.time - seq[index - 1].time);
+    if (index < seq.length - 1) localInterval = Math.min(localInterval, seq[index + 1].time - note.time);
+
+    let range = baseRange;
+    if (localInterval < 250) {
+      range = baseRange * 0.25;
+    } else if (localInterval < 500) {
+      range = baseRange * 0.5;
+    }
+
     return (this._rand(index) * range * 2) - range;
   },
 
@@ -157,7 +169,7 @@ window.PianoApp.Sequencer = {
     if (chordNotes.length <= 1) return 0;
     const sorted = chordNotes.slice().sort((a, b) => a.midi - b.midi);
     const rank = sorted.findIndex((n) => n.midi === note.midi);
-    return rank * 12;
+    return rank * 8;
   },
 
   _calculateVelocity(note, chordNotes, index) {

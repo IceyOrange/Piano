@@ -228,15 +228,6 @@ window.PianoApp.initPiano = function () {
 
       let pressedNote = null;
 
-      function isLightColor(hex) {
-        const normalized = hex.replace("#", "");
-        const r = parseInt(normalized.substring(0, 2), 16);
-        const g = parseInt(normalized.substring(2, 4), 16);
-        const b = parseInt(normalized.substring(4, 6), 16);
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance > 0.5;
-      }
-
       function startPreviewAnimation(note) {
         const config = navKeyAnimations[note];
         if (!config) return;
@@ -429,16 +420,21 @@ window.PianoApp.initPiano = function () {
           longPressNote = note;
           window.PianoApp.playNote(note);
           startPreviewAnimation(note);
-          // Prefetch target page while preview animates
-          const prefetchLink = document.createElement('link');
-          prefetchLink.rel = 'prefetch';
-          prefetchLink.href = nav.href;
-          document.head.appendChild(prefetchLink);
-          // Preload heavy assets for target page after 0.5s
+          // Prefetch target page while preview animates (deduplicated)
+          const prefetchSelector = 'link[rel="prefetch"][href="' + nav.href + '"]';
+          if (!document.head.querySelector(prefetchSelector)) {
+            const prefetchLink = document.createElement('link');
+            prefetchLink.rel = 'prefetch';
+            prefetchLink.href = nav.href;
+            document.head.appendChild(prefetchLink);
+          }
+          // Preload heavy assets for target page after 0.5s (deduplicated)
           setTimeout(() => {
             if (nav.href === 'experience.html') {
-              const img = new Image();
-              img.src = 'assets/images/ChinaMap.svg';
+              if (!document.querySelector('img[src="assets/images/ChinaMap.svg"]')) {
+                const img = new Image();
+                img.src = 'assets/images/ChinaMap.svg';
+              }
             }
           }, 500);
           longPressTimer = setTimeout(() => {
