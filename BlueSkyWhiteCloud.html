@@ -9,14 +9,20 @@
     <meta property="og:title" content="蓝天白云">
     <meta property="og:description" content="某个练完鼓的下午，在通向海边沙滩的小路上，耳机里响起了张悬的《蓝天白云》。">
     <meta name="theme-color" content="#87ceeb">
-    <link id="gfont" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&family=LXGW+WenKai&display=swap" rel="stylesheet">
+    <!-- 预连接关键域名，减少 DNS + TCP + TLS 握手时间 -->
+    <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- modulepreload Three.js，让浏览器在解析 HTML 时就开始下载 -->
+    <link rel="modulepreload" href="https://registry.npmmirror.com/three/0.160.0/files/build/three.module.js" crossorigin>
+    <link id="gfont" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai&display=swap" rel="stylesheet">
     <script>
         // Google Fonts 国内镜像回退
         (function() {
             if (!document.fonts || typeof document.fonts.check !== 'function') return;
             setTimeout(function() {
                 try {
-                    if (document.fonts.check('1em "Noto Sans SC"')) return;
+                    if (document.fonts.check('1em "LXGW WenKai"')) return;
                 } catch (e) { return; }
                 var link = document.getElementById('gfont');
                 if (link) {
@@ -42,7 +48,7 @@
 
         html, body {
             width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+            font-family: "LXGW WenKai", "PingFang SC", sans-serif;
         }
 
         :root {
@@ -62,7 +68,7 @@
 
         body {
             min-height: 400vh;
-            font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", sans-serif;
+            font-family: "LXGW WenKai", "PingFang SC", "Hiragino Sans GB", sans-serif;
             background: #000;
         }
 
@@ -227,7 +233,7 @@
             transform: translateX(-50%);
             z-index: 100;
             pointer-events: none;
-            font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+            font-family: "LXGW WenKai", "PingFang SC", sans-serif;
             font-size: clamp(13.5px, 1.3vw, 16px);
             background: none;
             backdrop-filter: none;
@@ -283,11 +289,21 @@
             background: #87ceeb;
             pointer-events: none;
             animation: introFadeOut 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+            animation-play-state: paused;
+        }
+
+        #page-intro.ready {
+            animation-play-state: running;
         }
 
         @keyframes introFadeOut {
             from { opacity: 1; }
             to   { opacity: 0; }
+        }
+
+        /* WebGL 失败时的 CSS 降级背景 */
+        body.no-webgl {
+            background: linear-gradient(180deg, #3f8aeb 0%, #7ab8f5 50%, #bfe9ff 100%);
         }
 
         /* ─── Mobile Landscape Rotation ─────────── */
@@ -351,15 +367,15 @@
     <script type="importmap" id="importmap-three">
     {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+            "three": "https://registry.npmmirror.com/three/0.160.0/files/build/three.module.js"
         }
     }
     </script>
     <script>
-        // Three.js 国内镜像回退：若 jsdelivr 不可达，切换回 unpkg
+        // Three.js CDN 回退：主用 npmmirror，备选 jsdmirror
         (function() {
-            var primary = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-            var fallback = 'https://unpkg.com/three@0.160.0/build/three.module.js';
+            var primary = 'https://registry.npmmirror.com/three/0.160.0/files/build/three.module.js';
+            var fallback = 'https://cdn.jsdmirror.com/npm/three@0.160.0/build/three.module.js';
             var map = document.getElementById('importmap-three');
             if (!map) return;
             var ac;
@@ -378,6 +394,10 @@
 
     <script type="module">
         import * as THREE from 'three';
+
+        // 阻止浏览器恢复上次滚动位置，确保每次加载都从白天（顶部）开始
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
 
         // ============================================
         // 1. 工具函数
@@ -1255,12 +1275,27 @@
         const camera = new THREE.PerspectiveCamera(50, (() => { const d = getVisualDimensions(); return d.w / d.h; })(), 0.1, 100);
         camera.position.z = 12;
 
-        const renderer = new THREE.WebGLRenderer({
-            canvas: skyCanvas,
-            antialias: false,
-            alpha: false
-        });
-        renderer.setClearColor(0x87ceeb, 1);
+        let renderer;
+        let webglFailed = false;
+        try {
+            renderer = new THREE.WebGLRenderer({
+                canvas: skyCanvas,
+                antialias: false,
+                alpha: false
+            });
+            renderer.setClearColor(0x87ceeb, 1);
+        } catch (e) {
+            webglFailed = true;
+            document.body.classList.add('no-webgl');
+            renderer = {
+                setClearColor: function() {},
+                setPixelRatio: function() {},
+                setSize: function() {},
+                setViewport: function() {},
+                render: function() {},
+                domElement: skyCanvas
+            };
+        }
         // gl_FragCoord 和 CSS 像素坐标系已统一
 
         // ============================================
@@ -3761,7 +3796,7 @@
             // 显示星座名称（冷银星光，与夜空自然融合）
             if (nearestConstellation.labelStar) {
                 starsCtx.save();
-                starsCtx.font = '500 18px "LXGW WenKai", "Noto Serif SC", serif';
+                starsCtx.font = '500 18px "LXGW WenKai", serif';
                 starsCtx.fillStyle = 'rgba(222, 234, 248, 0.55)';
                 starsCtx.textAlign = 'center';
                 starsCtx.shadowColor = 'rgba(20, 40, 80, 0.20)';
@@ -4358,6 +4393,13 @@
         const pageStartTime = performance.now();
 
         function init() {
+            // WebGL 失败时提前触发 intro 淡出，让 CSS 降级背景显现
+            if (webglFailed) {
+                const intro = document.getElementById('page-intro');
+                if (intro) intro.classList.add('ready');
+                return;
+            }
+
             // 创建太阳
             createSun();
 
@@ -4760,6 +4802,12 @@
             drawStars();
             // 始终渲染天空（GPU 开销小，避免夜间残留最后一帧亮色）
             renderer.render(scene, camera);
+            // 第一次渲染成功后触发 intro 淡出，避免 Three.js 加载慢时露出黑屏
+            if (!skyReady) {
+                skyReady = true;
+                const intro = document.getElementById('page-intro');
+                if (intro) intro.classList.add('ready');
+            }
             // Canvas 2D 鸟儿渲染
             birdsCtx.clearRect(0, 0, ...(() => { const d = getVisualDimensions(); return [d.w, d.h]; })());
             for (let i = 0; i < birds.length; i++) {
@@ -4767,6 +4815,7 @@
             }
         }
 
+        let skyReady = false;
         init();
         animate();
     </script>
