@@ -197,11 +197,6 @@
             z-index: 20;
         }
 
-        /* 时间提示 (默认隐藏) */
-        .time-hint {
-            display: none;
-        }
-
         /* 减少运动偏好支持 */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -385,19 +380,6 @@
         import * as THREE from 'three';
 
         // ============================================
-        // 模块目录
-        // 1. 工具函数 (鼠标追踪、视差)
-        // 2. 对象池系统
-        // 3. 时间状态管理
-        // 4. 天空渲染 (Three.js Shader)
-        // 5. 周围环境绘制 (Canvas 2D)
-        // 6. 星空系统
-        // 7. 流星/彗星系统
-        // 8. 飞鸟系统
-        // 9. 初始化与动画循环
-        // ============================================
-
-        // ============================================
         // 1. 工具函数
         // ============================================
 
@@ -488,7 +470,7 @@
             // -------- 彗星配置 --------
             comet: {
                 // 自动生成间隔
-                spawnInterval: { min: 5000, max: 10000 }, // 消失后等待时间 ms
+                spawnInterval: { min: 15000, max: 35000 }, // 消失后等待时间 ms
                 clickCooldown: 10000,   // 点击冷却 ms
 
                 // 轨迹参数
@@ -536,7 +518,7 @@
                 speed: { min: 5.5, max: 8.5 },
                 maxDistance: { min: 100, max: 150 }, // 飞行距离
                 length: { min: 95, max: 155 },
-                width: { min: 1.2, max: 2.2 },
+                width: { min: 0.7, max: 1.5 },
                 fadeSpeed: 0.08,        // 消失淡出速度
 
                 // 流星雨参数
@@ -949,110 +931,28 @@
             ctx.clearRect(0, 0, size, h);
 
             if (kind === 'glow') {
-                // 多层径向渐变，模拟光学散射的复杂 falloff
-                const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, size / 2);
-                g1.addColorStop(0, hexToRgba(colorHex, 0.55));
-                g1.addColorStop(0.25, hexToRgba(colorHex, 0.22));
-                g1.addColorStop(0.55, hexToRgba(colorHex, 0.08));
-                g1.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = g1;
-                ctx.fillRect(0, 0, size, h);
-
-                // 极中心高亮
-                const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.15);
-                g2.addColorStop(0, hexToRgba(0xffffff, 0.35));
-                g2.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = g2;
+                const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size / 2);
+                g.addColorStop(0, hexToRgba(colorHex, 0.55));
+                g.addColorStop(0.5, hexToRgba(colorHex, 0.15));
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
                 ctx.fillRect(0, 0, size, h);
             } else if (kind === 'hex') {
-                // 圆形光斑（bokeh），带边缘亮化和色差
-                const r = size * 0.38;
-                const rIn = size * 0.28;
-                const rEdge = size * 0.42;
-
-                // 1. 外层柔和光晕
-                const glowG = ctx.createRadialGradient(cx, cy, r * 0.6, cx, cy, rEdge * 1.2);
-                glowG.addColorStop(0, 'rgba(0,0,0,0)');
-                glowG.addColorStop(0.6, hexToRgba(colorHex, 0.12));
-                glowG.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = glowG;
-                ctx.fillRect(0, 0, size, h);
-
-                ctx.globalCompositeOperation = 'lighter';
-                // 2. 边缘亮环（圆形）
+                const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.4);
+                g.addColorStop(0, hexToRgba(colorHex, 0.5));
+                g.addColorStop(0.7, hexToRgba(colorHex, 0.2));
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
                 ctx.beginPath();
-                ctx.arc(cx, cy, rEdge, 0, Math.PI * 2);
-                ctx.fillStyle = hexToRgba(colorHex, 0.18);
+                ctx.arc(cx, cy, size * 0.4, 0, Math.PI * 2);
                 ctx.fill();
-
-                // 3. 主体填充 + 轻微色差：R/G/B 三个通道微量偏移叠加
-                const caShift = size * 0.015;
-                [
-                    { dx: -caShift, col: colorHex, a: 0.55 },
-                    { dx: 0, col: colorHex, a: 0.55 },
-                    { dx: caShift, col: colorHex, a: 0.55 }
-                ].forEach((ch, idx) => {
-                    ctx.save();
-                    ctx.translate(ch.dx, 0);
-                    // 用通道色模拟色差：整体变色
-                    const channelTint = idx === 0 ? 0xff3333 : (idx === 2 ? 0x3333ff : colorHex);
-                    const mix = idx === 1 ? colorHex : Math.round(
-                        (Math.round(channelTint / 65536) * 0.25 + Math.round(colorHex / 65536) * 0.75) * 65536 +
-                        (Math.round((channelTint % 65536) / 256) * 0.25 + Math.round((colorHex % 65536) / 256) * 0.75) * 256 +
-                        (Math.round(channelTint % 256) * 0.25 + Math.round(colorHex % 256) * 0.75)
-                    );
-                    ctx.beginPath();
-                    ctx.arc(cx + ch.dx, cy, r, 0, Math.PI * 2);
-                    const gg = ctx.createRadialGradient(cx + ch.dx, cy, rIn * 0.4, cx + ch.dx, cy, r);
-                    gg.addColorStop(0, hexToRgba(mix, ch.a * 0.35));
-                    gg.addColorStop(0.75, hexToRgba(mix, ch.a * 0.85));
-                    gg.addColorStop(1, hexToRgba(mix, ch.a * 0.25));
-                    ctx.fillStyle = gg;
-                    ctx.fill();
-                    ctx.restore();
-                });
-                ctx.globalCompositeOperation = 'source-over';
             } else if (kind === 'streak') {
-                // 变形光条：水平长条，带纵向高斯衰减 + 微弱色差
-                const wBar = size * 0.92;
-                const hBar = h * 0.55;
-                const x0 = cx - wBar / 2;
-                const y0 = cy - hBar / 2;
-
-                // 纵向 falloff 渐变
-                const gradV = ctx.createLinearGradient(cx, y0, cx, y0 + hBar);
-                gradV.addColorStop(0, 'rgba(0,0,0,0)');
-                gradV.addColorStop(0.35, hexToRgba(colorHex, 0.55));
-                gradV.addColorStop(0.5, hexToRgba(colorHex, 0.85));
-                gradV.addColorStop(0.65, hexToRgba(colorHex, 0.55));
-                gradV.addColorStop(1, 'rgba(0,0,0,0)');
-
-                // 横向 falloff 渐变
-                const gradH = ctx.createLinearGradient(x0, cy, x0 + wBar, cy);
-                gradH.addColorStop(0, 'rgba(0,0,0,0)');
-                gradH.addColorStop(0.15, hexToRgba(colorHex, 0.45));
-                gradH.addColorStop(0.5, hexToRgba(colorHex, 0.90));
-                gradH.addColorStop(0.85, hexToRgba(colorHex, 0.45));
-                gradH.addColorStop(1, 'rgba(0,0,0,0)');
-
-                ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                // 主条
-                ctx.fillStyle = gradV;
-                ctx.globalAlpha = 0.9;
-                ctx.fillRect(x0, y0, wBar, hBar);
-                ctx.globalCompositeOperation = 'source-in';
-                ctx.fillStyle = gradH;
-                ctx.fillRect(x0, y0, wBar, hBar);
-                ctx.restore();
-
-                // 外围光晕
-                ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.fillStyle = hexToRgba(colorHex, 0.25);
-                ctx.filter = `blur(${h * 0.25}px)`;
-                ctx.fillRect(x0, y0 - hBar * 0.3, wBar, hBar * 1.6);
-                ctx.restore();
+                const g = ctx.createLinearGradient(0, cy - h * 0.25, 0, cy + h * 0.25);
+                g.addColorStop(0, 'rgba(0,0,0,0)');
+                g.addColorStop(0.5, hexToRgba(colorHex, 0.7));
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, size, h);
             }
             const tex = new THREE.CanvasTexture(canvas);
             tex.needsUpdate = true;
@@ -2956,72 +2856,9 @@
 
             const targetCount = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 5 : 17;
 
-            // 固定成对彩蛋
-            const buddyPairs = [
-                ['liandao', 'chuitou'],
-            ];
-
-            // 构建选择单元
-            const buddyUnits = [];
-            const usedNames = new Set();
-            buddyPairs.forEach(pairNames => {
-                const pairDefs = pairNames.map(name => constellationDefs.find(d => d.name === name)).filter(Boolean);
-                if (pairDefs.length === 2) {
-                    buddyUnits.push(pairDefs);
-                    pairNames.forEach(n => usedNames.add(n));
-                }
-            });
-
-            // 小狗座彩蛋：要么跟小鸟座，要么跟骨头座一起出现
-            const xiaowangDef = constellationDefs.find(d => d.name === 'xiaowang');
-            const xiaoniaoDef = constellationDefs.find(d => d.name === 'xiaoniao');
-            const gutouDef = constellationDefs.find(d => d.name === 'gutou');
-            let xiaowangUnit = null;
-            if (xiaowangDef) {
-                const partner = Math.random() < 0.5 ? xiaoniaoDef : gutouDef;
-                if (partner) {
-                    xiaowangUnit = [xiaowangDef, partner];
-                    usedNames.add('xiaowang');
-                    usedNames.add(partner.name);
-                }
-            }
-
-            const singles = constellationDefs.filter(d => !usedNames.has(d.name));
-
-            // 随机打乱
-            buddyUnits.sort(() => Math.random() - 0.5);
-            singles.sort(() => Math.random() - 0.5);
-
-            const selectedDefs = [];
-            let selectedCount = 0;
-
-            // 先随机抽固定 buddy 对
-            for (const unit of buddyUnits) {
-                if (selectedCount + unit.length <= targetCount) {
-                    selectedDefs.push(...unit);
-                    selectedCount += unit.length;
-                }
-            }
-
-            // 再决定是否加入小狗座彩蛋单元（2个）
-            if (xiaowangUnit && selectedCount + xiaowangUnit.length <= targetCount) {
-                selectedDefs.push(...xiaowangUnit);
-                selectedCount += xiaowangUnit.length;
-                // 从 singles 中移除已入队的搭档，防止重复
-                const partnerName = xiaowangUnit[1].name;
-                for (let i = singles.length - 1; i >= 0; i--) {
-                    if (singles[i].name === partnerName) {
-                        singles.splice(i, 1);
-                        break;
-                    }
-                }
-            }
-
-            // 最后用单星座补齐
-            while (selectedCount < targetCount && singles.length > 0) {
-                selectedDefs.push(singles.pop());
-                selectedCount++;
-            }
+            // 随机选取星座
+            const shuffled = [...constellationDefs].sort(() => Math.random() - 0.5);
+            const selectedDefs = shuffled.slice(0, targetCount);
 
             // 收集所有星座星星和连线
             const allConstellationStars = [];
@@ -3058,46 +2895,18 @@
                 }
                 return null;
             }
-            function getAdjacent(cell) {
-                const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-                dirs.sort(() => Math.random() - 0.5);
-                for (const [dr, dc] of dirs) {
-                    const nr = cell.r + dr, nc = cell.c + dc;
-                    if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) {
-                        const key = `${nr},${nc}`;
-                        if (!usedCells.has(key)) {
-                            usedCells.add(key);
-                            return { r: nr, c: nc };
-                        }
-                    }
-                }
-                return getCell();
-            }
 
-            function placeDef(def, cell, buddyAnchor = null) {
+            function placeDef(def, cell) {
                 const scale = (constellationScales[def.name] || 1.0) * constellationGlobalScale;
                 const center = {
                     x: def.stars.reduce((sum, s) => sum + s.x, 0) / def.stars.length,
                     y: def.stars.reduce((sum, s) => sum + s.y, 0) / def.stars.length
                 };
 
-                let newCenter;
-                if (buddyAnchor) {
-                    // 紧挨 buddy：只在自身格子方向上偏移很小一段距离
-                    const cellCX = cell.c * cellW + cellW * 0.5;
-                    const cellCY = cell.r * cellH + cellH * 0.5;
-                    const dx = cellCX - buddyAnchor.x;
-                    const dy = cellCY - buddyAnchor.y;
-                    newCenter = {
-                        x: buddyAnchor.x + dx * 0.52 + (Math.random() - 0.5) * cellW * 0.12,
-                        y: buddyAnchor.y + dy * 0.52 + (Math.random() - 0.5) * cellH * 0.12
-                    };
-                } else {
-                    newCenter = {
-                        x: cell.c * cellW + marginX + Math.random() * Math.max(1, cellW - marginX * 2),
-                        y: cell.r * cellH + marginY + Math.random() * Math.max(1, cellH - marginY * 2)
-                    };
-                }
+                const newCenter = {
+                    x: cell.c * cellW + marginX + Math.random() * Math.max(1, cellW - marginX * 2),
+                    y: cell.r * cellH + marginY + Math.random() * Math.max(1, cellH - marginY * 2)
+                };
 
                 const prefix = def.stars[0].name.substring(0, 3);
                 prefixToDisplay[prefix] = def.displayName;
@@ -3114,49 +2923,7 @@
                 return newCenter;
             }
 
-            // 成对星座分组，确保 buddy 星座在网格中相邻
-            const placedNames = new Set();
-            const placementGroups = [];
-
-            // 固定 buddy 对：镰刀 + 锤头
-            const fixedBuddies = [['liandao', 'chuitou']];
-            fixedBuddies.forEach(([n1, n2]) => {
-                const d1 = selectedDefs.find(d => d.name === n1);
-                const d2 = selectedDefs.find(d => d.name === n2);
-                if (d1 && d2) {
-                    placementGroups.push({ type: 'pair', defs: [d1, d2] });
-                    placedNames.add(n1); placedNames.add(n2);
-                }
-            });
-
-            // 小狗座彩蛋：小鸟或骨头
-            const xw = selectedDefs.find(d => d.name === 'xiaowang');
-            const xwPartnerName = xiaowangUnit ? xiaowangUnit[1].name : null;
-            const xwPartner = xwPartnerName ? selectedDefs.find(d => d.name === xwPartnerName) : null;
-            if (xw && xwPartner) {
-                placementGroups.push({ type: 'pair', defs: [xw, xwPartner] });
-                placedNames.add('xiaowang');
-                placedNames.add(xwPartnerName);
-            }
-
-            // 单星座
-            selectedDefs.forEach(d => {
-                if (!placedNames.has(d.name)) {
-                    placementGroups.push({ type: 'single', defs: [d] });
-                }
-            });
-
-            placementGroups.sort(() => Math.random() - 0.5);
-            placementGroups.forEach(g => {
-                if (g.type === 'pair') {
-                    const c1 = getCell();
-                    const c2 = c1 ? getAdjacent(c1) : getCell();
-                    const anchor = placeDef(g.defs[0], c1 || getCell());
-                    placeDef(g.defs[1], c2 || getCell(), anchor);
-                } else {
-                    placeDef(g.defs[0], getCell());
-                }
-            });
+            selectedDefs.forEach(d => placeDef(d, getCell() || { r: 0, c: 0 }));
 
             // 添加星座星星到星星数组
             const constellationStarMap = {};
@@ -3392,7 +3159,7 @@
                 ctx.rotate(this.angle);
 
                 const len = this.length;
-                const maxW = this.width * 1.6;
+                const maxW = this.width * 1.4;
 
                 // 绘制两头尖、中间紧收的纺锤形
                 const drawSpindle = (halfWidth, gradient) => {
@@ -3886,7 +3653,7 @@
             const cachedGroups = stars.cachedConstellationGroups;
             if (!cachedGroups) return;
 
-            const activationRadius = 30;
+            const activationRadius = 80;
             let nearestConstellation = null;
             let nearestDist = Infinity;
 
@@ -3912,8 +3679,8 @@
 
             if (!nearestConstellation) return;
 
-            // 计算激活强度
-            const intensity = 1 - (nearestDist / activationRadius);
+            // 满强度显示，不做距离渐变
+            const intensity = 1;
 
             starsCtx.save();
             starsCtx.lineCap = 'round';
@@ -3936,20 +3703,17 @@
                     starsCtx.lineTo(s2.x, s2.y);
                 }
 
-                // 童话绘本风暖色连线：低饱和暖白，柔和而不刺眼
-                const baseAlpha = 0.35 + intensity * 0.35;
-                starsCtx.strokeStyle = `rgba(245, 235, 210, ${baseAlpha})`;
-                starsCtx.lineWidth = 1.2 + intensity * 1.0;
+                // 星光银蓝连线：冷白基底，通透如星尘
+                starsCtx.strokeStyle = 'rgba(200, 218, 240, 0.32)';
+                starsCtx.lineWidth = 1.6;
                 starsCtx.stroke();
 
-                // 柔和 pastel 发光
-                if (intensity > 0.3) {
-                    starsCtx.save();
-                    starsCtx.strokeStyle = `rgba(255, 240, 220, ${intensity * 0.12})`;
-                    starsCtx.lineWidth = 3;
-                    starsCtx.stroke();
-                    starsCtx.restore();
-                }
+                // 冰蓝微光晕
+                starsCtx.save();
+                starsCtx.strokeStyle = 'rgba(160, 190, 225, 0.10)';
+                starsCtx.lineWidth = 3;
+                starsCtx.stroke();
+                starsCtx.restore();
             });
 
             // 高亮该星座的所有星星
@@ -3966,8 +3730,8 @@
                     star.x, star.y, 0,
                     star.x, star.y, star.size * 3
                 );
-                outerGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${0.22 + intensity * 0.16})`);
-                outerGlow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${0.06 + intensity * 0.06})`);
+                outerGlow.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.38)`);
+                outerGlow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.12)`);
                 outerGlow.addColorStop(1, 'rgba(0,0,0,0)');
                 starsCtx.fillStyle = outerGlow;
                 starsCtx.beginPath();
@@ -3979,8 +3743,8 @@
                     star.x, star.y, 0,
                     star.x, star.y, star.size * 1.6
                 );
-                innerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.45 + intensity * 0.12})`);
-                innerGlow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${0.22 + intensity * 0.12})`);
+                innerGlow.addColorStop(0, 'rgba(248, 250, 255, 0.58)');
+                innerGlow.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.34)`);
                 innerGlow.addColorStop(1, 'rgba(0,0,0,0)');
                 starsCtx.fillStyle = innerGlow;
                 starsCtx.beginPath();
@@ -3988,19 +3752,19 @@
                 starsCtx.fill();
 
                 // 星星本体增亮
-                starsCtx.fillStyle = `rgba(255, 255, 255, ${0.65 + intensity * 0.1})`;
+                starsCtx.fillStyle = 'rgba(248, 250, 255, 0.82)';
                 starsCtx.beginPath();
-                starsCtx.arc(star.x, star.y, star.size * (0.8 + intensity * 0.4), 0, Math.PI * 2);
+                starsCtx.arc(star.x, star.y, star.size * 1.2, 0, Math.PI * 2);
                 starsCtx.fill();
             });
 
-            // 显示星座名称（童话绘本风：手写体、柔和 pastel、温润不刺眼）
-            if (intensity > 0.3 && nearestConstellation.labelStar) {
+            // 显示星座名称（冷银星光，与夜空自然融合）
+            if (nearestConstellation.labelStar) {
                 starsCtx.save();
                 starsCtx.font = '500 18px "LXGW WenKai", "Noto Serif SC", serif';
-                starsCtx.fillStyle = `rgba(255, 248, 235, ${intensity * 0.9})`;
+                starsCtx.fillStyle = 'rgba(222, 234, 248, 0.55)';
                 starsCtx.textAlign = 'center';
-                starsCtx.shadowColor = 'rgba(180, 140, 100, 0.3)';
+                starsCtx.shadowColor = 'rgba(20, 40, 80, 0.20)';
                 starsCtx.shadowBlur = 3;
                 starsCtx.shadowOffsetX = 0;
                 starsCtx.shadowOffsetY = 1;
