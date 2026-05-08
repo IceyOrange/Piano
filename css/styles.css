@@ -352,6 +352,16 @@ img {
   z-index: 10;
 }
 
+/* Chinese-mode page title: brushed calligraphy for a literary feel.
+   Special Elite reads as a typewriter and looks plain on Han characters,
+   so swap to a Chinese display face when the doc is in zh. Font-size and
+   letter-spacing are left to the base + header rules so the layout stays. */
+html[data-lang="zh"] .page-title {
+  font-family: 'Ma Shan Zheng', 'LXGW WenKai', 'STXingkai', '华文行楷', 'KaiTi', '楷体', 'Noto Serif SC', serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
 .page-warm .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -1543,6 +1553,36 @@ body:has(.page-header) .page {
   color: #9E6347;
 }
 
+/* Language toggle: a quiet utility that reads as part of the nav.
+   No pill, no border — just a nav-link sibling so the row stays calm. */
+.lang-toggle {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: #B5A899;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  line-height: inherit;
+  white-space: nowrap;
+  transition: color 0.18s ease, opacity 0.18s ease;
+  opacity: 0.85;
+}
+
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+  color: #2A7B72;
+  opacity: 1;
+  outline: none;
+}
+
+.experience-ariel .lang-toggle:hover,
+.experience-ariel .lang-toggle:focus-visible {
+  color: #9E6347;
+}
+
 /* Mobile */
 @media (max-width: 640px) {
   .page-header-inner {
@@ -1561,6 +1601,10 @@ body:has(.page-header) .page {
   }
 
   .page-nav a {
+    font-size: 0.6875rem;
+  }
+
+  .lang-toggle {
     font-size: 0.6875rem;
   }
 

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About</title>
-  <meta name="description" content="随便看看 👋">
+  <title data-i18n-doc-title="doc.about.title">About</title>
+  <meta name="description" content="Take a look around. ;)" data-i18n-meta-desc="doc.about.desc">
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Ma+Shan+Zheng&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>(function(){try{var n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(n&&n.type==='back_forward')document.documentElement.classList.add('prefers-no-animation');}catch(e){}})();</script>
-  <link rel="stylesheet" href="css/styles.css?v=133">
+  <link rel="stylesheet" href="css/styles.css?v=135">
 </head>
 <body>
 <!-- Page Transition Overlay -->
@@ -19,12 +19,13 @@
   <!-- Page Header -->
   <header class="page-header">
     <div class="page-header-inner">
-      <h1 class="page-title animate-fade-in-up delay-1">About.</h1>
+      <h1 class="page-title animate-fade-in-up delay-1" data-i18n="page.about.title">About.</h1>
       <nav class="page-nav" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a href="portfolio.html">Portfolio</a>
-        <a href="experience.html">Experience</a>
-        <a href="about.html" aria-current="page">About</a>
+        <a href="index.html" data-i18n="nav.home">Home</a>
+        <a href="portfolio.html" data-i18n="nav.portfolio">Portfolio</a>
+        <a href="experience.html" data-i18n="nav.experience">Experience</a>
+        <a href="about.html" aria-current="page" data-i18n="nav.about">About</a>
+        <button type="button" class="lang-toggle" aria-label="Switch to Chinese">中</button>
       </nav>
     </div>
   </header>
@@ -52,9 +53,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=133"></script>
-  <script src="js/transitions.js?v=133"></script>
-  <script src="js/pages.js?v=133"></script>
+  <script src="js/data.js?v=135"></script>
+  <script src="js/i18n.js?v=135"></script>
+  <script src="js/transitions.js?v=135"></script>
+  <script src="js/pages.js?v=135"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.PianoApp.initTransitions();

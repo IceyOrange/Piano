@@ -1,51 +1,84 @@
 window.PianoApp = window.PianoApp || {};
 
+// ─── i18n helpers ───────────────────────────────────────
+function getLang() {
+  return (window.PianoApp.i18n && window.PianoApp.i18n.getLang && window.PianoApp.i18n.getLang()) || 'en';
+}
+function tStr(key) {
+  return (window.PianoApp.i18n && window.PianoApp.i18n.t) ? window.PianoApp.i18n.t(key) : '';
+}
+// Pick English variant when lang === 'en' and the *En field exists; else fall back.
+function pickField(obj, key) {
+  if (!obj) return '';
+  var enKey = key + 'En';
+  if (getLang() === 'en' && obj[enKey] != null) return obj[enKey];
+  return obj[key];
+}
+
+// ─── Portfolio ──────────────────────────────────────────
 window.PianoApp.initPortfolio = function () {
-  const showcaseEl = document.getElementById("portfolio-showcase");
+  var showcaseEl = document.getElementById("portfolio-showcase");
   if (!showcaseEl) return;
 
-  const projects = window.PianoApp.data.projects;
-  showcaseEl.innerHTML = projects.map((project, i) => `
-    <article class="project-piece ${i % 2 === 1 ? 'project-piece--mirrored' : ''}">
-      <div class="project-visual">
-        <img src="${project.image}" alt="${project.name}" loading="lazy">
-      </div>
-      <div class="project-info">
-        <div class="project-meta">${project.year} · ${project.category}</div>
-        <h2>${project.name}</h2>
-        <p>${project.description}</p>
-        <div class="project-tech">
-          ${project.tech.map(t => `<span class="tag-pill">${t}</span>`).join("")}
-        </div>
-        ${project.link && project.link !== "#" ? `
-          <a href="${project.link}" target="_blank" rel="noopener noreferrer" class="project-link">
-            View Project
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 13L13 1M13 1H4M13 1V10" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-          </a>
-        ` : ""}
-      </div>
-    </article>
-  `).join("");
+  var lang = getLang();
+  var viewLabel = tStr('portfolio.viewProject') || 'View Project';
+  var projects = window.PianoApp.data.projects;
+
+  showcaseEl.innerHTML = projects.map(function (project, i) {
+    var name = pickField(project, 'name');
+    var description = pickField(project, 'description');
+    var category = pickField(project, 'category');
+    var tech = pickField(project, 'tech') || [];
+    return ''
+      + '<article class="project-piece ' + (i % 2 === 1 ? 'project-piece--mirrored' : '') + '">'
+      +   '<div class="project-visual">'
+      +     '<img src="' + project.image + '" alt="' + name + '" loading="lazy">'
+      +   '</div>'
+      +   '<div class="project-info">'
+      +     '<div class="project-meta">' + project.year + ' · ' + category + '</div>'
+      +     '<h2>' + name + '</h2>'
+      +     '<p>' + description + '</p>'
+      +     '<div class="project-tech">'
+      +       tech.map(function (t) { return '<span class="tag-pill">' + t + '</span>'; }).join('')
+      +     '</div>'
+      +     (project.link && project.link !== "#"
+        ? '<a href="' + project.link + '" target="_blank" rel="noopener noreferrer" class="project-link">'
+        +    viewLabel
+        +    '<svg width="14" height="14" viewBox="0 0 14 14" fill="none">'
+        +      '<path d="M1 13L13 1M13 1H4M13 1V10" stroke="currentColor" stroke-width="1.5"/>'
+        +    '</svg>'
+        + '</a>'
+        : '')
+      +   '</div>'
+      + '</article>';
+  }).join('');
+
+  // Register re-render hook so the lang toggle can call back here
+  window.PianoApp.rerenderPage = window.PianoApp.initPortfolio;
 };
 
+// ─── About ──────────────────────────────────────────────
 window.PianoApp.initAbout = function () {
-  const container = document.getElementById("about-container");
+  var container = document.getElementById("about-container");
   if (!container) return;
 
   var about = (window.PianoApp.data && window.PianoApp.data.about) || {};
 
+  // Cancel any in-flight typewriter from a previous render
+  window.PianoApp._typewriterToken = (window.PianoApp._typewriterToken || 0) + 1;
+  var typewriterToken = window.PianoApp._typewriterToken;
+
   // Name
   var nameEl = container.querySelector('.about-name');
-  if (nameEl && about.name) {
-    nameEl.textContent = about.name;
+  if (nameEl) {
+    nameEl.textContent = pickField(about, 'name') || '';
   }
 
   // Typewriter (supports single string or array of strings)
   var typewriterContainer = container.querySelector('.about-typewriter');
-  if (typewriterContainer && about.typewriter) {
-    var lines = Array.isArray(about.typewriter) ? about.typewriter : [about.typewriter];
+  var typewriterSource = pickField(about, 'typewriter');
+  if (typewriterContainer && typewriterSource) {
+    var lines = Array.isArray(typewriterSource) ? typewriterSource : [typewriterSource];
     typewriterContainer.innerHTML = '';
 
     var BASE_SPEED = 100;    // base milliseconds per character
@@ -53,23 +86,21 @@ window.PianoApp.initAbout = function () {
     var LINE_GAP = 400;     // pause between lines (ms)
     var INITIAL_DELAY = 400; // initial delay before typing starts (ms)
 
-    // Helper to get random typing delay for each character
     function getRandomDelay() {
       return BASE_SPEED + (Math.random() * SPEED_VARIANCE * 2 - SPEED_VARIANCE);
     }
 
-    // Type each line with random character delays
     var currentLine = 0;
     var currentChar = 0;
-    var startTime = null;
 
     function typeCharacter() {
+      // Bail out if a newer typewriter took over
+      if (typewriterToken !== window.PianoApp._typewriterToken) return;
       if (currentLine >= lines.length) return;
 
       var line = lines[currentLine];
 
-      // Create span for current line if not exists
-      var lineSpan = typewriterContainer.children[currentLine * 2]; // each line has span + possible br
+      var lineSpan = typewriterContainer.children[currentLine * 2];
       if (!lineSpan) {
         lineSpan = document.createElement('span');
         lineSpan.className = 'typewriter-text';
@@ -77,29 +108,23 @@ window.PianoApp.initAbout = function () {
         typewriterContainer.appendChild(lineSpan);
       }
 
-      // Add current character
       lineSpan.textContent += line[currentChar];
       currentChar++;
 
-      // Schedule next character
       if (currentChar < line.length) {
         setTimeout(typeCharacter, getRandomDelay());
       } else {
-        // Line complete, add blink caret
         lineSpan.style.animation = 'blink-caret 0.75s step-end infinite';
 
-        // Schedule next line or finish
-        setTimeout(function() {
+        setTimeout(function () {
+          if (typewriterToken !== window.PianoApp._typewriterToken) return;
           if (currentLine < lines.length - 1) {
-            // Remove caret from current line
             lineSpan.style.animation = 'none';
             lineSpan.style.borderRight = 'none';
 
-            // Add line break
             var br = document.createElement('br');
             typewriterContainer.appendChild(br);
 
-            // Move to next line
             currentLine++;
             currentChar = 0;
             typeCharacter();
@@ -108,16 +133,17 @@ window.PianoApp.initAbout = function () {
       }
     }
 
-    // Start typing after initial delay
     setTimeout(typeCharacter, INITIAL_DELAY);
   }
 
   // Handwriting — hide if no content
   var handwritingWrap = container.querySelector('.about-handwriting');
   if (handwritingWrap) {
-    if (about.handwriting) {
+    var handwriting = pickField(about, 'handwriting');
+    if (handwriting) {
       var handwritingText = handwritingWrap.querySelector('.handwriting-text');
-      if (handwritingText) handwritingText.textContent = about.handwriting;
+      if (handwritingText) handwritingText.textContent = handwriting;
+      handwritingWrap.style.display = '';
     } else {
       handwritingWrap.style.display = 'none';
     }
@@ -125,9 +151,10 @@ window.PianoApp.initAbout = function () {
 
   // Bio (array of paragraphs)
   var bioEl = container.querySelector('.about-bio');
-  if (bioEl && Array.isArray(about.bio)) {
+  var bioSource = pickField(about, 'bio');
+  if (bioEl && Array.isArray(bioSource)) {
     bioEl.innerHTML = '';
-    about.bio.forEach(function (text) {
+    bioSource.forEach(function (text) {
       var p = document.createElement('p');
       p.innerHTML = text;
       bioEl.appendChild(p);
@@ -148,14 +175,15 @@ window.PianoApp.initAbout = function () {
   var socialEl = container.querySelector('.about-social');
   if (socialEl && about.socialLinks) {
     socialEl.innerHTML = about.socialLinks.map(function (l) {
+      var label = pickField(l, 'name') || l.name;
       if (l.type === 'tooltip') {
         var tooltipBody = l.tooltipType === 'image'
-          ? '<img src="' + l.tooltipContent + '" alt="' + l.name + '">'
+          ? '<img src="' + l.tooltipContent + '" alt="' + label + '">'
           : '<span>' + l.tooltipContent + '</span>';
         var dirClass = l.tooltipDirection ? ' tooltip-' + l.tooltipDirection : '';
-        return '<span class="social-item">' + l.name + '<div class="social-tooltip' + dirClass + '">' + tooltipBody + '</div></span>';
+        return '<span class="social-item">' + label + '<div class="social-tooltip' + dirClass + '">' + tooltipBody + '</div></span>';
       }
-      return '<a class="social-item" href="' + l.url + '" target="_blank" rel="noopener">' + l.name + '</a>';
+      return '<a class="social-item" href="' + l.url + '" target="_blank" rel="noopener">' + label + '</a>';
     }).join('');
 
     // Attach load/error handlers to tooltip images after DOM insertion
@@ -171,7 +199,7 @@ window.PianoApp.initAbout = function () {
         }
         this.style.display = 'none';
         var fallback = document.createElement('span');
-        fallback.textContent = '图片加载失败';
+        fallback.textContent = getLang() === 'zh' ? '图片加载失败' : 'Image failed to load';
         fallback.style.cssText = 'color:var(--accent-warm);font-size:10px;padding:4px;';
         this.parentNode.appendChild(fallback);
       };
@@ -189,44 +217,53 @@ window.PianoApp.initAbout = function () {
         if (!isActive) item.classList.add('active');
       });
     });
-    document.addEventListener('click', function () {
-      socialEl.querySelectorAll('.social-item').forEach(function (si) {
-        si.classList.remove('active');
+    if (!window.PianoApp._aboutOutsideClickBound) {
+      window.PianoApp._aboutOutsideClickBound = true;
+      document.addEventListener('click', function () {
+        var s = document.querySelector('.about-social');
+        if (!s) return;
+        s.querySelectorAll('.social-item').forEach(function (si) {
+          si.classList.remove('active');
+        });
       });
-    });
+    }
   }
 
   // Avatar
   var avatarImg = container.querySelector('.about-avatar img');
   if (avatarImg && about.avatar) {
     avatarImg.src = about.avatar;
-    avatarImg.alt = about.avatarAlt || '';
+    avatarImg.alt = pickField(about, 'avatarAlt') || '';
   }
 
   // Stagger animation for hero section
   var hero = container.querySelector('.about-hero');
-  if (!hero) return;
+  if (!hero) {
+    window.PianoApp.rerenderPage = window.PianoApp.initAbout;
+    return;
+  }
 
   // Respect reduced motion / back-forward nav: show immediately
   if (document.documentElement.classList.contains('prefers-no-animation') ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     hero.classList.add("active");
-    return;
+  } else if (!hero.classList.contains('active')) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          hero.classList.add("active");
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -32px 0px' });
+    observer.observe(hero);
   }
 
-  // Trigger stagger animation when scrolled into view
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        hero.classList.add("active");
-        observer.disconnect();
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -32px 0px' });
-
-  observer.observe(hero);
+  // Register re-render hook for the lang toggle
+  window.PianoApp.rerenderPage = window.PianoApp.initAbout;
 };
 
+// ─── Experience ─────────────────────────────────────────
 window.PianoApp.initMap = function () {
   var mapContainer = document.getElementById("experience-map");
   var listContainer = document.getElementById("experience-list");
@@ -237,53 +274,49 @@ window.PianoApp.initMap = function () {
     return b.startDate.localeCompare(a.startDate);
   });
 
-  // ——— lat/lon ⇌ SVG projection (保留供后续新增数据点使用) ———
-  // viewBox 0 0 775 570, 4 control points via least-squares:
-  //   Dali(100.30,25.68)->(334.9,469.4)  Fanjingshan(108.72,27.89)->(445.9,438.9)
-  //   Liuzhou(109.43,24.33)->(455.0,474.5)  Datong(113.37,40.10)->(504.9,250.6)
+  // ——— lat/lon ⇌ SVG projection (kept for adding future markers) ———
+  // viewBox 0 0 775 570, 4 control points via least-squares.
   // function latLonToSvg(lon, lat) {
-  //   var x = 11.8294 * lon - 854.08;
-  //   var y = -15.0429 * lat + 867.23;
-  //   return { x: x, y: y };
-  // }
-  // function svgToLatLon(x, y) {
-  //   var lon = (x + 854.08) / 11.8294;
-  //   var lat = (867.23 - y) / 15.0429;
-  //   return { lon: lon, lat: lat };
+  //   return { x: 11.8294 * lon - 854.08, y: -15.0429 * lat + 867.23 };
   // }
 
   var extraMarkers = [
-    { city: "珠海", x: 502.4, y: 514.5 },
-    { city: "北京", x: 549.9, y: 255.8 },
-    { city: "广州", x: 502.4, y: 503.5 },
-    { city: "兴宁", x: 532.5, y: 487.6 },
-    { city: "武汉", x: 516.7, y: 400.5 },
-    { city: "景德镇", x: 551.5, y: 416.4 },
-    { city: "大理", x: 334.6, y: 470.2 },
-    { city: "大同", x: 505.6, y: 251.0 },
-    { city: "天津", x: 554.7, y: 266.9 },
-    { city: "岳阳", x: 499.2, y: 419.5 },
-    { city: "梵净山", x: 448.6, y: 433.8 },
-    { city: "武功山", x: 518.2, y: 438.5 },
-    { city: "柳州", x: 454.9, y: 473.4 },
-    { city: "大红山", x: 488.2, y: 194.7 },
-    { city: "佛山", x: 496.1, y: 503.5 }
-];
+    { city: "珠海",   cityEn: "Zhuhai",      x: 502.4, y: 514.5 },
+    { city: "北京",   cityEn: "Beijing",     x: 549.9, y: 255.8 },
+    { city: "广州",   cityEn: "Guangzhou",   x: 502.4, y: 503.5 },
+    { city: "兴宁",   cityEn: "Xingning",    x: 532.5, y: 487.6 },
+    { city: "武汉",   cityEn: "Wuhan",       x: 516.7, y: 400.5 },
+    { city: "景德镇", cityEn: "Jingdezhen",  x: 551.5, y: 416.4 },
+    { city: "大理",   cityEn: "Dali",        x: 334.6, y: 470.2 },
+    { city: "大同",   cityEn: "Datong",      x: 505.6, y: 251.0 },
+    { city: "天津",   cityEn: "Tianjin",     x: 554.7, y: 266.9 },
+    { city: "岳阳",   cityEn: "Yueyang",     x: 499.2, y: 419.5 },
+    { city: "梵净山", cityEn: "Mt. Fanjing", x: 448.6, y: 433.8 },
+    { city: "武功山", cityEn: "Mt. Wugong",  x: 518.2, y: 438.5 },
+    { city: "柳州",   cityEn: "Liuzhou",     x: 454.9, y: 473.4 },
+    { city: "大红山", cityEn: "Mt. Dahong",  x: 488.2, y: 194.7 },
+    { city: "佛山",   cityEn: "Foshan",      x: 496.1, y: 503.5 }
+  ];
 
   function renderMapMarkers() {
     var markersGroup = document.getElementById("map-markers");
     if (!markersGroup) return;
+
+    // Wipe any previous markers (so a lang switch doesn't pile up duplicates)
+    markersGroup.innerHTML = '';
+
     var svgEl = markersGroup.ownerSVGElement;
+    var lang = getLang();
+    var pickCity = function (m) { return lang === 'en' ? (m.cityEn || m.city) : m.city; };
 
     var markerIdx = 0;
-    function createMarker(pos, label, isDraggable, markerType) {
+    function createMarker(pos, label, isDraggable) {
       var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "svg-marker");
       g.style.animationDelay = (markerIdx * 0.18 + Math.random() * 0.08).toFixed(2) + "s";
       markerIdx++;
       if (isDraggable) g.style.cursor = "move";
 
-      // Outer pulse ring
       var pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       pulse.setAttribute("cx", pos.x);
       pulse.setAttribute("cy", pos.y);
@@ -294,7 +327,6 @@ window.PianoApp.initMap = function () {
       pulse.setAttribute("class", "marker-pulse");
       g.appendChild(pulse);
 
-      // Main dot
       var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       dot.setAttribute("cx", pos.x);
       dot.setAttribute("cy", pos.y);
@@ -305,7 +337,6 @@ window.PianoApp.initMap = function () {
       dot.setAttribute("class", "marker-dot");
       g.appendChild(dot);
 
-      // City label — hidden by default, shown on hover / tap
       var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", pos.x);
       text.setAttribute("y", pos.y - 14);
@@ -385,7 +416,6 @@ window.PianoApp.initMap = function () {
           }
         });
 
-        // Touch: tap to show label, drag to move
         g.addEventListener("touchstart", function (e) {
           e.preventDefault();
           dragging = true;
@@ -414,11 +444,12 @@ window.PianoApp.initMap = function () {
       var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
     }
     shuffled.forEach(function (m) {
-      createMarker({ x: m.x, y: m.y }, m.city, true, "extra");
+      createMarker({ x: m.x, y: m.y }, pickCity(m), true);
     });
 
-    // Mobile: tap blank area to hide all marker labels
-    if (svgEl) {
+    // Mobile: tap blank area to hide all marker labels (one-time bind)
+    if (svgEl && !svgEl.dataset.outsideBound) {
+      svgEl.dataset.outsideBound = '1';
       svgEl.addEventListener("touchstart", function (e) {
         if (e.target.closest(".svg-marker")) return;
         markersGroup.querySelectorAll(".marker-label").forEach(function (t) {
@@ -433,13 +464,16 @@ window.PianoApp.initMap = function () {
   }
 
   function renderExperienceList() {
+    var lang = getLang();
+    var presentLabel = tStr('experience.present') || 'Present';
+
     listContainer.innerHTML = "";
     experiences.forEach(function (exp) {
       var item = document.createElement("div");
       item.className = "experience-item";
 
       function fmtDate(d) {
-        if (!d) return "Present";
+        if (!d) return presentLabel;
         var parts = d.split("-");
         return parts[0] + "/" + parts[1];
       }
@@ -449,41 +483,47 @@ window.PianoApp.initMap = function () {
           '<span class="col-date-start">' + fmtDate(exp.startDate) + '</span>' +
         "</div>";
 
+      var tags = pickField(exp, 'tags') || [];
       var tagsHtml = "";
-      if (exp.tags && exp.tags.length > 0) {
-        exp.tags.forEach(function (t) {
-          tagsHtml += '<span class="tag">' + t + "</span>";
-        });
+      if (tags.length > 0) {
+        tags.forEach(function (t) { tagsHtml += '<span class="tag">' + t + "</span>"; });
         tagsHtml = '<div class="tag-row">' + tagsHtml + "</div>";
       }
 
-      var companyHtml = '<div class="company-name">' + exp.orgName + '</div>';
+      var orgName = pickField(exp, 'orgName') || exp.orgName;
+      var position = pickField(exp, 'position') || exp.position || '';
+      var orgLocation = pickField(exp, 'orgLocation') || exp.orgLocation || '';
 
-      var positionHtml = exp.position
-        ? '<div class="col-position">' + exp.position + '</div>'
-        : "";
-
-      var cityHtml = exp.orgLocation
-        ? '<div class="col-city">' + exp.orgLocation + '</div>'
-        : "";
+      var companyHtml = '<div class="company-name">' + orgName + '</div>';
+      var positionHtml = position ? '<div class="col-position">' + position + '</div>' : "";
+      var cityHtml = orgLocation ? '<div class="col-city">' + orgLocation + '</div>' : "";
 
       var rolesHtml = "";
       if (exp.roles && exp.roles.length > 0) {
         exp.roles.forEach(function (role) {
+          var desc = (lang === 'en' && role.descriptionEn != null)
+            ? role.descriptionEn
+            : (role.description || '');
+          desc = desc.replace(/\n/g, '<br>');
+
+          // Show only the active-language title (no bilingual stack).
+          var roleTitle = lang === 'zh' ? role.titleZh : role.titleEn;
           rolesHtml +=
             '<div class="job-item">' +
-              '<div class="job-desc"><div>' + (role.description || '').replace(/\n/g, '<br>') + "</div></div>" +
+              '<div class="job-desc"><div>' + desc + "</div></div>" +
               '<div class="job-role">' +
-                '<span class="role-zh">' + role.titleZh + "</span>" +
-                '<span class="role-en">' + role.titleEn + "</span>" +
+                '<span class="role-zh">' + (roleTitle || '') + "</span>" +
               "</div>" +
             "</div>";
         });
       } else {
+        var fallbackDesc = (lang === 'en' && exp.descriptionEn != null)
+          ? exp.descriptionEn
+          : (exp.description || '');
         rolesHtml =
           '<div class="job-item">' +
-            '<div class="job-desc"><div>' + (exp.description || '').replace(/\n/g, '<br>') + "</div></div>" +
-            '<div class="job-role"><span class="role-zh">' + exp.position + "</span></div>" +
+            '<div class="job-desc"><div>' + fallbackDesc.replace(/\n/g, '<br>') + "</div></div>" +
+            '<div class="job-role"><span class="role-zh">' + position + "</span></div>" +
           "</div>";
       }
 
@@ -497,4 +537,7 @@ window.PianoApp.initMap = function () {
 
   renderMapMarkers();
   renderExperienceList();
+
+  // Register re-render hook for the lang toggle
+  window.PianoApp.rerenderPage = window.PianoApp.initMap;
 };
