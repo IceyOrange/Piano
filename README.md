@@ -77,7 +77,7 @@ scripts/
 
 - A [piano](https://pin.it/FAAK2mtJ5) and a [kitten on a music score](https://pin.it/5Ww8Bq78A) on Pinterest, plus the score on Kimi's [pricing page](https://www.kimi.com/membership/pricing) — for the home page.
 - @baothiento's [pond](https://x.com/baothiento/status/2033203600298488136?s=20) and Deserts Chang's *[蓝天白云](https://music.163.com/#/song?id=326697)* — for *Blue Sky & White Cloud*.
-- Pachelbel's *Canon in D* — for the audio cue, public domain.
+- Pachelbel's *Canon in D* — for the audio cue. Sheet music adapted from [BiBiPiano](https://www.bilibili.com/video/BV12b4y1D7Rq/)'s arrangement; the original composition is public domain.
 
 ## License
 
@@ -166,7 +166,7 @@ scripts/
 
 - Pinterest 上的[钢琴](https://pin.it/FAAK2mtJ5)和[曲谱小猫](https://pin.it/5Ww8Bq78A)，以及 Kimi [会员订阅页](https://www.kimi.com/membership/pricing)底部的曲谱 — 启发了首页设计。
 - @baothiento 的[池塘](https://x.com/baothiento/status/2033203600298488136?s=20)和张悬的《[蓝天白云](https://music.163.com/#/song?id=326697)》— 启发了蓝天白云页面。
-- 帕赫贝尔《D大调卡农》— 音频彩蛋，公共领域。
+- 帕赫贝尔《D大调卡农》— 音频彩蛋。曲谱改编自 [BiBiPiano](https://www.bilibili.com/video/BV1SB4y1K78q/) 的编曲版本；原曲属公共领域。
 
 ## 许可
 
