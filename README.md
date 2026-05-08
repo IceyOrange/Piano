@@ -1,7 +1,8 @@
 # Piano
 
-> A piano you can actually play, on a homepage that quietly unfolds into more.  
-> 一个真的能弹的钢琴，落在主页上，背后藏着几个静静展开的子页面。
+**English** | [中文](#中文)
+
+> A piano you can actually play, on a homepage that quietly unfolds into more.
 
 ---
 
@@ -87,6 +88,8 @@ Personal site. Code is here for inspiration and reference; please don't lift the
 <br>
 
 # 中文
+
+[English](#piano) | **中文**
 
 > 一个真的能弹的钢琴，落在主页上，背后藏着几个静静展开的子页面。
 
