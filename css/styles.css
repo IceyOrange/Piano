@@ -244,6 +244,21 @@ img {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes fadeOutUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+/* Floating-bar variants — preserve translateX(-50%) centering through the
+   transition. The shared keyframes above clobber it because `transform` is a
+   single property. */
+@keyframes floatingBarOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+@keyframes overlayFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 
 .animate-fade-in {
   opacity: 0;
@@ -1656,4 +1671,651 @@ body:has(.page-header) .page {
     height: 100%;
     overflow: visible;
   }
+}
+
+/* ─── Cat Hover Menu (Easter Egg) ─────────────── */
+.cat-menu {
+  position: fixed;
+  z-index: 1001;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: rgba(0, 26, 72, 0.9);
+  border: 1px solid rgba(254, 246, 228, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(254, 246, 228, 0.04);
+  opacity: 0;
+  transform: scale(0.96) translateY(6px);
+  transform-origin: center;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  overflow: hidden;
+}
+/* Borders between cells — works for items and the canon flex wrapper alike. */
+.cat-menu > * + * {
+  border-left: 1px solid rgba(254, 246, 228, 0.06);
+}
+.cat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px 9px;
+  border: none;
+  background: transparent;
+  color: rgba(254, 246, 228, 0.65);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.3;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+  position: relative;
+}
+.cat-menu-item:hover {
+  background: rgba(254, 246, 228, 0.05);
+  color: var(--warm-ivory);
+}
+.cat-menu-item:hover .cat-menu-icon {
+  opacity: 1;
+}
+.cat-menu-icon {
+  font-size: 12px;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.12s ease;
+}
+
+/* Canon cell — wraps a button + external sheet-music link as flex siblings.
+   `<a>` cannot legally nest inside `<button>`, so we use a div wrapper that
+   visually behaves like a single menu cell. */
+.cat-menu-canon {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px 9px;
+  color: rgba(254, 246, 228, 0.9);
+  position: relative;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.cat-menu-canon:hover {
+  background: rgba(254, 246, 228, 0.05);
+}
+.cat-menu-canon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 2px;
+  background: var(--accent-warm);
+  border-radius: 1px;
+  opacity: 0.6;
+}
+.cat-menu-canon-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.3;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cat-menu-canon:hover .cat-menu-icon {
+  opacity: 1;
+}
+
+.cat-menu-source {
+  font-size: 10.5px;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(254, 246, 228, 0.42);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.cat-menu-canon:hover .cat-menu-source {
+  color: rgba(254, 246, 228, 0.7);
+}
+.cat-menu-source:hover {
+  color: var(--warm-ivory) !important;
+  text-decoration: underline;
+}
+
+/* Focus rings — visible only for keyboard users (Tab/arrow nav). The inset
+   shadow stays inside the menu's rounded corners while still being clearly
+   visible against the dark blur. */
+.cat-menu-item:focus-visible,
+.cat-menu-canon-btn:focus-visible,
+.cat-menu-source:focus-visible {
+  outline: none;
+  background: rgba(254, 246, 228, 0.08);
+  color: var(--warm-ivory);
+  box-shadow: inset 0 0 0 2px rgba(245, 224, 138, 0.55);
+}
+.cat-menu-source:focus-visible {
+  text-decoration: underline;
+}
+/* The cat itself is now a button via tabindex=0; give it a soft focus halo
+   so keyboard users see the target before activating Enter/Space.
+   `outline` on an SVG <g> renders against the bounding-box of the entire
+   group's client rect, which produces an awkward rectangle that often
+   extends past the visible cat artwork. `filter: drop-shadow` follows the
+   actual stroke/fill of the children and is the SVG-friendly equivalent.
+   We strip the default outline on plain :focus too — :focus-visible is the
+   only path we want to draw a halo, and Safari/Chrome's heuristic for
+   "should this SVG group show :focus-visible after a click" is unreliable. */
+[id="Oh Cat!"]:focus,
+[id="Oh Cat!"]:focus-visible,
+[id="Oh Cat!"]:focus-within {
+  outline: none;
+}
+[id="Oh Cat!"]:focus-visible {
+  filter: drop-shadow(0 0 3px rgba(245, 224, 138, 0.85))
+          drop-shadow(0 0 6px rgba(245, 224, 138, 0.45));
+}
+
+/* Mobile long-press feedback: ohCat scales down slightly while finger is held,
+   hinting that the long-press will trigger the menu. transform-origin centers
+   the scale so the cat doesn't slide. */
+.oh-cat-pressing {
+  animation: catPressRipple 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: center;
+}
+@keyframes catPressRipple {
+  0%   { transform: scale(1);    opacity: 1;   }
+  50%  { transform: scale(0.92); opacity: 0.85;}
+  100% { transform: scale(0.94); opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oh-cat-pressing { animation: none; opacity: 0.85; }
+}
+
+/* ─── Recording Countdown ─────────────────────── */
+.recording-countdown {
+  position: fixed;
+  inset: 0;
+  z-index: 1010;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 26, 72, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+.countdown-number {
+  font-family: 'Oranienbaum', 'Noto Serif SC', ui-serif, Georgia, serif;
+  font-size: clamp(80px, 15vw, 140px);
+  font-weight: 400;
+  color: rgba(254, 246, 228, 0.9);
+  text-shadow: 0 0 40px rgba(254, 246, 228, 0.15);
+  line-height: 1;
+  opacity: 0;
+}
+.countdown-number.countdown-animate {
+  animation: countPulse 0.95s ease-out forwards;
+}
+@keyframes countPulse {
+  0%  { transform: scale(0.5); opacity: 0; }
+  20% { transform: scale(1.08); opacity: 1; }
+  70% { transform: scale(1); opacity: 0.9; }
+  100%{ transform: scale(0.95); opacity: 0.15; }
+}
+.countdown-hint {
+  font-family: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: rgba(254, 246, 228, 0.55);
+  animation: fadeIn 0.4s ease 0.15s both;
+}
+.countdown-skip {
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: rgba(254, 246, 228, 0.6);
+  background: transparent;
+  border: 1px solid rgba(254, 246, 228, 0.18);
+  border-radius: 14px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  animation: fadeIn 0.4s ease 0.25s both;
+}
+.countdown-skip:hover,
+.countdown-skip:focus-visible {
+  color: rgba(254, 246, 228, 0.95);
+  border-color: rgba(245, 224, 138, 0.55);
+  background: rgba(245, 224, 138, 0.08);
+  outline: none;
+}
+
+/* ─── Shared Floating Bar ─────────────────────── */
+.floating-bar {
+  position: absolute;
+  top: -44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 18px;
+  background: rgba(0, 26, 72, 0.88);
+  border: 1px solid rgba(254, 246, 228, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  animation: fadeInDown 0.2s ease;
+  white-space: nowrap;
+}
+.floating-bar.is-leaving {
+  animation: floatingBarOut 0.2s ease forwards;
+  pointer-events: none;
+}
+
+/* ─── Recording Control Bar ────────────────────── */
+.rec-bar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 85, 85, 0.9);
+  box-shadow: 0 0 8px rgba(255, 85, 85, 0.4);
+  animation: recDotPulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes recDotPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.35); opacity: 0.5; }
+}
+.rec-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: rgba(255, 100, 100, 0.85);
+  text-transform: uppercase;
+}
+.rec-bar-timer {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(254, 246, 228, 0.7);
+  /* Sized to the literal "MM:SS / MM:SS" format — using `ch` instead of px
+     keeps the timer aligned even if the font scales for accessibility. */
+  min-width: 13ch;
+}
+.rec-bar-stop {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(254, 246, 228, 0.08);
+  color: rgba(254, 246, 228, 0.7);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.rec-bar-stop:hover {
+  background: rgba(254, 246, 228, 0.15);
+  color: var(--warm-ivory);
+}
+.rec-bar-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(254, 246, 228, 0.06);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+.rec-bar-progress-fill {
+  height: 100%;
+  background: var(--accent-warm);
+  transition: width 0.25s linear;
+}
+.recording-bar.warning .rec-bar-progress-fill {
+  background: rgba(255, 85, 85, 0.8);
+}
+.recording-bar.warning .rec-bar-timer {
+  color: rgba(255, 130, 130, 0.9);
+}
+
+/* ─── Playback Panel ─────────────────────────── */
+.playback-info {
+  font-size: 13px;
+  color: rgba(254, 246, 228, 0.7);
+}
+.playback-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.playback-preview {
+  background: rgba(254, 246, 228, 0.08);
+  color: rgba(254, 246, 228, 0.7);
+  /* Hold a stable width so swapping "Preview" ↔ "Stop" doesn't make the panel
+     reshuffle. tabular-nums steadies the icon glyph width too. */
+  min-width: 7ch;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.playback-preview:hover {
+  background: rgba(254, 246, 228, 0.15);
+  color: var(--warm-ivory);
+}
+.playback-preview.playing {
+  background: rgba(254, 246, 228, 0.2);
+  color: var(--warm-ivory);
+}
+.playback-discard {
+  background: rgba(254, 246, 228, 0.06);
+  color: rgba(254, 246, 228, 0.5);
+}
+.playback-discard:hover {
+  background: rgba(255, 100, 100, 0.12);
+  color: rgba(255, 130, 130, 0.85);
+}
+.playback-share {
+  background: var(--accent-warm);
+  color: var(--deep-navy);
+  font-weight: 500;
+}
+.playback-share:hover {
+  background: #c49668;
+}
+
+/* ─── Submit Dialog ───────────────────────────── */
+.submit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1004;
+  background: rgba(0, 26, 72, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.submit-overlay.is-leaving {
+  animation: overlayFadeOut 0.18s ease forwards;
+  pointer-events: none;
+}
+.submit-dialog {
+  background: rgba(0, 26, 72, 0.96);
+  color: var(--warm-ivory);
+  padding: 28px 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(254, 246, 228, 0.1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(254, 246, 228, 0.03);
+  min-width: 280px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.submit-info {
+  font-size: 13px;
+  color: var(--warm-ivory);
+  text-align: center;
+  background: rgba(254, 246, 228, 0.06);
+  border: 1px solid rgba(254, 246, 228, 0.06);
+  padding: 8px 16px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+}
+.submit-name {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid rgba(254, 246, 228, 0.12);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--warm-ivory);
+  background: rgba(254, 246, 228, 0.04);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.submit-name::placeholder {
+  color: rgba(254, 246, 228, 0.3);
+}
+.submit-name:focus {
+  border-color: var(--accent-warm);
+  background: rgba(254, 246, 228, 0.06);
+}
+.submit-name-error {
+  border-color: rgba(255, 100, 100, 0.6);
+  animation: shake 0.3s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.submit-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.submit-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, opacity 0.12s ease;
+}
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.submit-discard {
+  background: rgba(254, 246, 228, 0.06);
+  color: rgba(254, 246, 228, 0.6);
+}
+.submit-discard:hover {
+  background: rgba(254, 246, 228, 0.1);
+  color: rgba(254, 246, 228, 0.85);
+}
+.submit-share {
+  background: var(--accent-warm);
+  color: var(--deep-navy);
+}
+.submit-share:hover {
+  background: #c49668;
+}
+.submit-error {
+  font-size: 13px;
+  color: rgba(255, 120, 120, 0.9);
+  text-align: center;
+}
+
+/* ─── Community Panel ─────────────────────────── */
+.community-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1003;
+  background: rgba(0, 26, 72, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+.community-panel {
+  background: rgba(0, 26, 72, 0.96);
+  color: var(--warm-ivory);
+  border-radius: 16px 16px 0 0;
+  border: 1px solid rgba(254, 246, 228, 0.08);
+  border-bottom: none;
+  width: 100%;
+  max-width: 480px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.community-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(254, 246, 228, 0.08);
+  flex-shrink: 0;
+}
+.community-title {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+.community-close {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: rgba(254, 246, 228, 0.06);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(254, 246, 228, 0.6);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.community-close:hover {
+  background: rgba(254, 246, 228, 0.12);
+  color: var(--warm-ivory);
+}
+.community-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 16px;
+}
+.community-loading,
+.community-empty,
+.community-error {
+  text-align: center;
+  padding: 32px 16px;
+  color: rgba(254, 246, 228, 0.35);
+  font-size: 14px;
+}
+.community-retry {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 16px;
+  border: 1px solid rgba(254, 246, 228, 0.15);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(254, 246, 228, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.community-retry:hover {
+  background: rgba(254, 246, 228, 0.06);
+  color: var(--warm-ivory);
+}
+.community-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  position: relative;
+  transition: background 0.12s ease;
+}
+.community-card:hover {
+  background: rgba(254, 246, 228, 0.04);
+}
+.community-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.community-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(254, 246, 228, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.community-card-meta {
+  font-size: 12px;
+  color: rgba(254, 246, 228, 0.35);
+}
+.community-play-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(254, 246, 228, 0.08);
+  color: rgba(254, 246, 228, 0.7);
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.community-play-btn:hover {
+  background: rgba(254, 246, 228, 0.15);
+  color: var(--warm-ivory);
+}
+.community-play-btn.playing {
+  background: var(--accent-warm);
+  color: var(--deep-navy);
+  font-size: 10px;
+}
+/* Per-card playback progress: 2px sliver pinned to the bottom of the card,
+   invisible until the card is the active one. Width is driven by JS. */
+.community-progress {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: rgba(254, 246, 228, 0.06);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+  overflow: hidden;
+}
+.community-card.is-playing .community-progress {
+  opacity: 1;
+}
+.community-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent-warm);
+  transition: width 0.12s linear;
 }

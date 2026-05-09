@@ -144,6 +144,9 @@ window.PianoApp.initPiano = function () {
       // keyboard viewBox crop (y < 559) so it would be clipped in visualSvg.
       const hintEl = visualSvg.querySelector('g[id*="Click the Cat"]');
       if (hintEl) {
+        // Stable selector for cat-menu's avoid-overlap logic (the SVG id can
+        // change with copy edits; the role is part of our own contract).
+        hintEl.setAttribute('data-role', 'cat-hint');
         overlaySvg.appendChild(hintEl);
       }
 
@@ -454,6 +457,9 @@ window.PianoApp.initPiano = function () {
 
         pressedNote = note;
         window.PianoApp.playNote(note);
+        if (window.PianoApp.Recorder && window.PianoApp.Recorder.isRecording) {
+          window.PianoApp.Recorder.noteOn(note);
+        }
       }
 
       function handleUp(note) {
@@ -474,6 +480,9 @@ window.PianoApp.initPiano = function () {
         if (group && !isBlackKey(note)) group.classList.remove("pressed");
         setVisualState(note, "pressed", false);
         pressedNote = null;
+        if (window.PianoApp.Recorder && window.PianoApp.Recorder.isRecording) {
+          window.PianoApp.Recorder.noteOff(note);
+        }
       }
 
       function handleLeave() {
@@ -550,10 +559,37 @@ window.PianoApp.initPiano = function () {
       if (ohCat) {
         ohCat.style.cursor = "pointer";
         ohCat.style.pointerEvents = "auto";
+        ohCat.setAttribute("tabindex", "0");
+        ohCat.setAttribute("role", "button");
+        // Stay in sync with the language toggle: data-i18n-attr is read on every
+        // i18n.apply() call, and we set the initial value here for first paint.
+        ohCat.setAttribute("data-i18n-attr", "cat.menu.aria:aria-label");
+        if (window.PianoApp.i18n && window.PianoApp.i18n.t) {
+          ohCat.setAttribute("aria-label", window.PianoApp.i18n.t("cat.menu.aria"));
+        }
         ohCat.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           window.PianoApp.Sequencer.toggle();
+          // Mouse clicks on a focusable SVG <g> can leave focus stuck on the
+          // element, which then keeps :focus-visible true (browsers vary in
+          // their heuristic for SVG). Drop focus right away — keyboard users
+          // who Tab here still see the halo, but mouse-clickers don't get a
+          // lingering glow they didn't ask for.
+          if (typeof ohCat.blur === "function") {
+            try { ohCat.blur(); } catch (_) {}
+          }
+        });
+        // Keyboard activation opens the menu rather than toggling the sequencer
+        // directly — that way Tab→Enter users get the same set of options
+        // (record / community / canon) that mouse hover reveals.
+        ohCat.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+            e.preventDefault();
+            if (window.PianoApp.CatMenu && window.PianoApp.CatMenu.openMenuKeyboard) {
+              window.PianoApp.CatMenu.openMenuKeyboard();
+            }
+          }
         });
       }
 
@@ -630,53 +666,7 @@ window.PianoApp.initPiano = function () {
 
         document.body.appendChild(vinylCursor);
 
-        // ─── Cat Hover Tooltip ─────────────────
-        const catTooltip = document.createElement("div");
-        catTooltip.className = "cat-tooltip";
-        const catTooltipLink = document.createElement("a");
-        catTooltipLink.href = "https://www.bilibili.com/read/cv4079944/?opus_fallback=1";
-        catTooltipLink.target = "_blank";
-        catTooltipLink.rel = "noopener noreferrer";
-        catTooltipLink.textContent = "曲谱来源";
-        catTooltip.appendChild(catTooltipLink);
-        catTooltip.style.cssText = `
-          position: fixed;
-          z-index: 1001;
-          opacity: 0;
-          transition: opacity 0.2s ease;
-          pointer-events: none;
-        `;
-        catTooltipLink.style.cssText = `
-          display: block;
-          color: rgba(245, 240, 230, 0.7);
-          text-decoration: none;
-          font-size: 13px;
-          white-space: nowrap;
-          pointer-events: auto;
-          transition: color 0.15s ease;
-        `;
-        document.body.appendChild(catTooltip);
-
-        let tooltipHovered = false;
-        let tooltipHideTimer = null;
-
-        catTooltipLink.addEventListener("mouseenter", () => {
-          clearTimeout(tooltipHideTimer);
-          tooltipHovered = true;
-        });
-        catTooltipLink.addEventListener("mouseleave", () => {
-          tooltipHovered = false;
-          catTooltip.style.opacity = "0";
-        });
-
-        function positionCatTooltip() {
-          if (!ohCat) return;
-          const rect = ohCat.getBoundingClientRect();
-          const tw = catTooltip.offsetWidth;
-          catTooltip.style.left = (rect.left + rect.width / 2 - tw / 2) + "px";
-          catTooltip.style.top = (rect.top - catTooltip.offsetHeight - 8) + "px";
-        }
-
+        // ─── Cat Menu (hover Easter-egg) ────────────
         function positionVinylAtCat() {
           if (!vinylCursor) return;
           const size = 44;
@@ -688,32 +678,23 @@ window.PianoApp.initPiano = function () {
         }
 
         window.PianoApp.vinylCursor = vinylCursor;
-        window.PianoApp.vinylCursorState = { catHover: false, playingCanon: false };
+        window.PianoApp.vinylCursorState = { catHover: false, playingCanon: false, playingCommunity: false };
         window.PianoApp.updateVinylCursor = function () {
           const s = window.PianoApp.vinylCursorState;
-          const show = s.catHover || s.playingCanon;
+          const show = s.catHover || s.playingCanon || s.playingCommunity;
           if (!isMobile && ohCat) ohCat.style.cursor = show ? "none" : "pointer";
           if (vinylCursor) vinylCursor.style.opacity = show ? "1" : "0";
           if (isMobile && show) positionVinylAtCat();
           document.body.classList.toggle("vinyl-cursor-active", show);
           const svgEl = vinylCursor ? vinylCursor.querySelector("svg") : null;
           if (svgEl) {
-            svgEl.style.animationPlayState = s.playingCanon ? "running" : "paused";
+            svgEl.style.animationPlayState = (s.playingCanon || s.playingCommunity) ? "running" : "paused";
           }
         };
 
         if (isMobile) {
-          // On mobile, position vinyl at screen center; update on resize/scroll
           window.addEventListener("resize", positionVinylAtCat);
           window.addEventListener("scroll", positionVinylAtCat, true);
-          ohCat.addEventListener("touchstart", () => {
-            window.PianoApp.vinylCursorState.catHover = true;
-            window.PianoApp.updateVinylCursor();
-          });
-          ohCat.addEventListener("touchend", () => {
-            window.PianoApp.vinylCursorState.catHover = false;
-            window.PianoApp.updateVinylCursor();
-          });
         } else {
           document.addEventListener("mousemove", (e) => {
             if (vinylCursor) {
@@ -721,20 +702,11 @@ window.PianoApp.initPiano = function () {
               vinylCursor.style.top = e.clientY + "px";
             }
           });
-          ohCat.addEventListener("mouseenter", () => {
-            window.PianoApp.vinylCursorState.catHover = true;
-            window.PianoApp.updateVinylCursor();
-            clearTimeout(tooltipHideTimer);
-            catTooltip.style.opacity = "1";
-            positionCatTooltip();
-          });
-          ohCat.addEventListener("mouseleave", () => {
-            window.PianoApp.vinylCursorState.catHover = false;
-            window.PianoApp.updateVinylCursor();
-            tooltipHideTimer = setTimeout(() => {
-              if (!tooltipHovered) catTooltip.style.opacity = "0";
-            }, 100);
-          });
+        }
+
+        // Initialize CatMenu (replaces old tooltip, handles hover menu)
+        if (window.PianoApp.CatMenu) {
+          window.PianoApp.CatMenu.init(ohCat, overlaySvg);
         }
       }
 
@@ -755,12 +727,18 @@ window.PianoApp.initPiano = function () {
         const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.add("pressed");
         setVisualState(note, "pressed", true);
+        if (window.PianoApp.Recorder && window.PianoApp.Recorder.isRecording) {
+          window.PianoApp.Recorder.noteOn(note);
+        }
       }
 
       function releaseNote(note) {
         const group = keyElements.get(note);
         if (group && !isBlackKey(note)) group.classList.remove("pressed");
         setVisualState(note, "pressed", false);
+        if (window.PianoApp.Recorder && window.PianoApp.Recorder.isRecording) {
+          window.PianoApp.Recorder.noteOff(note);
+        }
       }
 
       // ─── Keyboard Chord Mapping ──────────────────

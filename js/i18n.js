@@ -25,6 +25,36 @@ window.PianoApp = window.PianoApp || {};
       'experience.quote':      'Wherever the heart finds peace, there is home. — Su Shi',
       'lang.toggleTo':         '中',
       'lang.toggleAria':       'Switch to Chinese',
+      // ─── Cat menu / recording flow ───
+      'cat.menu.aria':         'Cat menu',
+      'cat.menu.record':       'Record (R)',
+      'cat.menu.community':    'Community',
+      'cat.menu.canon':        'Play Canon',
+      'cat.menu.canonSource':  'Sheet Music',
+      'cat.menu.stop':         'Stop Recording',
+      'cat.menu.stopPlayback': 'Stop Playback',
+      'cat.menu.skip':         'Skip',
+      'rec.bar.label':         'REC',
+      'rec.bar.stop':          '■ Stop',
+      'rec.preview':           '▶ Preview',
+      'rec.previewStop':       '■ Stop',
+      'rec.discard':           '✕ Discard',
+      'rec.share':             '↗ Share',
+      'rec.recorded':          'recorded',
+      'countdown.hint':        'Canon paused',
+      'submit.placeholder':    'Your name',
+      'submit.discard':        'Discard',
+      'submit.share':          'Share',
+      'submit.sharing':        'Sharing...',
+      'submit.error.network':  'Network error',
+      'submit.error.failed':   'Failed',
+      'submit.error.rateLimit':'Too many submissions, try again later',
+      'submit.error.tooLong':  'Recording too long (6:21 max)',
+      'community.title':       'Community',
+      'community.loading':     'Loading...',
+      'community.empty':       'No recordings yet. Be the first!',
+      'community.error':       'Failed to load',
+      'community.retry':       'Retry',
     },
     zh: {
       'nav.home':              '首页',
@@ -45,6 +75,36 @@ window.PianoApp = window.PianoApp || {};
       'experience.quote':      '此心安处，便是吾乡。 —— 苏轼',
       'lang.toggleTo':         'EN',
       'lang.toggleAria':       '切换为英文',
+      // ─── 小猫菜单 / 录制 ───
+      'cat.menu.aria':         '小猫菜单',
+      'cat.menu.record':       '录制 (R)',
+      'cat.menu.community':    '社区',
+      'cat.menu.canon':        '播放卡农',
+      'cat.menu.canonSource':  '曲谱出处',
+      'cat.menu.stop':         '停止录制',
+      'cat.menu.stopPlayback': '停止播放',
+      'cat.menu.skip':         '跳过',
+      'rec.bar.label':         '录制中',
+      'rec.bar.stop':          '■ 停止',
+      'rec.preview':           '▶ 试听',
+      'rec.previewStop':       '■ 停止',
+      'rec.discard':           '✕ 丢弃',
+      'rec.share':             '↗ 分享',
+      'rec.recorded':          '已录制',
+      'countdown.hint':        '卡农已暂停',
+      'submit.placeholder':    '你的名字',
+      'submit.discard':        '丢弃',
+      'submit.share':          '分享',
+      'submit.sharing':        '提交中...',
+      'submit.error.network':  '网络错误',
+      'submit.error.failed':   '提交失败',
+      'submit.error.rateLimit':'提交太频繁,请稍后再试',
+      'submit.error.tooLong':  '录音过长(最长 6 分 21 秒)',
+      'community.title':       '社区录音',
+      'community.loading':     '加载中...',
+      'community.empty':       '还没有录音,来弹一段吧!',
+      'community.error':       '加载失败',
+      'community.retry':       '重试',
     },
   };
 
@@ -58,7 +118,12 @@ window.PianoApp = window.PianoApp || {};
 
   function getLang() {
     var stored = safeStorage('get', STORAGE_KEY);
-    return SUPPORTED.indexOf(stored) >= 0 ? stored : DEFAULT_LANG;
+    if (SUPPORTED.indexOf(stored) >= 0) return stored;
+    // First visit (no stored choice yet): respect the browser language so
+    // visitors land in their native tongue without manually toggling.
+    var nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (nav.indexOf('zh') === 0) return 'zh';
+    return DEFAULT_LANG;
   }
 
   function setLang(lang) {
