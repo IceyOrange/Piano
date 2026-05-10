@@ -834,8 +834,8 @@ window.PianoApp.CatMenu = (function () {
     actions.appendChild(shareBtn);
 
     dialog.appendChild(info);
-    dialog.appendChild(input);
     dialog.appendChild(titleInput);
+    dialog.appendChild(input);
     dialog.appendChild(actions);
     submitEl.appendChild(dialog);
 
