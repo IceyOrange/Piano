@@ -157,7 +157,7 @@ window.PianoApp.data = {
 
   about: {
     name: "黄添成",
-    nameEn: "Tiancheng Huang",
+    nameEn: "Lovegood",
     typewriter: [
       "为什么想要成为一名产品经理？",
       "产品会影响人们的生活。而好的产品不是让人离不开它，而是帮人把时间和精力省出来，去享受更重要的事。",
