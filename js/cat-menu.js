@@ -805,6 +805,10 @@ window.PianoApp.CatMenu = (function () {
         setTimeout(function () { titleInput.classList.remove("submit-name-error"); }, 1000);
         return;
       }
+      if (recordingEvents && recordingEvents.length > 6000) {
+        showError(dialog, t("submit.error.tooMany"));
+        return;
+      }
       shareBtn.disabled = true;
       shareBtn.textContent = t("submit.sharing");
       var name = input.value.trim() || undefined;
@@ -942,8 +946,10 @@ window.PianoApp.CatMenu = (function () {
     // Map a few well-known server messages to localized strings; fall back to
     // a generic "Failed" rather than echoing English at zh users.
     var msg = (result && typeof result.error === "string") ? result.error : "";
-    if (/Rate limit/i.test(msg))      return t("submit.error.rateLimit");
-    if (/Duration must be/i.test(msg)) return t("submit.error.tooLong");
+    if (/Rate limit/i.test(msg))         return t("submit.error.rateLimit");
+    if (/Duration must be/i.test(msg))   return t("submit.error.tooLong");
+    if (/Track name is required/i.test(msg)) return t("submit.error.titleRequired");
+    if (/Too many events/i.test(msg))    return t("submit.error.tooMany");
     return t("submit.error.failed");
   }
 

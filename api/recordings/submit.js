@@ -29,8 +29,8 @@ module.exports = async function handler(req, res) {
     if (!Array.isArray(ev) || ev.length === 0) {
       return res.status(400).json({ error: "Events array is required" });
     }
-    if (ev.length > 2400) {
-      return res.status(400).json({ error: "Too many events (max 2400)" });
+    if (ev.length > 6000) {
+      return res.status(400).json({ error: "Too many events (max 6000)" });
     }
     if (typeof dur !== "number" || dur <= 0 || dur > 381000) {
       return res.status(400).json({ error: "Duration must be 1-381000ms" });
