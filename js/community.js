@@ -103,14 +103,17 @@ window.PianoApp.Community = (function () {
 
       var nameEl = document.createElement("span");
       nameEl.className = "community-card-name";
-      nameEl.textContent = rec.name;
+      nameEl.textContent = rec.title || rec.name;
 
       var meta = document.createElement("span");
       meta.className = "community-card-meta";
       var date = new Date(rec.ts);
       var dateStr = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
       var durStr = formatDuration(rec.dur);
-      meta.textContent = dateStr + "  " + durStr;
+      var metaParts = [];
+      if (rec.title && rec.name) metaParts.push(rec.name);
+      metaParts.push(dateStr + "  " + durStr);
+      meta.textContent = metaParts.join(" · ");
 
       info.appendChild(nameEl);
       info.appendChild(meta);
@@ -202,11 +205,13 @@ window.PianoApp.Community = (function () {
       });
   }
 
-  function submitRecording(name, events, dur) {
+  function submitRecording(name, title, events, dur) {
+    var payload = { name: name, ev: events, dur: dur };
+    if (title) payload.title = title;
     return fetch("/api/recordings/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name, ev: events, dur: dur }),
+      body: JSON.stringify(payload),
     }).then(function (r) { return r.json(); });
   }
 

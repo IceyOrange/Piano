@@ -30,6 +30,7 @@ module.exports = async function handler(req, res) {
         return {
           id: rec.id,
           name: rec.name,
+          title: rec.title || undefined,
           ts: rec.ts,
           dur: rec.dur,
           count: rec.ev ? rec.ev.length : 0,
