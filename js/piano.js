@@ -768,6 +768,8 @@ window.PianoApp.initPiano = function () {
 
       document.addEventListener("keydown", (e) => {
         if (e.repeat) return;
+        // Don't steal keys while the user is typing in a form field.
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
         // Number keys (1–7) — use e.code so Shift doesn't change the identifier
         const digitMatch = e.code.match(/^Digit([1-7])$/);
@@ -794,6 +796,9 @@ window.PianoApp.initPiano = function () {
       });
 
       document.addEventListener("keyup", (e) => {
+        // Don't release piano keys while the user is typing in a form field.
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
         // Number keys (1–7)
         const digitMatch = e.code.match(/^Digit([1-7])$/);
         if (digitMatch) {
