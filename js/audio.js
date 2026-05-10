@@ -33,8 +33,15 @@ window.PianoApp.initAudio = function () {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     window.PianoApp.audioCtx = new AudioContext();
   }
+  // Only call resume() once a user gesture has occurred. The DOMContentLoaded
+  // warm-up call hits this before any interaction, and Chrome logs a console
+  // warning if we try to resume then. The next gesture-triggered call (piano
+  // click, playback start) will resume the context successfully.
   if (window.PianoApp.audioCtx.state === "suspended") {
-    window.PianoApp.audioCtx.resume();
+    var ua = navigator.userActivation;
+    if (!ua || ua.hasBeenActive || ua.isActive) {
+      window.PianoApp.audioCtx.resume();
+    }
   }
   if (!window.PianoApp._reverbNode && window.PianoApp.audioCtx) {
     window.PianoApp._reverbNode = window.PianoApp._createReverb();

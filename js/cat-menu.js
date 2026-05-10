@@ -421,6 +421,19 @@ window.PianoApp.CatMenu = (function () {
 
   function hideMenu() {
     if (!menuEl) return;
+    // If a menu item still has focus, move focus out BEFORE setting
+    // aria-hidden=true. Browsers warn when aria-hidden is applied to an
+    // ancestor of the focused element. Restoring focus to the cat keeps
+    // keyboard users anchored at a reasonable place.
+    if (menuEl.contains(document.activeElement)) {
+      var moved = false;
+      if (ohCatRef && typeof ohCatRef.focus === "function") {
+        try { ohCatRef.focus(); moved = true; } catch (_) { /* SVG focus may throw */ }
+      }
+      if (!moved && document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+    }
     menuEl.style.opacity = "0";
     menuEl.style.transform = "scale(0.96) translateY(6px)";
     menuEl.style.pointerEvents = "none";
