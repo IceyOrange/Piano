@@ -63,6 +63,8 @@ window.PianoApp = window.PianoApp || {};
       'community.deleteWrong': 'Wrong password',
       'community.deleteFailed':'Failed to delete',
       'community.deleting':    'Deleting...',
+      'community.sortNew':     'New',
+      'community.sortHot':     'Hot',
     },
     zh: {
       'nav.home':              '首页',
@@ -121,6 +123,8 @@ window.PianoApp = window.PianoApp || {};
       'community.deleteWrong': '密码错误',
       'community.deleteFailed':'删除失败',
       'community.deleting':    '删除中...',
+      'community.sortNew':     '最新',
+      'community.sortHot':     '最热',
     },
   };
 

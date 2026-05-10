@@ -3,6 +3,11 @@ window.PianoApp = window.PianoApp || {};
 window.PianoApp.Community = (function () {
   var panel = null;
   var currentPlaybackId = null;
+  var currentSort = "new"; // "new" or "hot"
+  var nowPlayingBar = null;
+  var npProgressFill = null;
+  var npTimeEl = null;
+  var npProgressTimer = null;
 
   function t(key) {
     return (window.PianoApp.i18n && window.PianoApp.i18n.t)
@@ -21,6 +26,8 @@ window.PianoApp.Community = (function () {
     if (window.PianoApp.Playback && window.PianoApp.Playback.isPlaying) {
       window.PianoApp.Playback.stop();
     }
+    if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
+    hideNowPlaying();
     currentPlaybackId = null;
     if (panel) {
       panel.style.opacity = "0";
@@ -44,11 +51,39 @@ window.PianoApp.Community = (function () {
     var title = document.createElement("span");
     title.className = "community-title";
     title.textContent = t("community.title");
+
+    // Sort toggle
+    var sortWrap = document.createElement("div");
+    sortWrap.className = "community-sort";
+    var btnNew = document.createElement("button");
+    btnNew.className = "community-sort-btn" + (currentSort === "new" ? " active" : "");
+    btnNew.textContent = t("community.sortNew");
+    btnNew.addEventListener("click", function () {
+      if (currentSort === "new") return;
+      currentSort = "new";
+      btnNew.classList.add("active");
+      btnHot.classList.remove("active");
+      fetchList();
+    });
+    var btnHot = document.createElement("button");
+    btnHot.className = "community-sort-btn" + (currentSort === "hot" ? " active" : "");
+    btnHot.textContent = t("community.sortHot");
+    btnHot.addEventListener("click", function () {
+      if (currentSort === "hot") return;
+      currentSort = "hot";
+      btnHot.classList.add("active");
+      btnNew.classList.remove("active");
+      fetchList();
+    });
+    sortWrap.appendChild(btnNew);
+    sortWrap.appendChild(btnHot);
+
     var closeBtn = document.createElement("button");
     closeBtn.className = "community-close";
     closeBtn.innerHTML = "&times;";
     closeBtn.addEventListener("click", hide);
     header.appendChild(title);
+    header.appendChild(sortWrap);
     header.appendChild(closeBtn);
     container.appendChild(header);
 
@@ -68,7 +103,9 @@ window.PianoApp.Community = (function () {
     var listEl = panel ? panel.querySelector(".community-list") : null;
     if (!listEl) return;
 
-    fetch("/api/recordings/list?limit=50")
+    var url = "/api/recordings/list?limit=50";
+    if (currentSort === "hot") url += "&sort=hot";
+    fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.recordings || data.recordings.length === 0) {
@@ -113,6 +150,7 @@ window.PianoApp.Community = (function () {
       var metaParts = [];
       if (rec.name) metaParts.push(rec.name);
       metaParts.push(dateStr + "  " + durStr);
+      if (rec.plays > 0) metaParts.push("▶ " + rec.plays);
       meta.textContent = metaParts.join(" · ");
 
       info.appendChild(nameEl);
@@ -253,6 +291,8 @@ window.PianoApp.Community = (function () {
     // If same recording is playing, stop it
     if (currentPlaybackId === id && window.PianoApp.Playback.isPlaying) {
       window.PianoApp.Playback.stop();
+      if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
+      hideNowPlaying();
       currentPlaybackId = null;
       btn.innerHTML = "&#9654;";
       btn.classList.remove("playing");
@@ -264,6 +304,8 @@ window.PianoApp.Community = (function () {
     if (window.PianoApp.Playback.isPlaying) {
       window.PianoApp.Playback.stop();
     }
+    if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
+    hideNowPlaying();
     // Reset previous button + progress bar
     var prev = panel ? panel.querySelector(".community-play-btn.playing") : null;
     if (prev) {
@@ -280,20 +322,46 @@ window.PianoApp.Community = (function () {
     currentPlaybackId = id;
 
     var fill = card ? card.querySelector(".community-progress-fill") : null;
+    // Capture card data for Now Playing bar
+    var cardTitle = card ? card.querySelector(".community-card-name") : null;
+    var cardMeta = card ? card.querySelector(".community-card-meta") : null;
 
     fetch("/api/recordings/get?id=" + encodeURIComponent(id))
       .then(function (r) { return r.json(); })
       .then(function (rec) {
+        if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.start(rec);
+        showNowPlaying(
+          rec.title || "",
+          rec.name || "",
+          rec.dur || 0,
+          function () {
+            // close callback — stop playback
+            window.PianoApp.Playback.stop();
+            if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
+            hideNowPlaying();
+            currentPlaybackId = null;
+            btn.innerHTML = "&#9654;";
+            btn.classList.remove("playing");
+            resetCardProgress(card);
+          }
+        );
         if (window.PianoApp.Playback) {
           window.PianoApp.Playback.play(rec, {
             onProgress: function (ratio) {
               if (fill) fill.style.width = (ratio * 100) + "%";
+              if (npProgressFill) npProgressFill.style.width = (ratio * 100) + "%";
+              if (npTimeEl) {
+                var elapsed = window.PianoApp.Playback ? window.PianoApp.Playback.getElapsedMs() : 0;
+                npTimeEl.textContent = formatDuration(elapsed);
+              }
             },
             onEnd: function () {
               if (currentPlaybackId === id) currentPlaybackId = null;
               btn.innerHTML = "&#9654;";
               btn.classList.remove("playing");
               resetCardProgress(card);
+              if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
+              hideNowPlaying();
             },
           });
         }
@@ -317,6 +385,75 @@ window.PianoApp.Community = (function () {
     }).then(function (r) { return r.json(); });
   }
 
+  function showNowPlaying(title, artist, duration, onClose) {
+    hideNowPlaying();
+
+    var bar = document.createElement("div");
+    bar.className = "now-playing-bar";
+
+    var infoEl = document.createElement("div");
+    infoEl.className = "now-playing-info";
+    var titleEl = document.createElement("span");
+    titleEl.className = "now-playing-title";
+    titleEl.textContent = title;
+    var metaEl = document.createElement("span");
+    metaEl.className = "now-playing-meta";
+    metaEl.textContent = artist ? artist + " · " + formatDuration(duration) : formatDuration(duration);
+    infoEl.appendChild(titleEl);
+    infoEl.appendChild(metaEl);
+
+    var progressEl = document.createElement("div");
+    progressEl.className = "now-playing-progress";
+    npProgressFill = document.createElement("div");
+    npProgressFill.className = "now-playing-progress-fill";
+    progressEl.appendChild(npProgressFill);
+
+    npTimeEl = document.createElement("span");
+    npTimeEl.className = "now-playing-time";
+    npTimeEl.textContent = "0:00";
+
+    var closeBtn = document.createElement("button");
+    closeBtn.className = "now-playing-close";
+    closeBtn.innerHTML = "&times;";
+    closeBtn.addEventListener("click", function () {
+      if (onClose) onClose();
+    });
+
+    bar.appendChild(infoEl);
+    bar.appendChild(progressEl);
+    bar.appendChild(npTimeEl);
+    bar.appendChild(closeBtn);
+    document.body.appendChild(bar);
+
+    // Position just above the keyboard
+    positionNowPlaying();
+
+    // Trigger animation
+    requestAnimationFrame(function () {
+      bar.classList.add("visible");
+    });
+
+    nowPlayingBar = bar;
+  }
+
+  function positionNowPlaying() {
+    if (!nowPlayingBar) return;
+    var kb = document.getElementById("piano-keyboard");
+    if (!kb) return;
+    var r = kb.getBoundingClientRect();
+    nowPlayingBar.style.bottom = (window.innerHeight - r.top) + "px";
+  }
+
+  function hideNowPlaying() {
+    if (npProgressTimer) { clearInterval(npProgressTimer); npProgressTimer = null; }
+    if (nowPlayingBar && nowPlayingBar.parentNode) {
+      nowPlayingBar.parentNode.removeChild(nowPlayingBar);
+    }
+    nowPlayingBar = null;
+    npProgressFill = null;
+    npTimeEl = null;
+  }
+
   function formatDuration(ms) {
     var s = Math.round(ms / 1000);
     var m = Math.floor(s / 60);
@@ -329,5 +466,6 @@ window.PianoApp.Community = (function () {
     hide: hide,
     submitRecording: submitRecording,
     fetchList: fetchList,
+    _repositionNP: positionNowPlaying,
   };
 })();

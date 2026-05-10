@@ -2194,6 +2194,32 @@ body:has(.page-header) .page {
   font-weight: 500;
   letter-spacing: 0.3px;
 }
+.community-sort {
+  display: flex;
+  gap: 2px;
+  background: rgba(254, 246, 228, 0.06);
+  border-radius: 6px;
+  padding: 2px;
+}
+.community-sort-btn {
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  color: rgba(254, 246, 228, 0.4);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.community-sort-btn.active {
+  background: rgba(254, 246, 228, 0.12);
+  color: var(--warm-ivory);
+}
+.community-sort-btn:hover:not(.active) {
+  color: rgba(254, 246, 228, 0.6);
+}
 .community-close {
   width: 30px;
   height: 30px;
@@ -2343,4 +2369,95 @@ body:has(.page-header) .page {
   width: 0%;
   background: var(--accent-warm);
   transition: width 0.12s linear;
+}
+
+/* ─── Falling Notes Canvas ───────────────────── */
+.falling-notes-canvas {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+}
+
+/* ─── Now Playing Bar ────────────────────────── */
+.now-playing-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: rgba(0, 26, 72, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 12px 12px 0 0;
+  border: 1px solid rgba(254, 246, 228, 0.08);
+  border-bottom: none;
+  color: var(--warm-ivory);
+  font-family: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, bottom 0.3s ease;
+}
+.now-playing-bar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.now-playing-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.now-playing-title {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.now-playing-meta {
+  font-size: 11px;
+  color: rgba(254, 246, 228, 0.4);
+}
+.now-playing-progress {
+  width: 80px;
+  height: 3px;
+  background: rgba(254, 246, 228, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.now-playing-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent-warm);
+  transition: width 0.15s linear;
+}
+.now-playing-time {
+  font-size: 11px;
+  color: rgba(254, 246, 228, 0.4);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 36px;
+}
+.now-playing-close {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(254, 246, 228, 0.06);
+  border-radius: 50%;
+  color: rgba(254, 246, 228, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.now-playing-close:hover {
+  background: rgba(254, 246, 228, 0.12);
+  color: var(--warm-ivory);
 }

@@ -23,6 +23,10 @@ module.exports = async function handler(req, res) {
     } catch (e) {
       return res.status(500).json({ error: "Data error" });
     }
+
+    // Increment play count (fire-and-forget, non-blocking)
+    kv.incr("plays:" + id).catch(function () {});
+
     return res.status(200).json(recording);
   } catch (err) {
     console.error("Get error:", err);
