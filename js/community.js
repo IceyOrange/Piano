@@ -304,6 +304,10 @@ window.PianoApp.Community = (function () {
     if (window.PianoApp.Playback.isPlaying) {
       window.PianoApp.Playback.stop();
     }
+    // Pause canon if playing
+    if (window.PianoApp.Sequencer && window.PianoApp.Sequencer.isPlaying) {
+      window.PianoApp.Sequencer.pause();
+    }
     if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.stop();
     hideNowPlaying();
     // Reset previous button + progress bar
