@@ -2295,6 +2295,30 @@ body:has(.page-header) .page {
   color: var(--deep-navy);
   font-size: 10px;
 }
+.community-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.community-delete-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: rgba(254, 246, 228, 0.25);
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.community-delete-btn:hover {
+  color: rgba(255, 100, 100, 0.8);
+  background: rgba(255, 100, 100, 0.08);
+}
 /* Per-card playback progress: 2px sliver pinned to the bottom of the card,
    invisible until the card is the active one. Width is driven by JS. */
 .community-progress {

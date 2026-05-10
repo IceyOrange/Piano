@@ -56,6 +56,11 @@ window.PianoApp = window.PianoApp || {};
       'community.empty':       'No recordings yet. Be the first!',
       'community.error':       'Failed to load',
       'community.retry':       'Retry',
+      'community.delete':      'Delete',
+      'community.deleteConfirm': 'Enter password to delete',
+      'community.deleteWrong': 'Wrong password',
+      'community.deleteFailed':'Failed to delete',
+      'community.deleting':    'Deleting...',
     },
     zh: {
       'nav.home':              '首页',
@@ -107,6 +112,11 @@ window.PianoApp = window.PianoApp || {};
       'community.empty':       '还没有录音,来弹一段吧!',
       'community.error':       '加载失败',
       'community.retry':       '重试',
+      'community.delete':      '删除',
+      'community.deleteConfirm': '输入密码以删除',
+      'community.deleteWrong': '密码错误',
+      'community.deleteFailed':'删除失败',
+      'community.deleting':    '删除中...',
     },
   };
 

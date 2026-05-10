@@ -125,6 +125,19 @@ window.PianoApp.Community = (function () {
         togglePlay(rec.id, playBtn, card);
       });
 
+      var deleteBtn = document.createElement("button");
+      deleteBtn.className = "community-delete-btn";
+      deleteBtn.innerHTML = "&#128465;";
+      deleteBtn.setAttribute("aria-label", t("community.delete"));
+      deleteBtn.addEventListener("click", function () {
+        showDeleteDialog(rec.id, card);
+      });
+
+      var actions = document.createElement("div");
+      actions.className = "community-card-actions";
+      actions.appendChild(playBtn);
+      actions.appendChild(deleteBtn);
+
       // Per-card playback progress bar — pinned to the card's bottom edge,
       // hidden until this card is the active one.
       var progress = document.createElement("div");
@@ -134,10 +147,99 @@ window.PianoApp.Community = (function () {
       progress.appendChild(fill);
 
       card.appendChild(info);
-      card.appendChild(playBtn);
+      card.appendChild(actions);
       card.appendChild(progress);
       container.appendChild(card);
     });
+  }
+
+  function showDeleteDialog(recId, card) {
+    var overlay = document.createElement("div");
+    overlay.className = "submit-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+
+    var dialog = document.createElement("div");
+    dialog.className = "submit-dialog";
+
+    var info = document.createElement("div");
+    info.className = "submit-info";
+    info.textContent = t("community.deleteConfirm");
+
+    var pwInput = document.createElement("input");
+    pwInput.type = "password";
+    pwInput.className = "submit-name";
+    pwInput.placeholder = "Password";
+    pwInput.maxLength = 30;
+
+    var actions = document.createElement("div");
+    actions.className = "submit-actions";
+
+    var cancelBtn = document.createElement("button");
+    cancelBtn.className = "submit-btn submit-discard";
+    cancelBtn.textContent = t("submit.discard");
+    cancelBtn.addEventListener("click", function () {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    });
+
+    var confirmBtn = document.createElement("button");
+    confirmBtn.className = "submit-btn submit-share";
+    confirmBtn.textContent = t("community.delete");
+    confirmBtn.addEventListener("click", function () {
+      var pw = pwInput.value.trim();
+      if (!pw) {
+        pwInput.focus();
+        pwInput.classList.add("submit-name-error");
+        setTimeout(function () { pwInput.classList.remove("submit-name-error"); }, 1000);
+        return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = t("community.deleting");
+      fetch("/api/recordings/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recId, password: pw }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (result) {
+          if (result && result.ok) {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            if (card && card.parentNode) card.parentNode.removeChild(card);
+          } else {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = t("community.delete");
+            showDialogError(dialog, t("community.deleteWrong"));
+          }
+        })
+        .catch(function () {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = t("community.delete");
+          showDialogError(dialog, t("community.deleteFailed"));
+        });
+    });
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(confirmBtn);
+    dialog.appendChild(info);
+    dialog.appendChild(pwInput);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay && overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
+    document.body.appendChild(overlay);
+    pwInput.focus();
+  }
+
+  function showDialogError(dialog, msg) {
+    var existing = dialog.querySelector(".submit-error");
+    if (existing) existing.parentNode.removeChild(existing);
+    var errEl = document.createElement("div");
+    errEl.className = "submit-error";
+    errEl.textContent = msg;
+    dialog.appendChild(errEl);
   }
 
   function resetCardProgress(card) {
