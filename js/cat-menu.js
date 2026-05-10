@@ -798,16 +798,16 @@ window.PianoApp.CatMenu = (function () {
     shareBtn.className = "submit-btn submit-share";
     shareBtn.textContent = t("submit.share");
     shareBtn.addEventListener("click", function () {
-      var name = input.value.trim();
-      if (!name) {
-        input.focus();
-        input.classList.add("submit-name-error");
-        setTimeout(function () { input.classList.remove("submit-name-error"); }, 1000);
+      var title = titleInput.value.trim();
+      if (!title) {
+        titleInput.focus();
+        titleInput.classList.add("submit-name-error");
+        setTimeout(function () { titleInput.classList.remove("submit-name-error"); }, 1000);
         return;
       }
       shareBtn.disabled = true;
       shareBtn.textContent = t("submit.sharing");
-      var title = titleInput.value.trim() || undefined;
+      var name = input.value.trim() || undefined;
       if (window.PianoApp.Community) {
         window.PianoApp.Community.submitRecording(name, title, recordingEvents, recordingDuration)
           .then(function (result) {
@@ -847,7 +847,7 @@ window.PianoApp.CatMenu = (function () {
     });
 
     document.body.appendChild(submitEl);
-    input.focus();
+    titleInput.focus();
   }
 
   function showError(dialog, msg) {

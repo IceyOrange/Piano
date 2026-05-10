@@ -23,8 +23,8 @@ module.exports = async function handler(req, res) {
   try {
     const { name, title, ev, dur } = req.body || {};
 
-    if (!name || !sanitize(name, 30)) {
-      return res.status(400).json({ error: "Name is required" });
+    if (!title || !sanitize(title, 50)) {
+      return res.status(400).json({ error: "Track name is required" });
     }
     if (!Array.isArray(ev) || ev.length === 0) {
       return res.status(400).json({ error: "Events array is required" });
@@ -58,8 +58,8 @@ module.exports = async function handler(req, res) {
     const id = randomId();
     const recording = {
       id,
-      name: sanitize(name, 30),
-      title: sanitize(title, 50) || undefined,
+      name: sanitize(name, 30) || undefined,
+      title: sanitize(title, 50),
       ts: Date.now(),
       dur: Math.round(dur),
       ev: ev.map((e) => ({

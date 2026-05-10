@@ -103,7 +103,7 @@ window.PianoApp.Community = (function () {
 
       var nameEl = document.createElement("span");
       nameEl.className = "community-card-name";
-      nameEl.textContent = rec.title || rec.name;
+      nameEl.textContent = rec.title;
 
       var meta = document.createElement("span");
       meta.className = "community-card-meta";
@@ -111,7 +111,7 @@ window.PianoApp.Community = (function () {
       var dateStr = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
       var durStr = formatDuration(rec.dur);
       var metaParts = [];
-      if (rec.title && rec.name) metaParts.push(rec.name);
+      if (rec.name) metaParts.push(rec.name);
       metaParts.push(dateStr + "  " + durStr);
       meta.textContent = metaParts.join(" · ");
 
