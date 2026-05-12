@@ -22,8 +22,8 @@ The three sub-pages have a quiet **中 / EN** toggle in the top-right nav — pr
 - **Community** — Browse and play back recordings shared by other visitors. Sort by newest or most popular. Playback renders on the same falling-notes canvas with full particle effects.
 - **Falling notes** — When a community recording plays, notes drift down a dedicated canvas layer with gradient bars, particle trails, key-matched ripple effects, and a subtle aurora backdrop.
 - **Cat menu** — A vinyl-cursor cat sits at the top of the keyboard. Hover for a radial menu: Record, Community, Play Canon, Sheet Music source.
-- **Keyboard chords** — Number keys `1`–`7` and letters `a`–`g` map to common chords for quick harmony.
-- **Canon in D cue** — Play the right opening notes to trigger a full Canon-in-D / Beatles tribute animation with synchronized falling notes.
+- **Keyboard chords** — `1`–`7` play the white-key scale (C3–B3); hold `Shift` for the octave above (C4–B4). Letters `a`–`g` trigger major triads (e.g. `f` = F major); hold `Shift` for minor (e.g. `Shift`+`f` = F minor).
+- **Easter eggs** — Play the right opening notes to trigger the *Canon in D* tribute with synchronized falling notes. Long-press the **Experience** key (G3) for a Beatles Abbey Road-style walk animation. Long-press other labeled keys for different surprises — go explore!
 
 ## Run locally
 
@@ -143,8 +143,8 @@ Personal site. Code is here for inspiration and reference; please don't lift the
 - **社区** — 浏览其他访客分享的录音，支持按最新或最热排序。播放时会在专属画布上渲染完整的音符掉落粒子特效。
 - **掉落音符** — 社区录音播放时，音符会以渐变长条形式缓缓落下，伴随粒子拖尾、琴键涟漪与极光背景。
 - **小猫菜单** — 键盘上方的小猫使用黑胶唱片光标，悬停展开圆形菜单：录制、社区、播放卡农、曲谱出处。
-- **键盘和弦** — 数字键 `1`–`7` 与字母 `a`–`g` 映射常用和弦，便于快速弹奏和声。
-- **卡农彩蛋** — 弹奏正确的开场音符，触发完整的《卡农》/ Beatles 致敬动画，并同步掉落音符。
+- **键盘和弦** — `1`–`7` 弹奏白键音阶（C3–B3），加 `Shift` 升高八度（C4–B4）；字母 `a`–`g` 触发大三和弦（如 `f` = F 大三和弦），加 `Shift` 变为小三和弦（如 `Shift`+`f` = F 小三和弦）。
+- **彩蛋** — 弹奏正确的开场音符触发《卡农》致敬动画并同步掉落音符；长按 **Experience** 对应的 G3 琴键可看到 Beatles 风格的人行横道动画。长按其它标注琴键还有更多惊喜，快去探索吧！
 
 ## 本地运行
 
