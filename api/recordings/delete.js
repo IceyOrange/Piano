@@ -1,5 +1,7 @@
 const { kv } = require("@vercel/kv");
 
+const DELETE_PASSWORD = process.env.DELETE_PASSWORD || "piano2026";
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -20,7 +22,8 @@ module.exports = async function handler(req, res) {
 
     const recording = typeof raw === "string" ? JSON.parse(raw) : raw;
 
-    if (password !== (recording.pw || recording.title)) {
+    const expectedPw = recording.pw || recording.title;
+    if (password !== expectedPw && password !== DELETE_PASSWORD) {
       return res.status(403).json({ error: "Wrong password" });
     }
 
