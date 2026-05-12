@@ -682,11 +682,10 @@ window.PianoApp.initPiano = function () {
         window.PianoApp.updateVinylCursor = function () {
           const s = window.PianoApp.vinylCursorState;
           const show = s.catHover || s.playingCanon || s.playingCommunity;
-          const hideSystemCursor = s.catHover || s.playingCanon;
-          if (!isMobile && ohCat) ohCat.style.cursor = hideSystemCursor ? "none" : "pointer";
+          if (!isMobile && ohCat) ohCat.style.cursor = show ? "none" : "pointer";
           if (vinylCursor) vinylCursor.style.opacity = show ? "1" : "0";
           if (isMobile && show) positionVinylAtCat();
-          document.body.classList.toggle("vinyl-cursor-active", hideSystemCursor);
+          document.body.classList.toggle("vinyl-cursor-active", show);
           const svgEl = vinylCursor ? vinylCursor.querySelector("svg") : null;
           if (svgEl) {
             svgEl.style.animationPlayState = (s.playingCanon || s.playingCommunity) ? "running" : "paused";

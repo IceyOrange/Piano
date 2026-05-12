@@ -15,6 +15,7 @@ window.PianoApp.Playback = (function () {
   var startWallTime = 0;
   var onProgressCb = null;
   var onEndCb = null;
+  var sounds = [];
 
   function clearTimers() {
     timers.forEach(clearTimeout);
@@ -29,10 +30,16 @@ window.PianoApp.Playback = (function () {
     }
   }
 
+  function stopSounds() {
+    sounds.forEach(function (s) { if (s && s.stop) s.stop(); });
+    sounds = [];
+  }
+
   function stop() {
     var wasPlaying = playing;
     playing = false;
     clearTimers();
+    stopSounds();
     recording = null;
     onProgressCb = null;
     onEndCb = null;
@@ -70,13 +77,14 @@ window.PianoApp.Playback = (function () {
 
       // Audio
       noteStart = startCtxTime + ev.d / 1000;
-      window.PianoApp.playNoteMidi(
+      var sound = window.PianoApp.playNoteMidi(
         window.PianoApp.noteToMidi(ev.n),
         1400,
         noteStart,
         ev.v,
         null
       );
+      if (sound) sounds.push(sound);
 
       // Visual press
       timers.push(setTimeout(pressKey.bind(null, ev.n), ev.d));

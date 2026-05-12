@@ -61,15 +61,18 @@ window.PianoApp.FallingNotes = (function () {
 
   function measure() {
     var container = document.getElementById("piano-keyboard");
-    if (!container) return;
-    var svg = container.querySelector(".piano-svg");
-    var r = svg ? svg.getBoundingClientRect() : container.getBoundingClientRect();
-    kbL = r.left;
-    kbW = r.width;
-    kbTop = r.top;
-
-    cssW = window.innerWidth;
-    cssH = kbTop > 80 ? kbTop : window.innerHeight * 0.55;
+    if (!container) {
+      cssW = window.innerWidth;
+      cssH = window.innerHeight * 0.55;
+    } else {
+      var svg = container.querySelector(".piano-svg");
+      var r = svg ? svg.getBoundingClientRect() : container.getBoundingClientRect();
+      kbL = r.left;
+      kbW = r.width;
+      kbTop = r.top;
+      cssW = window.innerWidth;
+      cssH = kbTop > 80 ? kbTop : window.innerHeight * 0.55;
+    }
 
     var dpr = window.devicePixelRatio || 1;
     canvas.width = cssW * dpr;
@@ -221,29 +224,25 @@ window.PianoApp.FallingNotes = (function () {
     // Blob 1: warm, left-of-center
     var b1x = cx * 0.6 + Math.sin(t * 0.3) * 40;
     var b1y = cy * 0.7 + Math.cos(t * 0.25) * 30;
-    drawBlob(b1x, b1y, 200, 100, "rgba(255, 180, 100, 0.07)");
+    drawBlob(b1x, b1y, 200, 255, 180, 100, 0.07);
 
     // Blob 2: cool, right-of-center
     var b2x = cx * 1.4 + Math.cos(t * 0.35) * 50;
     var b2y = cy * 1.0 + Math.sin(t * 0.2) * 25;
-    drawBlob(b2x, b2y, 180, 90, "rgba(100, 180, 255, 0.06)");
+    drawBlob(b2x, b2y, 180, 100, 180, 255, 0.06);
 
     // Blob 3: accent, center
     var b3x = cx + Math.sin(t * 0.22) * 30;
     var b3y = cy * 1.3 + Math.cos(t * 0.28) * 20;
-    drawBlob(b3x, b3y, 140, 70, "rgba(180, 130, 255, 0.04)");
+    drawBlob(b3x, b3y, 140, 180, 130, 255, 0.04);
   }
 
-  function drawBlob(x, y, rx, ry, color) {
-    ctx.save();
-    var grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-    grad.addColorStop(0, color);
-    grad.addColorStop(1, "transparent");
+  function drawBlob(x, y, size, r, g, b, alpha) {
+    var grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+    grad.addColorStop(0, "rgba(" + r + "," + g + "," + b + "," + alpha + ")");
+    grad.addColorStop(1, "rgba(" + r + "," + g + "," + b + ",0)");
     ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    ctx.fillRect(x - size, y - size, size * 2, size * 2);
   }
 
   // ── Center vinyl disc (small, semi-transparent) ──
