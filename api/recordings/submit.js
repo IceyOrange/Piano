@@ -85,13 +85,13 @@ module.exports = async function handler(req, res) {
       await kv.set(rateKey, 1, { ex: 3600 });
     }
 
-    // Cap list at 500 entries (atomic trim)
+    // Cap list at 500 entries
     const total = await kv.zcard("rec:list");
     if (total > 500) {
       const removeCount = total - 500;
       const oldest = await kv.zrange("rec:list", 0, removeCount - 1);
       if (oldest.length > 0) {
-        await kv.zremrangebyrank("rec:list", 0, removeCount - 1);
+        await kv.zrem("rec:list", oldest);
         await Promise.all(oldest.map((id) => kv.del("rec:" + id)));
       }
     }

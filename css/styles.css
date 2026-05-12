@@ -20,13 +20,11 @@
   --accent-warm-faint: rgba(212, 165, 116, 0.22);
   --warm-beige: #F2ECE2;
   --text-dark: #1C1916;
-  --text-brown: #574D44;
   --text-muted: #8B7E73;
   --text-label: #6B5E53;
   --accent-teal: #2A7B72;
   --accent-rust: #9E6347;
   --accent-gold: #c49668;
-  --accent-gold-light: #e8c090;
   --accent-gray: #B5A899;
   --font-sans: 'Sintony', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Oranienbaum', 'Noto Serif SC', ui-serif, Georgia, serif;
@@ -347,7 +345,14 @@ img {
 }
 .key-preview-animation svg {
   display: block;
+  max-height: 35vh;
+  width: auto;
   filter: drop-shadow(0 0 6px rgba(254, 246, 227, 0.5)) drop-shadow(0 0 2px rgba(254, 246, 227, 0.3));
+}
+@media (max-height: 500px) {
+  .key-preview-animation svg {
+    max-height: 20vh;
+  }
 }
 @media (max-width: 1024px) {
   .key-preview-animation svg {
