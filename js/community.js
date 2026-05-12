@@ -382,8 +382,8 @@ window.PianoApp.Community = (function () {
       });
   }
 
-  function submitRecording(name, title, events, dur) {
-    var payload = { name: name, ev: events, dur: dur };
+  function submitRecording(name, title, events, dur, pw) {
+    var payload = { name: name, ev: events, dur: dur, pw: pw };
     if (title) payload.title = title;
     return fetch("/api/recordings/submit", {
       method: "POST",

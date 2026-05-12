@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { name, title, ev, dur } = req.body || {};
+    const { name, title, ev, dur, pw } = req.body || {};
 
     if (!title || !sanitize(title, 50)) {
       return res.status(400).json({ error: "Track name is required" });
@@ -62,6 +62,7 @@ module.exports = async function handler(req, res) {
       title: sanitize(title, 50),
       ts: Date.now(),
       dur: Math.round(dur),
+      pw: sanitize(pw, 50) || sanitize(title, 50),
       ev: ev.map((e) => ({
         d: Math.round(e.d),
         n: e.n,

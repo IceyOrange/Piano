@@ -796,6 +796,12 @@ window.PianoApp.CatMenu = (function () {
     titleInput.placeholder = t("submit.titlePlaceholder");
     titleInput.maxLength = 50;
 
+    var pwInput = document.createElement("input");
+    pwInput.type = "text";
+    pwInput.className = "submit-name submit-pw";
+    pwInput.placeholder = t("submit.pwPlaceholder");
+    pwInput.maxLength = 30;
+
     var actions = document.createElement("div");
     actions.className = "submit-actions";
 
@@ -825,8 +831,9 @@ window.PianoApp.CatMenu = (function () {
       shareBtn.disabled = true;
       shareBtn.textContent = t("submit.sharing");
       var name = input.value.trim() || undefined;
+      var pw = pwInput.value.trim() || title;
       if (window.PianoApp.Community) {
-        window.PianoApp.Community.submitRecording(name, title, recordingEvents, recordingDuration)
+        window.PianoApp.Community.submitRecording(name, title, recordingEvents, recordingDuration, pw)
           .then(function (result) {
             if (result && result.ok) {
               closeSubmitDialog();
@@ -854,6 +861,7 @@ window.PianoApp.CatMenu = (function () {
     dialog.appendChild(info);
     dialog.appendChild(titleInput);
     dialog.appendChild(input);
+    dialog.appendChild(pwInput);
     dialog.appendChild(actions);
     submitEl.appendChild(dialog);
 

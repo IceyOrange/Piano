@@ -1,7 +1,5 @@
 const { kv } = require("@vercel/kv");
 
-const DELETE_PASSWORD = process.env.DELETE_PASSWORD || "piano2026";
-
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -14,13 +12,16 @@ module.exports = async function handler(req, res) {
     if (!id || !id.startsWith("r_")) {
       return res.status(400).json({ error: "Valid recording ID required" });
     }
-    if (password !== DELETE_PASSWORD) {
-      return res.status(403).json({ error: "Wrong password" });
+
+    const raw = await kv.get("rec:" + id);
+    if (!raw) {
+      return res.status(404).json({ error: "Recording not found" });
     }
 
-    const exists = await kv.get("rec:" + id);
-    if (!exists) {
-      return res.status(404).json({ error: "Recording not found" });
+    const recording = typeof raw === "string" ? JSON.parse(raw) : raw;
+
+    if (password !== (recording.pw || recording.title)) {
+      return res.status(403).json({ error: "Wrong password" });
     }
 
     await kv.del("rec:" + id);
