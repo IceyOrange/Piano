@@ -45,6 +45,10 @@ window.PianoApp.FallingNotes = (function () {
   var kbL = 0, kbW = 0, kbTop = 0;
   var cssW = 0, cssH = 0;
 
+  // Track info for center display
+  var trackTitle = "";
+  var trackArtist = "";
+
   function buildGeo() {
     noteGeo = {};
     WHITES.forEach(function (k) {
@@ -75,13 +79,16 @@ window.PianoApp.FallingNotes = (function () {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function start(rec) {
+  function start(rec, opts) {
     if (active) stop();
     if (!rec || !rec.ev || rec.ev.length === 0) return;
 
+    trackTitle = (opts && opts.title) || "";
+    trackArtist = (opts && opts.artist) || "";
+
     canvas = document.createElement("canvas");
     canvas.className = "falling-notes-canvas";
-    canvas.style.cssText = "position:fixed;top:0;left:0;pointer-events:none;z-index:11;";
+    canvas.style.cssText = "position:fixed;top:0;left:0;pointer-events:none;z-index:1005;";
     ctx = canvas.getContext("2d");
     document.body.appendChild(canvas);
 
@@ -130,6 +137,8 @@ window.PianoApp.FallingNotes = (function () {
     canvas = null;
     ctx = null;
     bars = [];
+    trackTitle = "";
+    trackArtist = "";
   }
 
   function draw() {
@@ -141,7 +150,19 @@ window.PianoApp.FallingNotes = (function () {
     ctx.clearRect(0, 0, cssW, cssH);
 
     var fallH = cssH;
+    var cx = cssW / 2;
+    var cy = fallH * 0.4;
 
+    // ── Aurora background ──
+    drawAurora(elapsed, cx, cy, fallH);
+
+    // ── Center vinyl disc ──
+    drawVinyl(elapsed, cx, cy);
+
+    // ── Track info ──
+    drawTrackInfo(cx, cy);
+
+    // ── Falling note bars ──
     for (var i = 0; i < bars.length; i++) {
       var bar = bars[i];
       var tStart = bar.startD - elapsed;
@@ -149,8 +170,6 @@ window.PianoApp.FallingNotes = (function () {
 
       if (tEnd < -300 || tStart > LOOK_AHEAD) continue;
 
-      // y = fallH when tStart = 0 (note hits the keyboard)
-      // y = 0 when tStart = LOOK_AHEAD (note enters from top)
       var bottomY = fallH * (1 - tStart / LOOK_AHEAD);
       var topY = fallH * (1 - tEnd / LOOK_AHEAD);
 
@@ -162,25 +181,145 @@ window.PianoApp.FallingNotes = (function () {
       var x = kbL + bar.geo.x * kbW;
       var w = bar.geo.w * kbW;
 
-      // Glow layer
+      // Glow layer (wider, brighter)
+      ctx.save();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = bar.geo.black
+        ? "rgba(100, 180, 255, 0.35)"
+        : "rgba(255, 190, 100, 0.35)";
       ctx.beginPath();
       rr(ctx, x - 2, topY - 1, w + 4, h + 2, Math.min(5, (w + 4) / 2));
       ctx.fillStyle = bar.geo.black
-        ? "rgba(100, 180, 255, 0.15)"
-        : "rgba(255, 190, 100, 0.15)";
+        ? "rgba(100, 180, 255, 0.25)"
+        : "rgba(255, 190, 100, 0.25)";
       ctx.fill();
+      ctx.restore();
 
-      // Solid bar
+      // Solid bar (brighter)
       var r = Math.min(3, w / 2, h / 2);
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = bar.geo.black
+        ? "rgba(130, 200, 255, 0.4)"
+        : "rgba(255, 195, 115, 0.4)";
       ctx.beginPath();
       rr(ctx, x, topY, w, h, r);
       ctx.fillStyle = bar.geo.black
-        ? "rgba(130, 200, 255, 0.6)"
-        : "rgba(255, 195, 115, 0.65)";
+        ? "rgba(130, 200, 255, 0.85)"
+        : "rgba(255, 195, 115, 0.85)";
       ctx.fill();
+      ctx.restore();
     }
 
     rafId = requestAnimationFrame(draw);
+  }
+
+  // ── Aurora: soft drifting color blobs ──
+  function drawAurora(elapsed, cx, cy, fallH) {
+    var t = elapsed / 1000;
+
+    // Blob 1: warm, left-of-center
+    var b1x = cx * 0.6 + Math.sin(t * 0.3) * 40;
+    var b1y = cy * 0.7 + Math.cos(t * 0.25) * 30;
+    drawBlob(b1x, b1y, 200, 100, "rgba(255, 180, 100, 0.07)");
+
+    // Blob 2: cool, right-of-center
+    var b2x = cx * 1.4 + Math.cos(t * 0.35) * 50;
+    var b2y = cy * 1.0 + Math.sin(t * 0.2) * 25;
+    drawBlob(b2x, b2y, 180, 90, "rgba(100, 180, 255, 0.06)");
+
+    // Blob 3: accent, center
+    var b3x = cx + Math.sin(t * 0.22) * 30;
+    var b3y = cy * 1.3 + Math.cos(t * 0.28) * 20;
+    drawBlob(b3x, b3y, 140, 70, "rgba(180, 130, 255, 0.04)");
+  }
+
+  function drawBlob(x, y, rx, ry, color) {
+    ctx.save();
+    var grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, "transparent");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── Center vinyl disc (small, semi-transparent) ──
+  function drawVinyl(elapsed, cx, cy) {
+    var radius = 28;
+    var angle = (elapsed / 1000) * 1.2; // slow rotation
+
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(245, 240, 230, 0.25)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Grooves
+    for (var g = 8; g < radius - 2; g += 4) {
+      ctx.beginPath();
+      ctx.arc(0, 0, g, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(60, 60, 60, 0.5)";
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+
+    // Center label
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "#F5F0E6";
+    ctx.fill();
+
+    // Reflection highlight
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.7, -0.4, 0.8);
+    ctx.strokeStyle = "rgba(245, 240, 230, 0.06)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Outer glow ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(245, 240, 230, 0.06)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── Track info below vinyl ──
+  function drawTrackInfo(cx, cy) {
+    if (!trackTitle && !trackArtist) return;
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    if (trackTitle) {
+      ctx.font = "600 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "rgba(245, 240, 230, 0.75)";
+      ctx.fillText(trackTitle, cx, cy + 40);
+    }
+
+    if (trackArtist) {
+      ctx.font = "400 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillStyle = "rgba(245, 240, 230, 0.35)";
+      ctx.fillText(trackArtist, cx, cy + 58);
+    }
+
+    ctx.restore();
   }
 
   function rr(c, x, y, w, h, r) {

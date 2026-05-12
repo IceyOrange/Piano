@@ -830,6 +830,7 @@ window.PianoApp.CatMenu = (function () {
           .then(function (result) {
             if (result && result.ok) {
               closeSubmitDialog();
+              showToast(t("toast.shared") + " " + title);
               recordingEvents = null;
               recordingDuration = 0;
               mode = "idle";
@@ -983,6 +984,22 @@ window.PianoApp.CatMenu = (function () {
     setTimeout(function () {
       if (el.parentNode) el.parentNode.removeChild(el);
     }, ms || 200);
+  }
+
+  function showToast(msg) {
+    var el = document.createElement("div");
+    el.className = "toast-notification";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(function () {
+      el.classList.add("toast-visible");
+    });
+    setTimeout(function () {
+      el.classList.remove("toast-visible");
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 350);
+    }, 2000);
   }
 
   return {

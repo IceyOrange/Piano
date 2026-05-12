@@ -333,7 +333,10 @@ window.PianoApp.Community = (function () {
     fetch("/api/recordings/get?id=" + encodeURIComponent(id))
       .then(function (r) { return r.json(); })
       .then(function (rec) {
-        if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.start(rec);
+        if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.start(rec, {
+              title: rec.title || "",
+              artist: rec.name || ""
+            });
         showNowPlaying(
           rec.title || "",
           rec.name || "",

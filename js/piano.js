@@ -640,7 +640,7 @@ window.PianoApp.initPiano = function () {
           width: 44px;
           height: 44px;
           pointer-events: none;
-          z-index: 1000;
+          z-index: 1010;
           opacity: 0;
           transition: opacity 0.15s ease;
           ${isMobile ? "transform: translate(0, 0);" : "transform: translate(-50%, -50%);"}
@@ -682,10 +682,11 @@ window.PianoApp.initPiano = function () {
         window.PianoApp.updateVinylCursor = function () {
           const s = window.PianoApp.vinylCursorState;
           const show = s.catHover || s.playingCanon || s.playingCommunity;
-          if (!isMobile && ohCat) ohCat.style.cursor = show ? "none" : "pointer";
+          const hideSystemCursor = s.catHover || s.playingCanon;
+          if (!isMobile && ohCat) ohCat.style.cursor = hideSystemCursor ? "none" : "pointer";
           if (vinylCursor) vinylCursor.style.opacity = show ? "1" : "0";
           if (isMobile && show) positionVinylAtCat();
-          document.body.classList.toggle("vinyl-cursor-active", show);
+          document.body.classList.toggle("vinyl-cursor-active", hideSystemCursor);
           const svgEl = vinylCursor ? vinylCursor.querySelector("svg") : null;
           if (svgEl) {
             svgEl.style.animationPlayState = (s.playingCanon || s.playingCommunity) ? "running" : "paused";
