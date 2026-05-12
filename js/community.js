@@ -7,7 +7,6 @@ window.PianoApp.Community = (function () {
   var nowPlayingBar = null;
   var npProgressFill = null;
   var npTimeEl = null;
-  var npProgressTimer = null;
 
   function t(key) {
     return (window.PianoApp.i18n && window.PianoApp.i18n.t)
@@ -453,7 +452,6 @@ window.PianoApp.Community = (function () {
   }
 
   function hideNowPlaying() {
-    if (npProgressTimer) { clearInterval(npProgressTimer); npProgressTimer = null; }
     if (nowPlayingBar && nowPlayingBar.parentNode) {
       nowPlayingBar.parentNode.removeChild(nowPlayingBar);
     }

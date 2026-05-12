@@ -1,4 +1,5 @@
 const { kv } = require("@vercel/kv");
+const crypto = require("crypto");
 
 function sanitize(str, maxLen) {
   return String(str || "")
@@ -8,16 +9,17 @@ function sanitize(str, maxLen) {
 }
 
 function randomId() {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let id = "r_";
-  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
-  return id;
+  return "r_" + crypto.randomBytes(6).toString("base64url").slice(0, 8);
 }
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!req.headers["content-type"] || !req.headers["content-type"].includes("application/json")) {
+    return res.status(415).json({ error: "Content-Type must be application/json" });
   }
 
   try {
@@ -40,15 +42,17 @@ module.exports = async function handler(req, res) {
     for (let i = 0; i < ev.length; i++) {
       const e = ev[i];
       if (typeof e.d !== "number" || typeof e.n !== "string" || typeof e.v !== "number") {
-        return res.status(400).json({ error: "Invalid event at index " + i });
+        return res.status(400).json({ error: "Invalid event format" });
       }
       if (e.d < 0 || e.d > 381000) {
-        return res.status(400).json({ error: "Event delta out of range at index " + i });
+        return res.status(400).json({ error: "Event delta out of range" });
       }
     }
 
     // Rate limiting: 5 submissions per hour per IP
-    const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown";
+    // Use the last value in x-forwarded-for (set by Vercel's edge, not client)
+    const forwarded = (req.headers["x-forwarded-for"] || "");
+    const ip = forwarded.split(",").pop().trim() || req.headers["x-real-ip"] || "unknown";
     const rateKey = "rl:" + ip;
     const count = await kv.get(rateKey);
     if (count && parseInt(count) >= 5) {
@@ -81,17 +85,14 @@ module.exports = async function handler(req, res) {
       await kv.set(rateKey, 1, { ex: 3600 });
     }
 
-    // Cap list at 500 entries (remove oldest)
+    // Cap list at 500 entries (atomic trim)
     const total = await kv.zcard("rec:list");
     if (total > 500) {
       const removeCount = total - 500;
       const oldest = await kv.zrange("rec:list", 0, removeCount - 1);
       if (oldest.length > 0) {
-        await kv.zrem("rec:list", oldest);
-        // Clean up individual keys
-        await Promise.all(
-          oldest.map((id) => kv.del("rec:" + id))
-        );
+        await kv.zremrangebyrank("rec:list", 0, removeCount - 1);
+        await Promise.all(oldest.map((id) => kv.del("rec:" + id)));
       }
     }
 

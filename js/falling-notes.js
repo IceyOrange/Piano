@@ -161,7 +161,7 @@ window.PianoApp.FallingNotes = (function () {
           break;
         }
       }
-      bars.push({ startD: ev.d, endD: endD, geo: geo, note: ev.n });
+      bars.push({ startD: ev.d, endD: endD, geo: geo, note: ev.n, hitTriggered: false });
     }
 
     active = true;

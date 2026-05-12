@@ -584,7 +584,7 @@ window.PianoApp.initPiano = function () {
         // directly — that way Tab→Enter users get the same set of options
         // (record / community / canon) that mouse hover reveals.
         ohCat.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             if (window.PianoApp.CatMenu && window.PianoApp.CatMenu.openMenuKeyboard) {
               window.PianoApp.CatMenu.openMenuKeyboard();

@@ -1,11 +1,15 @@
 const { kv } = require("@vercel/kv");
 
-const DELETE_PASSWORD = process.env.DELETE_PASSWORD || "piano2026";
+const DELETE_PASSWORD = process.env.DELETE_PASSWORD || null;
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!req.headers["content-type"] || !req.headers["content-type"].includes("application/json")) {
+    return res.status(415).json({ error: "Content-Type must be application/json" });
   }
 
   try {
@@ -23,7 +27,7 @@ module.exports = async function handler(req, res) {
     const recording = typeof raw === "string" ? JSON.parse(raw) : raw;
 
     const expectedPw = recording.pw || recording.title;
-    if (password !== expectedPw && password !== DELETE_PASSWORD) {
+    if (password !== expectedPw && !(DELETE_PASSWORD && password === DELETE_PASSWORD)) {
       return res.status(403).json({ error: "Wrong password" });
     }
 

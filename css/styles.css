@@ -18,6 +18,16 @@
   --accent-warm: #D4A574;
   --accent-warm-dim: rgba(212, 165, 116, 0.5);
   --accent-warm-faint: rgba(212, 165, 116, 0.22);
+  --warm-beige: #F2ECE2;
+  --text-dark: #1C1916;
+  --text-brown: #574D44;
+  --text-muted: #8B7E73;
+  --text-label: #6B5E53;
+  --accent-teal: #2A7B72;
+  --accent-rust: #9E6347;
+  --accent-gold: #c49668;
+  --accent-gold-light: #e8c090;
+  --accent-gray: #B5A899;
   --font-sans: 'Sintony', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Oranienbaum', 'Noto Serif SC', ui-serif, Georgia, serif;
   --font-display: 'Oranienbaum', 'Noto Serif SC', ui-serif, Georgia, serif;
@@ -46,10 +56,10 @@ body {
 
 /* Sub-page body backgrounds eliminate flash during page load */
 body:has(.page-warm) {
-  background: #F2ECE2;
+  background: var(--warm-beige);
 }
 body:has(.experience-ariel) {
-  background: #F2ECE2;
+  background: var(--warm-beige);
 }
 
 a {
@@ -361,7 +371,7 @@ img {
   letter-spacing: -1px;
   line-height: 1.2;
   margin-bottom: 0;
-  color: #6B5E53;
+  color: var(--text-label);
   text-align: left;
   position: relative;
   z-index: 10;
@@ -1539,7 +1549,7 @@ body.vinyl-cursor-active * {
   left: 0;
   right: 0;
   z-index: 90;
-  background: #F2ECE2;
+  background: var(--warm-beige);
 }
 
 /* Push page content down to avoid being hidden under fixed header */
@@ -1574,25 +1584,25 @@ body:has(.page-header) .page {
 .page-nav a {
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  color: #8B7E73;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.2s ease;
   white-space: nowrap;
 }
 
 .page-nav a:hover {
-  color: #2A7B72;
+  color: var(--accent-teal);
 }
 
 .page-nav a[aria-current="page"] {
   font-weight: 600;
-  color: #1C1916;
+  color: var(--text-dark);
   cursor: default;
 }
 
 /* Experience page nav hover override */
 .experience-ariel .page-nav a:hover {
-  color: #9E6347;
+  color: var(--accent-rust);
 }
 
 /* Language toggle: a quiet utility that reads as part of the nav.
@@ -1600,7 +1610,7 @@ body:has(.page-header) .page {
 .lang-toggle {
   font-family: var(--font-sans);
   font-size: 0.8125rem;
-  color: #B5A899;
+  color: var(--accent-gray);
   background: transparent;
   border: 0;
   padding: 0;
@@ -1615,14 +1625,14 @@ body:has(.page-header) .page {
 
 .lang-toggle:hover,
 .lang-toggle:focus-visible {
-  color: #2A7B72;
+  color: var(--accent-teal);
   opacity: 1;
   outline: none;
 }
 
 .experience-ariel .lang-toggle:hover,
 .experience-ariel .lang-toggle:focus-visible {
-  color: #9E6347;
+  color: var(--accent-rust);
 }
 
 /* Mobile */
@@ -2078,7 +2088,7 @@ body:has(.page-header) .page {
   font-weight: 600;
 }
 .playback-share:hover {
-  background: #c49668;
+  background: var(--accent-gold);
   transform: scale(1.04);
 }
 
@@ -2201,7 +2211,7 @@ body:has(.page-header) .page {
   font-weight: 600;
 }
 .submit-share:hover {
-  background: #c49668;
+  background: var(--accent-gold);
 }
 .submit-error {
   font-size: 13px;
