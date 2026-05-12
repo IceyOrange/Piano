@@ -8,13 +8,22 @@
 
 ## Pages
 
-- **Home** (`index.html`) — A two-octave piano keyboard (F2–E4). Click or tap to play. A handful of labeled keys long-press to jump into a sub-page; play the right cue and a tribute to *Canon in D* / The Beatles unfolds.
+- **Home** (`index.html`) — A two-octave piano keyboard (F2–E4). Click, tap, or use keyboard keys (1–7, a–g for chords) to play. A handful of labeled keys long-press to jump into a sub-page. Hover the cat to record, share, or browse community recordings. Play the right cue and a tribute to *Canon in D* / The Beatles unfolds.
 - **Portfolio** (`portfolio.html`) — A magazine-style project showcase. Currently: this site, and *Blue Sky & White Cloud*.
 - **Experience** (`experience.html`) — A Marauder's-Map-style timeline drawn over a stylized China map.
 - **About** (`about.html`) — A typewriter intro, a handwritten line, a short bio, social links.
 - **Blue Sky & White Cloud** (`BlueSkyWhiteCloud.html`) — A scroll from daylight into a starry night; click meteors at night to summon a falling-star storm and trace constellations.
 
 The three sub-pages have a quiet **中 / EN** toggle in the top-right nav — preference persists via `localStorage`.
+
+## Features
+
+- **Recording** — Press the cat or hit `R` to start recording. Play freely, then preview, discard, or share. Each recording can be protected with a delete password (defaults to the track name).
+- **Community** — Browse and play back recordings shared by other visitors. Sort by newest or most popular. Playback renders on the same falling-notes canvas with full particle effects.
+- **Falling notes** — When a community recording plays, notes drift down a dedicated canvas layer with gradient bars, particle trails, key-matched ripple effects, and a subtle aurora backdrop.
+- **Cat menu** — A vinyl-cursor cat sits at the top of the keyboard. Hover for a radial menu: Record, Community, Play Canon, Sheet Music source.
+- **Keyboard chords** — Number keys `1`–`7` and letters `a`–`g` map to common chords for quick harmony.
+- **Canon in D cue** — Play the right opening notes to trigger a full Canon-in-D / Beatles tribute animation with synchronized falling notes.
 
 ## Run locally
 
@@ -48,6 +57,18 @@ js/
   sequencer.js             Plays canon_data through audio.js
   pages.js                 Renders portfolio, experience, about (lang-aware)
   transitions.js           Page-exit overlay + intercepted nav links
+  recorder.js              Recording session, preview, submit flow
+  playback.js              Community recording playback engine
+  falling-notes.js         Canvas particle effects for note visualization
+  cat-menu.js              Vinyl-cursor cat + radial menu
+  community.js             Community panel, recording list, sort/filter
+
+api/                       Vercel serverless functions
+  recordings/
+    list.js                GET — paginated recording list with like counts
+    submit.js              POST — validate and store a new recording
+    delete.js              POST — delete a recording (password-protected)
+    like.js                POST — increment like count
 
 assets/
   images/                  Photos, SVGs, favicon, BlueSkyWhiteCloud textures
@@ -58,6 +79,17 @@ assets/
 scripts/
   parse_mscz.py            Converts Canon_in_D.mscz → canon_data.js
 ```
+
+## Backend API (Vercel)
+
+Four serverless endpoints power the community feature, backed by Vercel KV:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/recordings/list` | GET | Paginated list (`?page=` & `?sort=new\|hot`), returns id, title, author, createdAt, likes |
+| `/api/recordings/submit` | POST | Stores a recording after validation (length ≤ 6:21, notes ≤ 6000, rate-limited) |
+| `/api/recordings/delete` | POST | Deletes a recording if the provided password matches the per-recording password or the admin password |
+| `/api/recordings/like` | POST | Increments the like counter for a recording |
 
 ## Type & motion notes
 
@@ -97,13 +129,22 @@ Personal site. Code is here for inspiration and reference; please don't lift the
 
 ## 页面
 
-- **首页** (`index.html`) — 两个八度的钢琴键盘 (F2–E4)，点击或触摸即可弹奏。长按特定琴键可跳转到子页面；弹奏特定音符将触发致敬《卡农》与 The Beatles 的动画。
+- **首页** (`index.html`) — 两个八度的钢琴键盘 (F2–E4)，点击或触摸即可弹奏，键盘 `1`–`7`、`a`–`g` 可快速弹奏和弦。长按特定琴键可跳转到子页面；悬停小猫可录制、分享或浏览社区录音。弹奏特定音符将触发致敬《卡农》与 The Beatles 的动画。
 - **作品集** (`portfolio.html`) — 杂志排版风格的项目展示，目前收录本站与《蓝天白云》。
 - **足迹** (`experience.html`) — 活点地图风格的履历时间线，绘制在抽象的中国地图上。
 - **关于我** (`about.html`) — 打字机自述、手写体签名、简短介绍与社交链接。
 - **蓝天白云** (`BlueSkyWhiteCloud.html`) — 向下滚动，从白天滑入星空；夜晚点击流星触发漫天星雨，探索星座连线。
 
 三个子页面右上角均设有 **中 / EN** 语言切换按钮，选择会通过 `localStorage` 持久保存。
+
+## 功能
+
+- **录制** — 点击小猫或按 `R` 键开始录制，自由弹奏后支持试听、丢弃或分享。每段录音可设置删除密码，默认以曲目名作为密码。
+- **社区** — 浏览其他访客分享的录音，支持按最新或最热排序。播放时会在专属画布上渲染完整的音符掉落粒子特效。
+- **掉落音符** — 社区录音播放时，音符会以渐变长条形式缓缓落下，伴随粒子拖尾、琴键涟漪与极光背景。
+- **小猫菜单** — 键盘上方的小猫使用黑胶唱片光标，悬停展开圆形菜单：录制、社区、播放卡农、曲谱出处。
+- **键盘和弦** — 数字键 `1`–`7` 与字母 `a`–`g` 映射常用和弦，便于快速弹奏和声。
+- **卡农彩蛋** — 弹奏正确的开场音符，触发完整的《卡农》/ Beatles 致敬动画，并同步掉落音符。
 
 ## 本地运行
 
@@ -137,6 +178,18 @@ js/
   sequencer.js             卡农音序器
   pages.js                 子页面渲染（语言感知）
   transitions.js           页面过渡动画
+  recorder.js              录制会话、试听与提交流程
+  playback.js              社区录音播放引擎
+  falling-notes.js         音符可视化 Canvas 粒子特效
+  cat-menu.js              黑胶光标小猫与圆形菜单
+  community.js             社区面板、录音列表、排序/筛选
+
+api/                       Vercel 无服务器函数
+  recordings/
+    list.js                GET — 分页录音列表，含点赞数
+    submit.js              POST — 校验并存储新录音
+    delete.js              POST — 删除录音（需密码）
+    like.js                POST — 点赞计数
 
 assets/
   images/                  图片与纹理
@@ -147,6 +200,17 @@ assets/
 scripts/
   parse_mscz.py            解析脚本
 ```
+
+## 后端 API（Vercel）
+
+社区功能由四个无服务器接口支持，数据持久化使用 Vercel KV：
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/recordings/list` | GET | 分页列表（`?page=` & `?sort=new\|hot`），返回 id、title、author、createdAt、likes |
+| `/api/recordings/submit` | POST | 校验后存储录音（时长 ≤ 6:21、音符 ≤ 6000、带速率限制） |
+| `/api/recordings/delete` | POST | 删除录音，密码需匹配录音专属密码或管理员密码 |
+| `/api/recordings/like` | POST | 为录音点赞 |
 
 ## 字体与动效
 
