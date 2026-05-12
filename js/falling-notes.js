@@ -62,10 +62,10 @@ window.PianoApp.FallingNotes = (function () {
   var numBgStars = 60;
 
   // Colors
-  var WHITE_KEY_COLOR = { r: 255, g: 200, b: 120 };
-  var BLACK_KEY_COLOR = { r: 120, g: 200, b: 255 };
-  var WHITE_KEY_GLOW = "rgba(255, 200, 120, 0.4)";
-  var BLACK_KEY_GLOW = "rgba(120, 200, 255, 0.4)";
+  var WHITE_KEY_COLOR = { r: 228, g: 195, b: 148 };
+  var BLACK_KEY_COLOR = { r: 195, g: 210, b: 230 };
+  var WHITE_KEY_GLOW = "rgba(228, 195, 148, 0.35)";
+  var BLACK_KEY_GLOW = "rgba(195, 210, 230, 0.3)";
 
   function buildGeo() {
     noteGeo = {};
@@ -368,28 +368,28 @@ window.PianoApp.FallingNotes = (function () {
       ctx.beginPath();
       rr(ctx, x - 1, topY - 1, w + 2, h + 2, r + 1);
       ctx.fillStyle = isBlack
-        ? "rgba(120, 200, 255, 0.15)"
-        : "rgba(255, 200, 120, 0.15)";
+        ? "rgba(195, 210, 230, 0.15)"
+        : "rgba(228, 195, 148, 0.15)";
       ctx.fill();
       ctx.restore();
 
       // Main bar body with gradient
       var grad = ctx.createLinearGradient(x, topY, x, bottomY);
       if (isBlack) {
-        grad.addColorStop(0, "rgba(140, 210, 255, 0.75)");
-        grad.addColorStop(0.5, "rgba(120, 200, 255, 0.9)");
-        grad.addColorStop(1, "rgba(100, 180, 240, 0.7)");
+        grad.addColorStop(0, "rgba(210, 222, 238, 0.75)");
+        grad.addColorStop(0.5, "rgba(195, 210, 230, 0.9)");
+        grad.addColorStop(1, "rgba(175, 195, 220, 0.7)");
       } else {
-        grad.addColorStop(0, "rgba(255, 210, 140, 0.75)");
-        grad.addColorStop(0.5, "rgba(255, 200, 120, 0.9)");
-        grad.addColorStop(1, "rgba(240, 185, 100, 0.7)");
+        grad.addColorStop(0, "rgba(240, 212, 170, 0.75)");
+        grad.addColorStop(0.5, "rgba(228, 195, 148, 0.9)");
+        grad.addColorStop(1, "rgba(210, 180, 130, 0.7)");
       }
 
       ctx.save();
       ctx.shadowBlur = 10;
       ctx.shadowColor = isBlack
-        ? "rgba(120, 200, 255, 0.35)"
-        : "rgba(255, 200, 120, 0.35)";
+        ? "rgba(195, 210, 230, 0.3)"
+        : "rgba(228, 195, 148, 0.3)";
       ctx.beginPath();
       rr(ctx, x, topY, w, h, r);
       ctx.fillStyle = grad;
@@ -434,22 +434,22 @@ window.PianoApp.FallingNotes = (function () {
     // Blob 1: warm, left-of-center
     var b1x = cx * 0.55 + Math.sin(t * 0.25) * 50;
     var b1y = cy * 0.6 + Math.cos(t * 0.2) * 35;
-    drawBlob(b1x, b1y, 280, 255, 180, 100, 0.06);
+    drawBlob(b1x, b1y, 280, 230, 190, 140, 0.06);
 
     // Blob 2: cool, right-of-center
     var b2x = cx * 1.45 + Math.cos(t * 0.3) * 60;
     var b2y = cy * 0.9 + Math.sin(t * 0.18) * 30;
-    drawBlob(b2x, b2y, 260, 100, 180, 255, 0.05);
+    drawBlob(b2x, b2y, 260, 170, 190, 220, 0.05);
 
     // Blob 3: accent, center-bottom
     var b3x = cx + Math.sin(t * 0.2) * 40;
     var b3y = cy * 1.4 + Math.cos(t * 0.25) * 25;
-    drawBlob(b3x, b3y, 200, 160, 200, 255, 0.04);
+    drawBlob(b3x, b3y, 200, 180, 190, 210, 0.04);
 
     // Blob 4: subtle warm accent
     var b4x = cx * 0.8 + Math.cos(t * 0.15) * 30;
     var b4y = cy * 0.5 + Math.sin(t * 0.22) * 20;
-    drawBlob(b4x, b4y, 180, 255, 160, 120, 0.035);
+    drawBlob(b4x, b4y, 180, 230, 195, 155, 0.035);
   }
 
   function drawBlob(x, y, size, r, g, b, alpha) {
