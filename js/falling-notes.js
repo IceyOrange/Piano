@@ -159,12 +159,6 @@ window.PianoApp.FallingNotes = (function () {
     // ── Aurora background ──
     drawAurora(elapsed, cx, cy, fallH);
 
-    // ── Center vinyl disc ──
-    drawVinyl(elapsed, cx, cy);
-
-    // ── Track info ──
-    drawTrackInfo(cx, cy);
-
     // ── Falling note bars ──
     for (var i = 0; i < bars.length; i++) {
       var bar = bars[i];
@@ -245,81 +239,6 @@ window.PianoApp.FallingNotes = (function () {
     ctx.fillRect(x - size, y - size, size * 2, size * 2);
   }
 
-  // ── Center vinyl disc (small, semi-transparent) ──
-  function drawVinyl(elapsed, cx, cy) {
-    var radius = 28;
-    var angle = (elapsed / 1000) * 1.2; // slow rotation
-
-    ctx.save();
-    ctx.globalAlpha = 0.7;
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-
-    // Outer ring
-    ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(245, 240, 230, 0.25)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Grooves
-    for (var g = 8; g < radius - 2; g += 4) {
-      ctx.beginPath();
-      ctx.arc(0, 0, g, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(60, 60, 60, 0.5)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    }
-
-    // Center label
-    ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, Math.PI * 2);
-    ctx.fillStyle = "#F5F0E6";
-    ctx.fill();
-
-    // Reflection highlight
-    ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.7, -0.4, 0.8);
-    ctx.strokeStyle = "rgba(245, 240, 230, 0.06)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.restore();
-
-    // Outer glow ring
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius + 6, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(245, 240, 230, 0.06)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // ── Track info below vinyl ──
-  function drawTrackInfo(cx, cy) {
-    if (!trackTitle && !trackArtist) return;
-
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-
-    if (trackTitle) {
-      ctx.font = "600 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-      ctx.fillStyle = "rgba(245, 240, 230, 0.75)";
-      ctx.fillText(trackTitle, cx, cy + 40);
-    }
-
-    if (trackArtist) {
-      ctx.font = "400 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-      ctx.fillStyle = "rgba(245, 240, 230, 0.35)";
-      ctx.fillText(trackArtist, cx, cy + 58);
-    }
-
-    ctx.restore();
-  }
 
   function rr(c, x, y, w, h, r) {
     if (r < 0) r = 0;
