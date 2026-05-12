@@ -130,9 +130,10 @@ window.PianoApp.Community = (function () {
 
   function renderList(container, recordings) {
     container.innerHTML = "";
-    recordings.forEach(function (rec) {
+    recordings.forEach(function (rec, index) {
       var card = document.createElement("div");
       card.className = "community-card";
+      card.style.animationDelay = (index * 0.04) + "s";
       card.setAttribute("data-id", rec.id);
 
       var info = document.createElement("div");

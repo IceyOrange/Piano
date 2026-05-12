@@ -45,9 +45,27 @@ window.PianoApp.FallingNotes = (function () {
   var kbL = 0, kbW = 0, kbTop = 0;
   var cssW = 0, cssH = 0;
 
-  // Track info for center display
-  var trackTitle = "";
-  var trackArtist = "";
+  // ── Particle System ──────────────────────────
+  var particles = [];
+  var maxParticles = 180;
+  var particlePool = [];
+  var poolIndex = 0;
+
+  // ── Hit Effects ──────────────────────────────
+  var hitEffects = [];
+  var maxHitEffects = 40;
+  var hitPool = [];
+  var hitPoolIndex = 0;
+
+  // ── Background Stars ─────────────────────────
+  var bgStars = [];
+  var numBgStars = 60;
+
+  // Colors
+  var WHITE_KEY_COLOR = { r: 255, g: 200, b: 120 };
+  var BLACK_KEY_COLOR = { r: 120, g: 200, b: 255 };
+  var WHITE_KEY_GLOW = "rgba(255, 200, 120, 0.4)";
+  var BLACK_KEY_GLOW = "rgba(120, 200, 255, 0.4)";
 
   function buildGeo() {
     noteGeo = {};
@@ -57,6 +75,37 @@ window.PianoApp.FallingNotes = (function () {
     BLACKS.forEach(function (k) {
       noteGeo[k.note] = { x: (k.cx - k.w / 2) / SVG_W, w: k.w / SVG_W, black: true };
     });
+  }
+
+  function initPools() {
+    particlePool = [];
+    for (var i = 0; i < maxParticles; i++) {
+      particlePool.push({
+        x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0,
+        size: 0, color: null, alpha: 0, active: false
+      });
+    }
+    hitPool = [];
+    for (var i = 0; i < maxHitEffects; i++) {
+      hitPool.push({
+        x: 0, y: 0, life: 0, maxLife: 0,
+        radius: 0, color: null, active: false
+      });
+    }
+  }
+
+  function initBgStars() {
+    bgStars = [];
+    for (var i = 0; i < numBgStars; i++) {
+      bgStars.push({
+        x: Math.random(),
+        y: Math.random(),
+        size: 0.5 + Math.random() * 1.5,
+        twinkleSpeed: 0.3 + Math.random() * 1.5,
+        twinkleOffset: Math.random() * Math.PI * 2,
+        alphaBase: 0.1 + Math.random() * 0.25
+      });
+    }
   }
 
   function measure() {
@@ -86,9 +135,6 @@ window.PianoApp.FallingNotes = (function () {
     if (active) stop();
     if (!rec || !rec.ev || rec.ev.length === 0) return;
 
-    trackTitle = (opts && opts.title) || "";
-    trackArtist = (opts && opts.artist) || "";
-
     canvas = document.createElement("canvas");
     canvas.className = "falling-notes-canvas";
     canvas.style.cssText = "position:fixed;top:0;left:0;pointer-events:none;z-index:1005;";
@@ -96,6 +142,8 @@ window.PianoApp.FallingNotes = (function () {
     document.body.appendChild(canvas);
 
     measure();
+    initPools();
+    initBgStars();
 
     // Pre-compute note bars
     bars = [];
@@ -113,7 +161,7 @@ window.PianoApp.FallingNotes = (function () {
           break;
         }
       }
-      bars.push({ startD: ev.d, endD: endD, geo: geo });
+      bars.push({ startD: ev.d, endD: endD, geo: geo, note: ev.n });
     }
 
     active = true;
@@ -121,7 +169,6 @@ window.PianoApp.FallingNotes = (function () {
 
     resizeHandler = function () {
       if (active) measure();
-      // Let community.js know to reposition its now-playing bar
       if (window.PianoApp.Community && window.PianoApp.Community._repositionNP) {
         window.PianoApp.Community._repositionNP();
       }
@@ -140,8 +187,115 @@ window.PianoApp.FallingNotes = (function () {
     canvas = null;
     ctx = null;
     bars = [];
-    trackTitle = "";
-    trackArtist = "";
+    particles = [];
+    hitEffects = [];
+  }
+
+  // ── Particle helpers ─────────────────────────
+  function spawnParticle(x, y, color, isBlack) {
+    var p = particlePool[poolIndex];
+    poolIndex = (poolIndex + 1) % maxParticles;
+
+    p.x = x;
+    p.y = y;
+    var angle = (Math.random() - 0.5) * Math.PI;
+    var speed = 0.3 + Math.random() * 1.2;
+    p.vx = Math.sin(angle) * speed;
+    p.vy = Math.cos(angle) * speed * 0.5 - 0.5;
+    p.maxLife = 20 + Math.random() * 30;
+    p.life = p.maxLife;
+    p.size = 1 + Math.random() * 2.5;
+    p.color = isBlack ? BLACK_KEY_COLOR : WHITE_KEY_COLOR;
+    p.active = true;
+  }
+
+  function spawnHitEffect(x, y, isBlack) {
+    var h = hitPool[hitPoolIndex];
+    hitPoolIndex = (hitPoolIndex + 1) % maxHitEffects;
+
+    h.x = x;
+    h.y = y;
+    h.maxLife = 25 + Math.random() * 15;
+    h.life = h.maxLife;
+    h.radius = 4 + Math.random() * 8;
+    h.color = isBlack ? BLACK_KEY_COLOR : WHITE_KEY_COLOR;
+    h.active = true;
+  }
+
+  function updateAndDrawParticles() {
+    for (var i = 0; i < maxParticles; i++) {
+      var p = particlePool[i];
+      if (!p.active) continue;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.02;
+      p.life--;
+
+      if (p.life <= 0) {
+        p.active = false;
+        continue;
+      }
+
+      var progress = 1 - p.life / p.maxLife;
+      var alpha = (1 - progress * progress) * 0.6;
+      var size = p.size * (1 - progress * 0.5);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(" + p.color.r + "," + p.color.g + "," + p.color.b + "," + alpha + ")";
+      ctx.fill();
+    }
+  }
+
+  function updateAndDrawHitEffects() {
+    for (var i = 0; i < maxHitEffects; i++) {
+      var h = hitPool[i];
+      if (!h.active) continue;
+
+      h.life--;
+      if (h.life <= 0) {
+        h.active = false;
+        continue;
+      }
+
+      var progress = 1 - h.life / h.maxLife;
+      var alpha = (1 - progress) * 0.5;
+      var radius = h.radius + progress * 25;
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(" + h.color.r + "," + h.color.g + "," + h.color.b + "," + alpha * 0.4 + ")";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Inner glow
+      if (progress < 0.3) {
+        var innerAlpha = (1 - progress / 0.3) * 0.3;
+        var grad = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, radius * 0.6);
+        grad.addColorStop(0, "rgba(" + h.color.r + "," + h.color.g + "," + h.color.b + "," + innerAlpha + ")");
+        grad.addColorStop(1, "rgba(" + h.color.r + "," + h.color.g + "," + h.color.b + ",0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(h.x - radius, h.y - radius, radius * 2, radius * 2);
+      }
+    }
+  }
+
+  function drawBgStars(elapsed) {
+    var t = elapsed / 1000;
+    for (var i = 0; i < numBgStars; i++) {
+      var s = bgStars[i];
+      var twinkle = Math.sin(t * s.twinkleSpeed + s.twinkleOffset);
+      var alpha = s.alphaBase * (0.6 + 0.4 * twinkle);
+      var x = s.x * cssW;
+      var y = s.y * cssH;
+
+      ctx.beginPath();
+      ctx.arc(x, y, s.size, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(254, 246, 228, " + alpha + ")";
+      ctx.fill();
+    }
   }
 
   function draw() {
@@ -156,8 +310,9 @@ window.PianoApp.FallingNotes = (function () {
     var cx = cssW / 2;
     var cy = fallH * 0.4;
 
-    // ── Aurora background ──
+    // ── Background layers ──
     drawAurora(elapsed, cx, cy, fallH);
+    drawBgStars(elapsed);
 
     // ── Falling note bars ──
     for (var i = 0; i < bars.length; i++) {
@@ -178,67 +333,133 @@ window.PianoApp.FallingNotes = (function () {
       var x = kbL + bar.geo.x * kbW;
       var w = bar.geo.w * kbW;
 
-      // Glow layer (wider, brighter)
+      var isBlack = bar.geo.black;
+      var baseColor = isBlack ? BLACK_KEY_COLOR : WHITE_KEY_COLOR;
+      var glowColor = isBlack ? BLACK_KEY_GLOW : WHITE_KEY_GLOW;
+
+      // Spawn trail particles for moving notes
+      if (tStart > 0 && tStart < LOOK_AHEAD && h > 8) {
+        var particleCount = Math.min(3, Math.floor(w / 15));
+        for (var p = 0; p < particleCount; p++) {
+          if (Math.random() < 0.3) {
+            spawnParticle(
+              x + Math.random() * w,
+              topY + Math.random() * h,
+              baseColor, isBlack
+            );
+          }
+        }
+      }
+
+      // Hit effect when note reaches keyboard
+      if (tStart <= 0 && tStart > -80 && !bar.hitTriggered) {
+        bar.hitTriggered = true;
+        spawnHitEffect(x + w / 2, fallH - 2, isBlack);
+      } else if (tStart > 0) {
+        bar.hitTriggered = false;
+      }
+
+      var r = Math.min(4, w / 2, h / 2);
+
+      // Outer glow layer
       ctx.save();
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = bar.geo.black
-        ? "rgba(100, 180, 255, 0.35)"
-        : "rgba(255, 190, 100, 0.35)";
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = glowColor;
       ctx.beginPath();
-      rr(ctx, x - 2, topY - 1, w + 4, h + 2, Math.min(5, (w + 4) / 2));
-      ctx.fillStyle = bar.geo.black
-        ? "rgba(100, 180, 255, 0.25)"
-        : "rgba(255, 190, 100, 0.25)";
+      rr(ctx, x - 1, topY - 1, w + 2, h + 2, r + 1);
+      ctx.fillStyle = isBlack
+        ? "rgba(120, 200, 255, 0.15)"
+        : "rgba(255, 200, 120, 0.15)";
       ctx.fill();
       ctx.restore();
 
-      // Solid bar (brighter)
-      var r = Math.min(3, w / 2, h / 2);
+      // Main bar body with gradient
+      var grad = ctx.createLinearGradient(x, topY, x, bottomY);
+      if (isBlack) {
+        grad.addColorStop(0, "rgba(140, 210, 255, 0.75)");
+        grad.addColorStop(0.5, "rgba(120, 200, 255, 0.9)");
+        grad.addColorStop(1, "rgba(100, 180, 240, 0.7)");
+      } else {
+        grad.addColorStop(0, "rgba(255, 210, 140, 0.75)");
+        grad.addColorStop(0.5, "rgba(255, 200, 120, 0.9)");
+        grad.addColorStop(1, "rgba(240, 185, 100, 0.7)");
+      }
+
       ctx.save();
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = bar.geo.black
-        ? "rgba(130, 200, 255, 0.4)"
-        : "rgba(255, 195, 115, 0.4)";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = isBlack
+        ? "rgba(120, 200, 255, 0.35)"
+        : "rgba(255, 200, 120, 0.35)";
       ctx.beginPath();
       rr(ctx, x, topY, w, h, r);
-      ctx.fillStyle = bar.geo.black
-        ? "rgba(130, 200, 255, 0.85)"
-        : "rgba(255, 195, 115, 0.85)";
+      ctx.fillStyle = grad;
       ctx.fill();
       ctx.restore();
+
+      // Top highlight (sheen)
+      if (h > 10) {
+        var sheenH = Math.min(h * 0.25, 8);
+        var sheenGrad = ctx.createLinearGradient(x, topY, x, topY + sheenH);
+        sheenGrad.addColorStop(0, "rgba(255, 255, 255, 0.25)");
+        sheenGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.beginPath();
+        rr(ctx, x + 1, topY + 1, w - 2, sheenH, r - 1);
+        ctx.fillStyle = sheenGrad;
+        ctx.fill();
+      }
+
+      // Bottom edge glow for longer notes
+      if (h > 20) {
+        var edgeGrad = ctx.createLinearGradient(x, bottomY - 6, x, bottomY);
+        edgeGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+        edgeGrad.addColorStop(1, "rgba(255, 255, 255, 0.15)");
+        ctx.beginPath();
+        rr(ctx, x + 1, bottomY - 6, w - 2, 6, r - 1);
+        ctx.fillStyle = edgeGrad;
+        ctx.fill();
+      }
     }
+
+    // ── Update and draw effects ──
+    updateAndDrawParticles();
+    updateAndDrawHitEffects();
 
     rafId = requestAnimationFrame(draw);
   }
 
-  // ── Aurora: soft drifting color blobs ──
+  // ── Aurora: layered drifting color blobs ──
   function drawAurora(elapsed, cx, cy, fallH) {
     var t = elapsed / 1000;
 
     // Blob 1: warm, left-of-center
-    var b1x = cx * 0.6 + Math.sin(t * 0.3) * 40;
-    var b1y = cy * 0.7 + Math.cos(t * 0.25) * 30;
-    drawBlob(b1x, b1y, 200, 255, 180, 100, 0.07);
+    var b1x = cx * 0.55 + Math.sin(t * 0.25) * 50;
+    var b1y = cy * 0.6 + Math.cos(t * 0.2) * 35;
+    drawBlob(b1x, b1y, 280, 255, 180, 100, 0.06);
 
     // Blob 2: cool, right-of-center
-    var b2x = cx * 1.4 + Math.cos(t * 0.35) * 50;
-    var b2y = cy * 1.0 + Math.sin(t * 0.2) * 25;
-    drawBlob(b2x, b2y, 180, 100, 180, 255, 0.06);
+    var b2x = cx * 1.45 + Math.cos(t * 0.3) * 60;
+    var b2y = cy * 0.9 + Math.sin(t * 0.18) * 30;
+    drawBlob(b2x, b2y, 260, 100, 180, 255, 0.05);
 
-    // Blob 3: accent, center
-    var b3x = cx + Math.sin(t * 0.22) * 30;
-    var b3y = cy * 1.3 + Math.cos(t * 0.28) * 20;
-    drawBlob(b3x, b3y, 140, 180, 130, 255, 0.04);
+    // Blob 3: accent, center-bottom
+    var b3x = cx + Math.sin(t * 0.2) * 40;
+    var b3y = cy * 1.4 + Math.cos(t * 0.25) * 25;
+    drawBlob(b3x, b3y, 200, 160, 200, 255, 0.04);
+
+    // Blob 4: subtle warm accent
+    var b4x = cx * 0.8 + Math.cos(t * 0.15) * 30;
+    var b4y = cy * 0.5 + Math.sin(t * 0.22) * 20;
+    drawBlob(b4x, b4y, 180, 255, 160, 120, 0.035);
   }
 
   function drawBlob(x, y, size, r, g, b, alpha) {
     var grad = ctx.createRadialGradient(x, y, 0, x, y, size);
     grad.addColorStop(0, "rgba(" + r + "," + g + "," + b + "," + alpha + ")");
+    grad.addColorStop(0.5, "rgba(" + r + "," + g + "," + b + "," + alpha * 0.5 + ")");
     grad.addColorStop(1, "rgba(" + r + "," + g + "," + b + ",0)");
     ctx.fillStyle = grad;
     ctx.fillRect(x - size, y - size, size * 2, size * 2);
   }
-
 
   function rr(c, x, y, w, h, r) {
     if (r < 0) r = 0;
