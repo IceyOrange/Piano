@@ -3,6 +3,20 @@ window.PianoApp = window.PianoApp || {};
 window.PianoApp.data = {
   projects: [
     {
+      id: "3",
+      name: "Unveiling",
+      nameEn: "Unveiling",
+      description: "类比分析 Agentic Workflow 搭建 — 自己的方法论沉淀。将个人思维习惯产品化，通过结构化类比（剥离表面噪音，提取底层机制，在时空不同角落寻找同构案例）来分析问题。<br>使用 LangGraph 设计了一套多智能体工作流，实现从问题抽象、跨域/跨时代案例搜索到洞察回映的全链路自动化，已部署上线。拆解为五步工作流（结构抽象→搜索生成→查询验证→案例提取→洞察回映），设计 5 个 Agent 的职责分工与信息传递协议；针对每个 Agent 进行多轮 Prompt 迭代与对比实验优化。",
+      descriptionEn: "Analogical-Analysis Agentic Workflow — crystallizing a personal methodology into a product. Turns structured analogical reasoning into a tool: strip surface noise, extract underlying mechanisms, and hunt for isomorphic cases across time and space.<br>Built a multi-agent workflow with LangGraph that automates the full pipeline — problem abstraction → cross-domain/cross-era case search → insight reflection. Deployed and live. Decomposed into a five-step workflow with five specialized agents, each with defined I/O schemas and handoff protocols. Iterated prompts through multi-round quality validation and controlled experiments.",
+      year: "2026",
+      category: "AI 产品",
+      categoryEn: "AI Product",
+      image: "assets/images/unveiling.jpg",
+      tech: ["LangGraph", "多智能体", "Prompt 工程"],
+      techEn: ["LangGraph", "Multi-Agent", "Prompt Engineering"],
+      link: "#",
+    },
+    {
       id: "1",
       name: "一个能弹琴的个人主页",
       nameEn: "Play Piano Online",
