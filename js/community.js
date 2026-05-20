@@ -104,16 +104,25 @@ window.PianoApp.Community = (function () {
 
     var url = "/api/recordings/list?limit=50";
     if (currentSort === "hot") url += "&sort=hot";
+    var builtins = (window.PianoApp.builtinSongs && window.PianoApp.builtinSongs.list)
+      ? window.PianoApp.builtinSongs.list()
+      : [];
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        if (!data.recordings || data.recordings.length === 0) {
+        var server = (data && data.recordings) ? data.recordings : [];
+        var combined = builtins.concat(server);
+        if (combined.length === 0) {
           listEl.innerHTML = '<div class="community-empty">' + t("community.empty") + "</div>";
           return;
         }
-        renderList(listEl, data.recordings);
+        renderList(listEl, combined);
       })
       .catch(function () {
+        if (builtins.length > 0) {
+          renderList(listEl, builtins);
+          return;
+        }
         listEl.innerHTML = '<div class="community-error">' +
           t("community.error") +
           '<button class="community-retry">' +
@@ -148,6 +157,7 @@ window.PianoApp.Community = (function () {
       var dateStr = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
       var durStr = formatDuration(rec.dur);
       var metaParts = [];
+      if (rec.builtin) metaParts.push(t("community.builtin"));
       if (rec.name) metaParts.push(rec.name);
       metaParts.push(dateStr + "  " + durStr);
       if (rec.plays > 0) metaParts.push("▶ " + rec.plays);
@@ -163,18 +173,19 @@ window.PianoApp.Community = (function () {
         togglePlay(rec.id, playBtn, card);
       });
 
-      var deleteBtn = document.createElement("button");
-      deleteBtn.className = "community-delete-btn";
-      deleteBtn.innerHTML = "&#128465;";
-      deleteBtn.setAttribute("aria-label", t("community.delete"));
-      deleteBtn.addEventListener("click", function () {
-        showDeleteDialog(rec.id, card);
-      });
-
       var actions = document.createElement("div");
       actions.className = "community-card-actions";
       actions.appendChild(playBtn);
-      actions.appendChild(deleteBtn);
+      if (!rec.builtin) {
+        var deleteBtn = document.createElement("button");
+        deleteBtn.className = "community-delete-btn";
+        deleteBtn.innerHTML = "&#128465;";
+        deleteBtn.setAttribute("aria-label", t("community.delete"));
+        deleteBtn.addEventListener("click", function () {
+          showDeleteDialog(rec.id, card);
+        });
+        actions.appendChild(deleteBtn);
+      }
 
       // Per-card playback progress bar — pinned to the card's bottom edge,
       // hidden until this card is the active one.
@@ -330,8 +341,15 @@ window.PianoApp.Community = (function () {
     var cardTitle = card ? card.querySelector(".community-card-name") : null;
     var cardMeta = card ? card.querySelector(".community-card-meta") : null;
 
-    fetch("/api/recordings/get?id=" + encodeURIComponent(id))
-      .then(function (r) { return r.json(); })
+    var loader;
+    if (window.PianoApp.builtinSongs && window.PianoApp.builtinSongs.isBuiltinId(id)) {
+      loader = Promise.resolve(window.PianoApp.builtinSongs.getById(id));
+    } else {
+      loader = fetch("/api/recordings/get?id=" + encodeURIComponent(id))
+        .then(function (r) { return r.json(); });
+    }
+
+    loader
       .then(function (rec) {
         if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.start(rec, {
               title: rec.title || "",

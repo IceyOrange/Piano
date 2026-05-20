@@ -67,6 +67,7 @@ window.PianoApp = window.PianoApp || {};
       'community.deleting':    'Deleting...',
       'community.sortNew':     'New',
       'community.sortHot':     'Hot',
+      'community.builtin':     'Built-in',
     },
     zh: {
       'nav.home':              '首页',
@@ -129,6 +130,7 @@ window.PianoApp = window.PianoApp || {};
       'community.deleting':    '删除中...',
       'community.sortNew':     '最新',
       'community.sortHot':     '最热',
+      'community.builtin':     '内置',
     },
   };
 
