@@ -32,7 +32,7 @@ window.PianoApp.data = {
     },
     {
       id: "2",
-      name: " 蓝天白云",
+      name: "蓝天白云",
       nameEn: "Blue Sky & White Cloud",
       description: "灵感源于 @baothiento 的<a href='https://x.com/baothiento/status/2033203600298488136?s=20' target='_blank'>池塘</a>和张悬的<a href='https://music.163.com/#/song?id=326697' target='_blank'>《蓝天白云》</a><br>向下滚动由白天滑入星空——白天点击放飞飞鸟、微风落叶；夜晚点击流星触发漫天星雨，探索星座连线，还有机会看见稀有的彗星！",
       descriptionEn: "Inspired by @baothiento's <a href='https://x.com/baothiento/status/2033203600298488136?s=20' target='_blank'>pond</a> and Deserts Chang's <a href='https://music.163.com/#/song?id=326697' target='_blank'>&ldquo;Blue Sky &amp; White Cloud&rdquo;</a>.<br>Scroll down to glide from daylight into a starry night — by day, click to release birds and let leaves drift in the breeze; by night, click a meteor to summon a falling-star storm, trace constellations, and maybe spot a rare comet.",
@@ -179,7 +179,7 @@ window.PianoApp.data = {
       "这也是我想做产品经理的原因：在技术发展迅速的时代，希望自己做的东西，能帮人们给生活多留一些时间 ：）"
     ],
     typewriterEn: [
-      "Why do I want to become a product manager?",
+      "Why do I want to be a product manager?",
       "Products shape how people live. The best ones aren't the kind you can't put down — they're the kind that quietly hand your time and attention back to the things that actually matter.",
       "What I want to design are products like that: ones whose purpose is to be forgotten, leaving more of life intact.",
       "That's why I want to be a PM: in an era of rapid technological change, I'd like the things I build to help people keep a little more time for living. :)"

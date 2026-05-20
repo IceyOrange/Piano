@@ -372,7 +372,6 @@ window.PianoApp.Community = (function () {
             },
           });
         }
-        currentPlaybackId = id;
       })
       .catch(function () {
         btn.innerHTML = "&#9654;";

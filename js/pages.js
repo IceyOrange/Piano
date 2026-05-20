@@ -508,11 +508,12 @@ window.PianoApp.initMap = function () {
 
           // Show only the active-language title (no bilingual stack).
           var roleTitle = lang === 'zh' ? role.titleZh : role.titleEn;
+          var roleClass = lang === 'zh' ? 'role-zh' : 'role-en';
           rolesHtml +=
             '<div class="job-item">' +
               '<div class="job-desc"><div>' + desc + "</div></div>" +
               '<div class="job-role">' +
-                '<span class="role-zh">' + (roleTitle || '') + "</span>" +
+                '<span class="' + roleClass + '">' + (roleTitle || '') + "</span>" +
               "</div>" +
             "</div>";
         });

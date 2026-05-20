@@ -38,9 +38,9 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ recordings: [], total: ids.length });
     }
 
-    // Fetch play counts for the page
-    const pagePlayKeys = pageIds.map((id) => "plays:" + id);
-    const pagePlays = await kv.mget(...pagePlayKeys);
+    // Reuse play counts already fetched above — find the slice for this page
+    const pageStart = ids.indexOf(pageIds[0]);
+    const pagePlays = playCounts.slice(pageStart, pageStart + pageIds.length);
 
     // Fetch recordings in parallel
     const raw = await Promise.all(

@@ -32,6 +32,7 @@ module.exports = async function handler(req, res) {
     }
 
     await kv.del("rec:" + id);
+    await kv.del("plays:" + id);
     await kv.zrem("rec:list", id);
 
     return res.status(200).json({ ok: true });
