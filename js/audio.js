@@ -219,9 +219,9 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity, opt
     // Slow natural decay — like a piano with sustain pedal
     gain.gain.exponentialRampToValueAtTime(0.001, decayEnd);
   } else {
-    // Normal (melody) mode: clean articulation with gentle release
-    const releaseStart = startTime + perceptualDur - 0.10;
-    const releaseEnd = releaseStart + 0.18;
+    // Normal (melody) mode: hold longer, release with a tail for legato overlap
+    const releaseStart = startTime + perceptualDur - 0.05;
+    const releaseEnd = releaseStart + 0.35;
     stopTime = releaseEnd + 0.05;
 
     gain.gain.setValueAtTime(0, startTime);
@@ -230,16 +230,22 @@ window.PianoApp._playSample = function (note, startTime, duration, velocity, opt
     gain.gain.exponentialRampToValueAtTime(0.001, releaseEnd);
   }
 
-  const dry = ctx.createGain();
-  dry.gain.value = 0.85;
-  dry.connect(ctx.destination);
+  if (!window.PianoApp._dryGain) {
+    window.PianoApp._dryGain = ctx.createGain();
+    window.PianoApp._dryGain.gain.value = 0.85;
+    window.PianoApp._dryGain.connect(ctx.destination);
+  }
 
   source.connect(gain);
-  gain.connect(dry);
+  gain.connect(window.PianoApp._dryGain);
 
   if (window.PianoApp._reverbNode) {
     gain.connect(window.PianoApp._reverbNode);
   }
+
+  source.onended = function () {
+    try { gain.disconnect(); } catch (e) {}
+  };
 
   source.start(startTime);
   source.stop(stopTime);

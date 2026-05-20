@@ -13,6 +13,9 @@ window.PianoApp.Sequencer = {
   MAX_VOICES: 28,
   _chordCache: null,
   _chordCacheIndex: -1,
+  _visualRaf: null,
+  _nextVisualIndex: 0,
+  _visualActive: [],
 
   _predecodeSamples() {
     const seq = window.PianoApp.canonSequence;
@@ -56,36 +59,10 @@ window.PianoApp.Sequencer = {
       window.PianoApp.updateVinylCursor();
     }
 
-    // ─── Visual timers: schedule all at once
-    seq.forEach((note) => {
-      if (note.time < this.elapsedMs) return;
-
-      const visualDelay = note.time - this.elapsedMs;
-      const visualTimer = setTimeout(() => {
-        if (!this.isPlaying) return;
-        if (note.hasKey && window.PianoApp.pressKeyVisual) {
-          window.PianoApp.pressKeyVisual(note.note);
-        }
-        const releaseTimer = setTimeout(() => {
-          if (note.hasKey && window.PianoApp.releaseKeyVisual) {
-            window.PianoApp.releaseKeyVisual(note.note);
-          }
-        }, note.duration);
-        this.timeouts.push(releaseTimer);
-      }, visualDelay);
-
-      this.timeouts.push(visualTimer);
-    });
-
-    // ─── End timer
-    if (seq.length > 0) {
-      const last = seq[seq.length - 1];
-      const remaining = last.time + last.duration - this.elapsedMs;
-      const endTimer = setTimeout(() => {
-        this._resetState();
-      }, Math.max(0, remaining + 100));
-      this.timeouts.push(endTimer);
-    }
+    // ─── Visual: rAF-based scheduler (eliminates timer flood in fast passages)
+    this._nextVisualIndex = 0;
+    this._visualActive = [];
+    this._scheduleVisualFrame();
 
     // ─── Audio: start lookahead scheduler
     this.nextAudioIndex = 0;
@@ -245,7 +222,7 @@ window.PianoApp.Sequencer = {
       } else if (role === "inner") {
         sustainedDuration = note.duration * 1.25;
       } else {
-        sustainedDuration = note.duration * 1.10;
+        sustainedDuration = note.duration * 1.35;
       }
 
       // Sustain pedal simulation for bass ostinato and rich inner voices
@@ -274,6 +251,60 @@ window.PianoApp.Sequencer = {
     }
   },
 
+  _scheduleVisualFrame() {
+    if (!this.isPlaying) return;
+
+    var ctx = window.PianoApp.audioCtx;
+    var seq = window.PianoApp.canonSequence;
+    var elapsed = ctx ? (ctx.currentTime - this.baseTime) * 1000 : 0;
+
+    // Press notes whose time has been reached
+    while (this._nextVisualIndex < seq.length) {
+      var note = seq[this._nextVisualIndex];
+      if (note.time > elapsed) break;
+      if (note.time >= this.elapsedMs && note.hasKey) {
+        if (window.PianoApp.pressKeyVisual) {
+          window.PianoApp.pressKeyVisual(note.note);
+        }
+        this._visualActive.push({
+          noteName: note.note,
+          releaseTime: note.time + note.duration,
+        });
+      }
+      this._nextVisualIndex++;
+    }
+
+    // Release notes whose duration has expired
+    var stillActive = [];
+    for (var i = 0; i < this._visualActive.length; i++) {
+      var v = this._visualActive[i];
+      if (v.releaseTime <= elapsed) {
+        if (window.PianoApp.releaseKeyVisual) {
+          window.PianoApp.releaseKeyVisual(v.noteName);
+        }
+      } else {
+        stillActive.push(v);
+      }
+    }
+    this._visualActive = stillActive;
+
+    // Check if playback is done
+    if (
+      seq.length > 0 &&
+      elapsed >=
+        seq[seq.length - 1].time +
+          seq[seq.length - 1].duration +
+          100
+    ) {
+      this._resetState();
+      return;
+    }
+
+    this._visualRaf = requestAnimationFrame(
+      () => this._scheduleVisualFrame()
+    );
+  },
+
   pause() {
     if (!this.isPlaying) return;
     this.isPlaying = false;
@@ -283,6 +314,17 @@ window.PianoApp.Sequencer = {
     }
     this.timeouts.forEach((t) => clearTimeout(t));
     this.timeouts = [];
+
+    if (this._visualRaf) {
+      cancelAnimationFrame(this._visualRaf);
+      this._visualRaf = null;
+    }
+    for (var vi = 0; vi < this._visualActive.length; vi++) {
+      if (window.PianoApp.releaseKeyVisual) {
+        window.PianoApp.releaseKeyVisual(this._visualActive[vi].noteName);
+      }
+    }
+    this._visualActive = [];
 
     this.activeSounds.forEach((s) => {
       if (!s._stopped) { s._stopped = true; try { s.stop(); } catch (e) {} }
@@ -339,6 +381,12 @@ window.PianoApp.Sequencer = {
     this.nextAudioIndex = 0;
     this._chordCache = null;
     this._chordCacheIndex = -1;
+    this._visualActive = [];
+    this._nextVisualIndex = 0;
+    if (this._visualRaf) {
+      cancelAnimationFrame(this._visualRaf);
+      this._visualRaf = null;
+    }
     if (this.scheduleTimer) {
       clearTimeout(this.scheduleTimer);
       this.scheduleTimer = null;
