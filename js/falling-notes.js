@@ -40,6 +40,7 @@ window.PianoApp.FallingNotes = (function () {
   var active = false;
   var resizeHandler = null;
   var LOOK_AHEAD = 2200;
+  var drawStartIdx = 0;
 
   // Cached layout
   var kbL = 0, kbW = 0, kbTop = 0;
@@ -59,7 +60,7 @@ window.PianoApp.FallingNotes = (function () {
 
   // ── Background Stars ─────────────────────────
   var bgStars = [];
-  var numBgStars = 60;
+  var numBgStars = 40;
 
   // Colors
   var WHITE_KEY_COLOR = { r: 228, g: 195, b: 148 };
@@ -164,6 +165,29 @@ window.PianoApp.FallingNotes = (function () {
       bars.push({ startD: ev.d, endD: endD, geo: geo, note: ev.n, hitTriggered: false });
     }
 
+    // Prevent same-note bars from visually overlapping (vertical "sticking")
+    var MIN_BAR_GAP = 60;
+    var MIN_BAR_DURATION = 80;
+    var byNote = {};
+    bars.forEach(function (b) {
+      (byNote[b.note] = byNote[b.note] || []).push(b);
+    });
+    Object.keys(byNote).forEach(function (n) {
+      var g = byNote[n].sort(function (a, b) { return a.startD - b.startD; });
+      for (var k = 0; k < g.length - 1; k++) {
+        var limit = g[k + 1].startD - MIN_BAR_GAP;
+        if (g[k].endD > limit) {
+          g[k].endD = Math.max(g[k].startD + MIN_BAR_DURATION, limit);
+        }
+      }
+    });
+
+    // Render black-key bars on top of white-key bars (z-order)
+    bars.sort(function (a, b) {
+      if (a.geo.black !== b.geo.black) return a.geo.black ? 1 : -1;
+      return a.startD - b.startD;
+    });
+
     active = true;
     rafId = requestAnimationFrame(draw);
 
@@ -189,6 +213,7 @@ window.PianoApp.FallingNotes = (function () {
     bars = [];
     particles = [];
     hitEffects = [];
+    drawStartIdx = 0;
   }
 
   // ── Particle helpers ─────────────────────────
@@ -315,12 +340,29 @@ window.PianoApp.FallingNotes = (function () {
     drawBgStars(elapsed);
 
     // ── Falling note bars ──
-    for (var i = 0; i < bars.length; i++) {
+    while (drawStartIdx < bars.length && bars[drawStartIdx].endD - elapsed < -300) {
+      drawStartIdx++;
+    }
+
+    // Count visible bars to dynamically degrade rendering quality under load
+    var visibleCount = 0;
+    for (var i = drawStartIdx; i < bars.length; i++) {
+      var bar = bars[i];
+      var tStart = bar.startD - elapsed;
+      if (tStart > LOOK_AHEAD) break;
+      var tEnd = bar.endD - elapsed;
+      if (tEnd < -300) continue;
+      visibleCount++;
+    }
+    var useHeavyEffects = visibleCount <= 40;
+    var enableParticles = visibleCount <= 30;
+
+    for (var i = drawStartIdx; i < bars.length; i++) {
       var bar = bars[i];
       var tStart = bar.startD - elapsed;
       var tEnd = bar.endD - elapsed;
 
-      if (tEnd < -300 || tStart > LOOK_AHEAD) continue;
+      if (tStart > LOOK_AHEAD) break;
 
       var bottomY = fallH * (1 - tStart / LOOK_AHEAD);
       var topY = fallH * (1 - tEnd / LOOK_AHEAD);
@@ -328,20 +370,22 @@ window.PianoApp.FallingNotes = (function () {
       if (topY < 0) topY = 0;
       if (bottomY > fallH) bottomY = fallH;
       var h = bottomY - topY;
-      if (h < 4) h = 4;
+      if (h < 10) h = 10;
 
-      var x = kbL + bar.geo.x * kbW;
-      var w = bar.geo.w * kbW;
+      var keyW = bar.geo.w * kbW;
+      var pad = keyW * 0.06;
+      var w = Math.max(4, keyW - pad * 2);
+      var x = kbL + bar.geo.x * kbW + pad;
 
       var isBlack = bar.geo.black;
       var baseColor = isBlack ? BLACK_KEY_COLOR : WHITE_KEY_COLOR;
       var glowColor = isBlack ? BLACK_KEY_GLOW : WHITE_KEY_GLOW;
 
       // Spawn trail particles for moving notes
-      if (tStart > 0 && tStart < LOOK_AHEAD && h > 8) {
+      if (enableParticles && tStart > 0 && tStart < LOOK_AHEAD && h > 8) {
         var particleCount = Math.min(3, Math.floor(w / 15));
         for (var p = 0; p < particleCount; p++) {
-          if (Math.random() < 0.3) {
+          if (Math.random() < 0.15) {
             spawnParticle(
               x + Math.random() * w,
               topY + Math.random() * h,
@@ -355,23 +399,33 @@ window.PianoApp.FallingNotes = (function () {
       if (tStart <= 0 && tStart > -80 && !bar.hitTriggered) {
         bar.hitTriggered = true;
         spawnHitEffect(x + w / 2, fallH - 2, isBlack);
-      } else if (tStart > 0) {
-        bar.hitTriggered = false;
+      }
+
+      // Anticipatory glow on key when note is about to land
+      if (useHeavyEffects && tStart > 0 && tStart < 160) {
+        var glowInt = 1 - tStart / 160;
+        var glowGrad = ctx.createLinearGradient(x, fallH - 28, x, fallH);
+        glowGrad.addColorStop(0, "rgba(" + baseColor.r + "," + baseColor.g + "," + baseColor.b + ",0)");
+        glowGrad.addColorStop(1, "rgba(" + baseColor.r + "," + baseColor.g + "," + baseColor.b + "," + (glowInt * 0.28) + ")");
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(x, fallH - 28, w, 28);
       }
 
       var r = Math.min(4, w / 2, h / 2);
 
       // Outer glow layer
-      ctx.save();
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = glowColor;
-      ctx.beginPath();
-      rr(ctx, x - 1, topY - 1, w + 2, h + 2, r + 1);
-      ctx.fillStyle = isBlack
-        ? "rgba(195, 210, 230, 0.15)"
-        : "rgba(228, 195, 148, 0.15)";
-      ctx.fill();
-      ctx.restore();
+      if (useHeavyEffects) {
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = glowColor;
+        ctx.beginPath();
+        rr(ctx, x - 1, topY - 1, w + 2, h + 2, r + 1);
+        ctx.fillStyle = isBlack
+          ? "rgba(195, 210, 230, 0.15)"
+          : "rgba(228, 195, 148, 0.15)";
+        ctx.fill();
+        ctx.restore();
+      }
 
       // Main bar body with gradient
       var grad = ctx.createLinearGradient(x, topY, x, bottomY);
@@ -385,19 +439,28 @@ window.PianoApp.FallingNotes = (function () {
         grad.addColorStop(1, "rgba(210, 180, 130, 0.7)");
       }
 
-      ctx.save();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = isBlack
-        ? "rgba(195, 210, 230, 0.3)"
-        : "rgba(228, 195, 148, 0.3)";
+      if (useHeavyEffects) {
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = isBlack
+          ? "rgba(195, 210, 230, 0.3)"
+          : "rgba(228, 195, 148, 0.3)";
+      }
       ctx.beginPath();
       rr(ctx, x, topY, w, h, r);
       ctx.fillStyle = grad;
       ctx.fill();
-      ctx.restore();
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = isBlack
+        ? "rgba(220, 230, 245, 0.22)"
+        : "rgba(245, 225, 185, 0.22)";
+      ctx.stroke();
+      if (useHeavyEffects) {
+        ctx.restore();
+      }
 
       // Top highlight (sheen)
-      if (h > 10) {
+      if (useHeavyEffects && h > 10) {
         var sheenH = Math.min(h * 0.25, 8);
         var sheenGrad = ctx.createLinearGradient(x, topY, x, topY + sheenH);
         sheenGrad.addColorStop(0, "rgba(255, 255, 255, 0.25)");
@@ -409,7 +472,7 @@ window.PianoApp.FallingNotes = (function () {
       }
 
       // Bottom edge glow for longer notes
-      if (h > 20) {
+      if (useHeavyEffects && h > 20) {
         var edgeGrad = ctx.createLinearGradient(x, bottomY - 6, x, bottomY);
         edgeGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
         edgeGrad.addColorStop(1, "rgba(255, 255, 255, 0.15)");

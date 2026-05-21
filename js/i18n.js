@@ -68,6 +68,10 @@ window.PianoApp = window.PianoApp || {};
       'community.sortNew':     'New',
       'community.sortHot':     'Hot',
       'community.builtin':     'Built-in',
+      'community.song.epilogue': 'Lovebed',
+      'community.song.biekan':   'LoveZzz',
+      'community.title.epilogue': 'La La Land - Epilogue',
+      'community.title.biekan':   'Even Though I\'m Just a Little Goat',
     },
     zh: {
       'nav.home':              '首页',
@@ -131,6 +135,10 @@ window.PianoApp = window.PianoApp || {};
       'community.sortNew':     '最新',
       'community.sortHot':     '最热',
       'community.builtin':     '内置',
+      'community.song.epilogue': 'Lovebed',
+      'community.song.biekan':   'LoveZzz',
+      'community.title.epilogue': '爱乐之城 Epilogue',
+      'community.title.biekan':   '别看我只是一只羊',
     },
   };
 

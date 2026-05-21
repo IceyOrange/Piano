@@ -771,6 +771,11 @@ window.PianoApp.initPiano = function () {
         // Don't steal keys while the user is typing in a form field.
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
+        // When community panel is open, only the G chord is allowed.
+        const communityOpen = document.querySelector(".community-overlay");
+        const key = e.key.toLowerCase();
+        if (communityOpen && key !== "g") return;
+
         // Number keys (1–7) — use e.code so Shift doesn't change the identifier
         const digitMatch = e.code.match(/^Digit([1-7])$/);
         if (digitMatch) {
@@ -785,7 +790,6 @@ window.PianoApp.initPiano = function () {
         }
 
         // Letter chord keys (a–g)
-        const key = e.key.toLowerCase();
         const chordDef = keyboardChords[key];
         if (!chordDef) return;
         if (activeKeyboardChords.has(key)) return;
@@ -799,6 +803,10 @@ window.PianoApp.initPiano = function () {
         // Don't release piano keys while the user is typing in a form field.
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
+        const communityOpen = document.querySelector(".community-overlay");
+        const chordKey = e.key.toLowerCase();
+        if (communityOpen && chordKey !== "g") return;
+
         // Number keys (1–7)
         const digitMatch = e.code.match(/^Digit([1-7])$/);
         if (digitMatch) {
@@ -811,7 +819,6 @@ window.PianoApp.initPiano = function () {
         }
 
         // Letter chord keys (a–g)
-        const chordKey = e.key.toLowerCase();
         if (!activeKeyboardChords.has(chordKey)) return;
         const notes = activeKeyboardChords.get(chordKey);
         activeKeyboardChords.delete(chordKey);

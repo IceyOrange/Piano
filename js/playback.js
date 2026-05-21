@@ -1,18 +1,24 @@
 window.PianoApp = window.PianoApp || {};
 
 window.PianoApp.Playback = (function () {
-  // Visuals: each noteOn schedules pressKeyVisual and releaseKeyVisual based on
-  // the matching noteOff. Realtime takes can have sub-CSS-transition hold times,
-  // so we floor visual hold at MIN_VIS ms so the press is always perceptible.
   var MIN_VIS = 90;
+  // Chunked scheduling: only create audio nodes for events within this
+  // look-ahead window (seconds). Re-check every SCHEDULE_INTERVAL_MS to
+  // schedule the next chunk. This avoids creating thousands of
+  // AudioBufferSourceNodes + setTimeout calls upfront for long recordings.
+  var SCHEDULE_AHEAD_S = 2;
+  var SCHEDULE_INTERVAL_MS = 500;
 
   var playing = false;
   var timers = [];
+  var scheduleTimer = null;
   var endTimer = null;
   var progressTimer = null;
   var recording = null;
   var totalDur = 0;
+  var startCtxTime = 0;
   var startWallTime = 0;
+  var nextIdx = 0;
   var onProgressCb = null;
   var onEndCb = null;
   var sounds = [];
@@ -20,6 +26,10 @@ window.PianoApp.Playback = (function () {
   function clearTimers() {
     timers.forEach(clearTimeout);
     timers = [];
+    if (scheduleTimer) {
+      clearTimeout(scheduleTimer);
+      scheduleTimer = null;
+    }
     if (endTimer) {
       clearTimeout(endTimer);
       endTimer = null;
@@ -41,6 +51,7 @@ window.PianoApp.Playback = (function () {
     clearTimers();
     stopSounds();
     recording = null;
+    nextIdx = 0;
     onProgressCb = null;
     onEndCb = null;
     if (wasPlaying && window.PianoApp.releaseAllKeysVisual) {
@@ -52,31 +63,23 @@ window.PianoApp.Playback = (function () {
     }
   }
 
-  function play(rec, opts) {
-    stop();
-    if (!rec || !rec.ev || rec.ev.length === 0) return;
-    recording = rec;
-    playing = true;
-    totalDur = rec.dur || 0;
-    onProgressCb = (opts && opts.onProgress) || null;
-    onEndCb = (opts && opts.onEnd) || null;
-
-    window.PianoApp.initAudio();
+  function scheduleChunk() {
+    if (!playing || !recording) return;
     var ctx = window.PianoApp.audioCtx;
-    if (ctx && ctx.state === "suspended") ctx.resume();
+    if (!ctx) return;
+    var events = recording.ev;
+    var aheadTime = ctx.currentTime + SCHEDULE_AHEAD_S;
+    var elapsedMs = (ctx.currentTime - startCtxTime) * 1000;
+    var i, j, ev, noteStart, visDelay, offDelay;
 
-    var startCtxTime = ctx.currentTime;
-    startWallTime = Date.now();
+    while (nextIdx < events.length) {
+      ev = events[nextIdx];
+      if (ev.v <= 0) { nextIdx++; continue; }
 
-    var events = rec.ev;
-    var i, j, ev, noteStart, offDelay;
-
-    for (i = 0; i < events.length; i++) {
-      ev = events[i];
-      if (ev.v <= 0) continue;
+      noteStart = startCtxTime + ev.d / 1000;
+      if (noteStart > aheadTime) break;
 
       // Audio
-      noteStart = startCtxTime + ev.d / 1000;
       var sound = window.PianoApp.playNoteMidi(
         window.PianoApp.noteToMidi(ev.n),
         1400,
@@ -87,23 +90,49 @@ window.PianoApp.Playback = (function () {
       if (sound) sounds.push(sound);
 
       // Visual press
-      timers.push(setTimeout(pressKey.bind(null, ev.n), ev.d));
+      visDelay = ev.d - elapsedMs;
+      if (visDelay < 0) visDelay = 0;
+      timers.push(setTimeout(pressKey.bind(null, ev.n), visDelay));
 
-      // Visual release: find the matching noteOff (same pitch, v == 0); fall
-      // back to MIN_VIS after the press if no off was recorded (e.g. truncated
-      // take). Either way, hold at least MIN_VIS so the user sees the keypress.
+      // Visual release: find matching noteOff
       offDelay = ev.d + MIN_VIS;
-      for (j = i + 1; j < events.length; j++) {
+      for (j = nextIdx + 1; j < events.length; j++) {
         if (events[j].n === ev.n && events[j].v === 0) {
           offDelay = Math.max(events[j].d, ev.d + MIN_VIS);
           break;
         }
       }
-      timers.push(setTimeout(releaseKey.bind(null, ev.n), offDelay));
+      var relVisDelay = offDelay - elapsedMs;
+      if (relVisDelay < 0) relVisDelay = 0;
+      timers.push(setTimeout(releaseKey.bind(null, ev.n), relVisDelay));
+
+      nextIdx++;
     }
 
-    // Auto-stop slightly after the recorded duration so a held final note has
-    // time to ring out before we tear down the visuals.
+    if (nextIdx < events.length && playing) {
+      scheduleTimer = setTimeout(scheduleChunk, SCHEDULE_INTERVAL_MS);
+    }
+  }
+
+  function play(rec, opts) {
+    stop();
+    if (!rec || !rec.ev || rec.ev.length === 0) return;
+    recording = rec;
+    playing = true;
+    totalDur = rec.dur || 0;
+    nextIdx = 0;
+    onProgressCb = (opts && opts.onProgress) || null;
+    onEndCb = (opts && opts.onEnd) || null;
+
+    window.PianoApp.initAudio();
+    var ctx = window.PianoApp.audioCtx;
+    if (ctx && ctx.state === "suspended") ctx.resume();
+
+    startCtxTime = ctx.currentTime;
+    startWallTime = Date.now();
+
+    scheduleChunk();
+
     endTimer = setTimeout(function () {
       var cb = onEndCb;
       stop();

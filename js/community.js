@@ -149,7 +149,7 @@ window.PianoApp.Community = (function () {
 
       var nameEl = document.createElement("span");
       nameEl.className = "community-card-name";
-      nameEl.textContent = rec.title;
+      nameEl.textContent = rec.builtin ? t(rec.title) : rec.title;
 
       var meta = document.createElement("span");
       meta.className = "community-card-meta";
@@ -157,9 +157,8 @@ window.PianoApp.Community = (function () {
       var dateStr = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate();
       var durStr = formatDuration(rec.dur);
       var metaParts = [];
-      if (rec.builtin) metaParts.push(t("community.builtin"));
-      if (rec.name) metaParts.push(rec.name);
-      metaParts.push(dateStr + "  " + durStr);
+      if (rec.name) metaParts.push(rec.builtin ? t(rec.name) : rec.name);
+      metaParts.push(dateStr + " · " + durStr);
       if (rec.plays > 0) metaParts.push("▶ " + rec.plays);
       meta.textContent = metaParts.join(" · ");
 
@@ -344,6 +343,17 @@ window.PianoApp.Community = (function () {
     var loader;
     if (window.PianoApp.builtinSongs && window.PianoApp.builtinSongs.isBuiltinId(id)) {
       loader = Promise.resolve(window.PianoApp.builtinSongs.getById(id));
+      var plays = window.PianoApp.builtinSongs.incrementPlay(id);
+      if (cardMeta) {
+        var parts = cardMeta.textContent.split(" · ");
+        var lastIdx = parts.length - 1;
+        if (parts[lastIdx] && parts[lastIdx].indexOf("▶") === 0) {
+          parts[lastIdx] = "▶ " + plays;
+        } else {
+          parts.push("▶ " + plays);
+        }
+        cardMeta.textContent = parts.join(" · ");
+      }
     } else {
       loader = fetch("/api/recordings/get?id=" + encodeURIComponent(id))
         .then(function (r) { return r.json(); });
@@ -352,12 +362,12 @@ window.PianoApp.Community = (function () {
     loader
       .then(function (rec) {
         if (window.PianoApp.FallingNotes) window.PianoApp.FallingNotes.start(rec, {
-              title: rec.title || "",
-              artist: rec.name || ""
+              title: rec.builtin ? t(rec.title) : (rec.title || ""),
+              artist: rec.builtin ? t(rec.name) : (rec.name || "")
             });
         showNowPlaying(
-          rec.title || "",
-          rec.name || "",
+          rec.builtin ? t(rec.title) : (rec.title || ""),
+          rec.builtin ? t(rec.name) : (rec.name || ""),
           rec.dur || 0,
           function () {
             // close callback — stop playback
@@ -481,7 +491,7 @@ window.PianoApp.Community = (function () {
     var s = Math.round(ms / 1000);
     var m = Math.floor(s / 60);
     s = s % 60;
-    return m > 0 ? m + ":" + (s < 10 ? "0" : "") + s : s + "s";
+    return m > 0 ? m + "′" + (s < 10 ? "0" : "") + s + "″" : s + "″";
   }
 
   return {
