@@ -44,43 +44,32 @@ window.PianoApp.FallingNotes = (function () {
   var kbL = 0, kbW = 0, kbTop = 0;
   var cssW = 0, cssH = 0;
 
-  // ── Pre-rendered textures ──
+  // Pre-rendered bar textures (the only textures we keep)
   var barTexWhite = null;
   var barTexBlack = null;
-  var glowTexWhite = null;
-  var glowTexBlack = null;
-  var spotTexWhite = null;
-  var spotTexBlack = null;
-  var hitGlowTex = null;
   var TEX_W = 100;
   var TEX_H = 200;
-  var GLOW_PAD = 14;
 
-  // ── Quality thresholds ──
-  var QUALITY_FULL = 15;
-  var QUALITY_MEDIUM = 35;
+  // Quality thresholds
+  var QUALITY_FULL = 8;
+  var QUALITY_MEDIUM = 25;
 
-  // ── Pre-computed color strings ──
+  // Flat fill colors for batched rendering
   var FLAT_WHITE = "rgba(232,198,142,0.85)";
   var FLAT_BLACK = "rgba(178,202,238,0.85)";
-  var GLOW_WHITE_STR = "rgba(235,195,130,0.12)";
-  var GLOW_BLACK_STR = "rgba(170,198,238,0.12)";
 
   // Key colors (particles + hit effects)
   var WHITE_KEY_COLOR = { r: 235, g: 195, b: 130 };
   var BLACK_KEY_COLOR = { r: 175, g: 202, b: 238 };
 
-  // ── Pools ──
-  var particles = [];
-  var maxParticles = 180;
   var particlePool = [];
+  var maxParticles = 100;
   var poolIndex = 0;
-  var hitEffects = [];
-  var maxHitEffects = 40;
   var hitPool = [];
+  var maxHitEffects = 20;
   var hitPoolIndex = 0;
   var bgStars = [];
-  var numBgStars = 40;
+  var numBgStars = 25;
 
   function buildGeo() {
     noteGeo = {};
@@ -92,16 +81,9 @@ window.PianoApp.FallingNotes = (function () {
     });
   }
 
-  // ── Texture builders (all free at runtime — pre-rendered once) ──
-
   function buildBarTextures() {
     barTexWhite = makeBarTexture(false);
     barTexBlack = makeBarTexture(true);
-    glowTexWhite = makeGlowTexture(false);
-    glowTexBlack = makeGlowTexture(true);
-    spotTexWhite = makeSpotTexture(false);
-    spotTexBlack = makeSpotTexture(true);
-    hitGlowTex = makeHitGlowTexture();
   }
 
   function makeBarTexture(isBlack) {
@@ -109,20 +91,15 @@ window.PianoApp.FallingNotes = (function () {
     c.width = TEX_W; c.height = TEX_H;
     var tc = c.getContext("2d");
 
-    // 5-stop vertical gradient for richer color depth
     var g = tc.createLinearGradient(0, 0, 0, TEX_H);
     if (isBlack) {
-      g.addColorStop(0,    "rgba(208, 224, 248, 0.72)");
-      g.addColorStop(0.2,  "rgba(195, 215, 240, 0.88)");
-      g.addColorStop(0.5,  "rgba(178, 202, 235, 0.94)");
-      g.addColorStop(0.8,  "rgba(165, 190, 225, 0.88)");
-      g.addColorStop(1,    "rgba(150, 178, 215, 0.72)");
+      g.addColorStop(0,   "rgba(208, 224, 248, 0.72)");
+      g.addColorStop(0.5, "rgba(178, 202, 235, 0.94)");
+      g.addColorStop(1,   "rgba(150, 178, 215, 0.72)");
     } else {
-      g.addColorStop(0,    "rgba(248, 222, 168, 0.72)");
-      g.addColorStop(0.2,  "rgba(242, 212, 155, 0.88)");
-      g.addColorStop(0.5,  "rgba(232, 198, 140, 0.94)");
-      g.addColorStop(0.8,  "rgba(220, 182, 125, 0.88)");
-      g.addColorStop(1,    "rgba(208, 168, 110, 0.72)");
+      g.addColorStop(0,   "rgba(248, 222, 168, 0.72)");
+      g.addColorStop(0.5, "rgba(232, 198, 140, 0.94)");
+      g.addColorStop(1,   "rgba(208, 168, 110, 0.72)");
     }
 
     tc.beginPath();
@@ -130,45 +107,16 @@ window.PianoApp.FallingNotes = (function () {
     tc.fillStyle = g;
     tc.fill();
 
-    // Left edge highlight (light source simulation)
-    var leftG = tc.createLinearGradient(0, 0, 5, 0);
-    leftG.addColorStop(0, "rgba(255,255,255,0.18)");
-    leftG.addColorStop(1, "rgba(255,255,255,0)");
-    tc.fillStyle = leftG;
-    tc.fillRect(1, 2, 5, TEX_H - 4);
-
-    // Right edge shadow
-    var rightG = tc.createLinearGradient(TEX_W - 5, 0, TEX_W, 0);
-    rightG.addColorStop(0, "rgba(0,0,0,0)");
-    rightG.addColorStop(1, "rgba(0,0,0,0.07)");
-    tc.fillStyle = rightG;
-    tc.fillRect(TEX_W - 6, 2, 5, TEX_H - 4);
-
-    // Top cap bright highlight
+    // Top highlight
     var capG = tc.createLinearGradient(0, 0, 0, 8);
-    capG.addColorStop(0, "rgba(255,255,255,0.3)");
+    capG.addColorStop(0, "rgba(255,255,255,0.25)");
     capG.addColorStop(1, "rgba(255,255,255,0)");
     tc.beginPath();
     rr(tc, 2, 1, TEX_W - 4, 8, 4);
     tc.fillStyle = capG;
     tc.fill();
 
-    // Sheen in upper portion
-    var sheenH = Math.min(TEX_H * 0.3, 22);
-    var sheenG = tc.createLinearGradient(0, 0, 0, sheenH);
-    sheenG.addColorStop(0, "rgba(255,255,255,0.16)");
-    sheenG.addColorStop(1, "rgba(255,255,255,0)");
-    tc.fillStyle = sheenG;
-    tc.fillRect(3, 3, TEX_W - 6, sheenH);
-
-    // Bottom subtle warm/cool glow
-    var botG = tc.createLinearGradient(0, TEX_H - 10, 0, TEX_H);
-    botG.addColorStop(0, "rgba(0,0,0,0)");
-    botG.addColorStop(1, "rgba(0,0,0,0.04)");
-    tc.fillStyle = botG;
-    tc.fillRect(2, TEX_H - 10, TEX_W - 4, 10);
-
-    // Refined border
+    // Border
     tc.beginPath();
     rr(tc, 0, 0, TEX_W, TEX_H, 5);
     tc.strokeStyle = isBlack ? "rgba(190,210,240,0.18)" : "rgba(255,220,165,0.22)";
@@ -178,66 +126,12 @@ window.PianoApp.FallingNotes = (function () {
     return c;
   }
 
-  function makeGlowTexture(isBlack) {
-    var c = document.createElement("canvas");
-    var size = TEX_W + GLOW_PAD * 2;
-    c.width = size; c.height = TEX_H + GLOW_PAD * 2;
-    var tc = c.getContext("2d");
-
-    var rx = size / 2, ry = size / 2;
-    var radius = Math.max(rx, ry);
-    var r, g, b;
-    if (isBlack) { r = 170; g = 198; b = 238; }
-    else { r = 235; g = 195; b = 130; }
-
-    var grad = tc.createRadialGradient(rx, ry, 0, rx, ry, radius);
-    grad.addColorStop(0,   "rgba(" + r + "," + g + "," + b + ",0.16)");
-    grad.addColorStop(0.3, "rgba(" + r + "," + g + "," + b + ",0.07)");
-    grad.addColorStop(1,   "rgba(" + r + "," + g + "," + b + ",0)");
-    tc.fillStyle = grad;
-    tc.fillRect(0, 0, size, size);
-
-    return c;
-  }
-
-  function makeSpotTexture(isBlack) {
-    var c = document.createElement("canvas");
-    c.width = 80; c.height = 40;
-    var tc = c.getContext("2d");
-
-    var r, g, b;
-    if (isBlack) { r = 180; g = 208; b = 242; }
-    else { r = 242; g = 205; b = 145; }
-
-    var grad = tc.createRadialGradient(40, 35, 0, 40, 35, 38);
-    grad.addColorStop(0,   "rgba(" + r + "," + g + "," + b + ",0.45)");
-    grad.addColorStop(0.35,"rgba(" + r + "," + g + "," + b + ",0.18)");
-    grad.addColorStop(1,   "rgba(" + r + "," + g + "," + b + ",0)");
-    tc.fillStyle = grad;
-    tc.fillRect(0, 0, 80, 40);
-
-    return c;
-  }
-
-  function makeHitGlowTexture() {
-    var c = document.createElement("canvas");
-    c.width = 64; c.height = 64;
-    var tc = c.getContext("2d");
-    var grad = tc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0,   "rgba(255,255,255,0.55)");
-    grad.addColorStop(0.3, "rgba(255,255,255,0.2)");
-    grad.addColorStop(1,   "rgba(255,255,255,0)");
-    tc.fillStyle = grad;
-    tc.fillRect(0, 0, 64, 64);
-    return c;
-  }
-
   function initPools() {
     particlePool = [];
     for (var i = 0; i < maxParticles; i++) {
       particlePool.push({
         x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0,
-        size: 0, color: null, alpha: 0, active: false
+        size: 0, color: null, active: false
       });
     }
     hitPool = [];
@@ -254,12 +148,11 @@ window.PianoApp.FallingNotes = (function () {
     for (var i = 0; i < numBgStars; i++) {
       var warm = Math.random() < 0.5;
       bgStars.push({
-        x: Math.random(),
-        y: Math.random(),
+        x: Math.random(), y: Math.random(),
         size: 0.5 + Math.random() * 1.5,
         twinkleSpeed: 0.3 + Math.random() * 1.5,
         twinkleOffset: Math.random() * Math.PI * 2,
-        alphaBase: 0.08 + Math.random() * 0.22,
+        alphaBase: 0.08 + Math.random() * 0.2,
         r: warm ? 254 : 230,
         g: warm ? 240 : 235,
         b: warm ? 220 : 250
@@ -275,13 +168,10 @@ window.PianoApp.FallingNotes = (function () {
     } else {
       var svg = container.querySelector(".piano-svg");
       var r = svg ? svg.getBoundingClientRect() : container.getBoundingClientRect();
-      kbL = r.left;
-      kbW = r.width;
-      kbTop = r.top;
+      kbL = r.left; kbW = r.width; kbTop = r.top;
       cssW = window.innerWidth;
       cssH = kbTop > 80 ? kbTop : window.innerHeight * 0.55;
     }
-
     var dpr = window.devicePixelRatio || 1;
     canvas.width = cssW * dpr;
     canvas.height = cssH * dpr;
@@ -312,30 +202,21 @@ window.PianoApp.FallingNotes = (function () {
       if (ev.v <= 0) continue;
       var geo = noteGeo[ev.n];
       if (!geo) continue;
-
       var endD = ev.d + 180;
       for (var j = i + 1; j < events.length; j++) {
-        if (events[j].n === ev.n && events[j].v === 0) {
-          endD = events[j].d;
-          break;
-        }
+        if (events[j].n === ev.n && events[j].v === 0) { endD = events[j].d; break; }
       }
       bars.push({ startD: ev.d, endD: endD, geo: geo, note: ev.n, hitTriggered: false });
     }
 
-    var MIN_BAR_GAP = 60;
-    var MIN_BAR_DURATION = 80;
+    var MIN_BAR_GAP = 60, MIN_BAR_DURATION = 80;
     var byNote = {};
-    bars.forEach(function (b) {
-      (byNote[b.note] = byNote[b.note] || []).push(b);
-    });
+    bars.forEach(function (b) { (byNote[b.note] = byNote[b.note] || []).push(b); });
     Object.keys(byNote).forEach(function (n) {
       var g = byNote[n].sort(function (a, b) { return a.startD - b.startD; });
       for (var k = 0; k < g.length - 1; k++) {
         var limit = g[k + 1].startD - MIN_BAR_GAP;
-        if (g[k].endD > limit) {
-          g[k].endD = Math.max(g[k].startD + MIN_BAR_DURATION, limit);
-        }
+        if (g[k].endD > limit) g[k].endD = Math.max(g[k].startD + MIN_BAR_DURATION, limit);
       }
     });
 
@@ -359,19 +240,14 @@ window.PianoApp.FallingNotes = (function () {
   function stop() {
     active = false;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    if (resizeHandler) {
-      window.removeEventListener("resize", resizeHandler);
-      resizeHandler = null;
-    }
+    if (resizeHandler) { window.removeEventListener("resize", resizeHandler); resizeHandler = null; }
     if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
-    canvas = null; ctx = null; bars = []; particles = []; hitEffects = [];
+    canvas = null; ctx = null; bars = [];
     drawStartIdx = 0;
-    barTexWhite = barTexBlack = glowTexWhite = glowTexBlack = null;
-    spotTexWhite = spotTexBlack = hitGlowTex = null;
+    barTexWhite = barTexBlack = null;
   }
 
-  // ── Particle helpers ──
-  function spawnParticle(x, y, color, isBlack) {
+  function spawnParticle(x, y, isBlack) {
     var p = particlePool[poolIndex];
     poolIndex = (poolIndex + 1) % maxParticles;
     p.x = x; p.y = y;
@@ -390,9 +266,9 @@ window.PianoApp.FallingNotes = (function () {
     var h = hitPool[hitPoolIndex];
     hitPoolIndex = (hitPoolIndex + 1) % maxHitEffects;
     h.x = x; h.y = y;
-    h.maxLife = 18 + Math.random() * 12;
+    h.maxLife = 18 + Math.random() * 10;
     h.life = h.maxLife;
-    h.radius = 6 + Math.random() * 10;
+    h.radius = 5 + Math.random() * 8;
     h.color = isBlack ? BLACK_KEY_COLOR : WHITE_KEY_COLOR;
     h.active = true;
   }
@@ -403,9 +279,8 @@ window.PianoApp.FallingNotes = (function () {
       if (!p.active) continue;
       p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.life--;
       if (p.life <= 0) { p.active = false; continue; }
-
       var progress = 1 - p.life / p.maxLife;
-      var alpha = (1 - progress * progress) * 0.6;
+      var alpha = (1 - progress * progress) * 0.5;
       var size = p.size * (1 - progress * 0.5);
       ctx.beginPath();
       ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
@@ -420,36 +295,14 @@ window.PianoApp.FallingNotes = (function () {
       if (!h.active) continue;
       h.life--;
       if (h.life <= 0) { h.active = false; continue; }
-
       var progress = 1 - h.life / h.maxLife;
-      var radius = h.radius + progress * 30;
-
-      // Outer soft ring
-      var outerAlpha = (1 - progress) * 0.4;
+      var alpha = (1 - progress) * 0.4;
+      var radius = h.radius + progress * 22;
       ctx.beginPath();
       ctx.arc(h.x, h.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(" + h.color.r + "," + h.color.g + "," + h.color.b + "," + outerAlpha + ")";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(" + h.color.r + "," + h.color.g + "," + h.color.b + "," + alpha + ")";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-
-      // Inner bright white ring
-      if (progress < 0.5) {
-        var innerRingAlpha = (1 - progress / 0.5) * 0.45;
-        ctx.beginPath();
-        ctx.arc(h.x, h.y, radius * 0.55, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(255,255,255," + innerRingAlpha + ")";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      // Central glow via pre-rendered texture
-      if (progress < 0.4 && hitGlowTex) {
-        var glowAlpha = (1 - progress / 0.4) * 0.5;
-        var glowSize = radius * 0.8;
-        ctx.globalAlpha = glowAlpha;
-        ctx.drawImage(hitGlowTex, h.x - glowSize, h.y - glowSize, glowSize * 2, glowSize * 2);
-        ctx.globalAlpha = 1;
-      }
     }
   }
 
@@ -491,26 +344,24 @@ window.PianoApp.FallingNotes = (function () {
     else if (visibleCount <= QUALITY_MEDIUM) quality = 1;
     else quality = 0;
 
-    if (quality >= 2) {
-      drawAurora(elapsed, cssW / 2, fallH * 0.4, fallH);
-      drawBgStars(elapsed);
-    } else if (quality >= 1) {
-      drawBgStars(elapsed);
-    }
+    // Background stars (skip when very dense)
+    if (quality >= 1) drawBgStars(elapsed);
 
+    // Bars
     if (quality === 0) {
       drawBarsBatched(elapsed, fallH);
     } else {
       drawBarsTextured(elapsed, fallH, quality);
     }
 
-    if (quality >= 1) updateAndDrawParticles();
+    // Particles only at full quality
+    if (quality >= 2) updateAndDrawParticles();
     updateAndDrawHitEffects();
 
     rafId = requestAnimationFrame(draw);
   }
 
-  // ── Minimal quality: batched flat fills ──
+  // ── Minimal: batched flat fills ──
   function drawBarsBatched(elapsed, fallH) {
     var whiteBars = [];
     var blackBars = [];
@@ -540,33 +391,24 @@ window.PianoApp.FallingNotes = (function () {
         spawnHitEffect(x + w / 2, fallH - 2, bar.geo.black);
       }
 
-      var obj = { x: x, y: topY, w: w, h: h, r: r };
-      if (bar.geo.black) blackBars.push(obj);
-      else whiteBars.push(obj);
+      (bar.geo.black ? blackBars : whiteBars).push({ x: x, y: topY, w: w, h: h, r: r });
     }
 
     if (whiteBars.length > 0) {
       ctx.beginPath();
-      for (var j = 0; j < whiteBars.length; j++) {
-        var b = whiteBars[j];
-        rr(ctx, b.x, b.y, b.w, b.h, b.r);
-      }
+      for (var j = 0; j < whiteBars.length; j++) rr(ctx, whiteBars[j].x, whiteBars[j].y, whiteBars[j].w, whiteBars[j].h, whiteBars[j].r);
       ctx.fillStyle = FLAT_WHITE;
       ctx.fill();
     }
-
     if (blackBars.length > 0) {
       ctx.beginPath();
-      for (var j = 0; j < blackBars.length; j++) {
-        var b = blackBars[j];
-        rr(ctx, b.x, b.y, b.w, b.h, b.r);
-      }
+      for (var j = 0; j < blackBars.length; j++) rr(ctx, blackBars[j].x, blackBars[j].y, blackBars[j].w, blackBars[j].h, blackBars[j].r);
       ctx.fillStyle = FLAT_BLACK;
       ctx.fill();
     }
   }
 
-  // ── Full/Medium quality: textured rendering ──
+  // ── Full/Medium: 1 drawImage per bar ──
   function drawBarsTextured(elapsed, fallH, quality) {
     for (var i = drawStartIdx; i < bars.length; i++) {
       var bar = bars[i];
@@ -587,47 +429,19 @@ window.PianoApp.FallingNotes = (function () {
       var x = kbL + bar.geo.x * kbW + pad;
 
       var isBlack = bar.geo.black;
-      var tex = isBlack ? barTexBlack : barTexWhite;
-      var glowTex = isBlack ? glowTexBlack : glowTexWhite;
 
-      // Trail particles
-      if (quality >= 2 && tStart > 0 && tStart < LOOK_AHEAD && h > 8) {
-        var pc = Math.min(3, Math.floor(w / 15));
-        for (var p = 0; p < pc; p++) {
-          if (Math.random() < 0.15) {
-            spawnParticle(x + Math.random() * w, topY + Math.random() * h, null, isBlack);
-          }
-        }
-      } else if (quality === 1 && tStart > 0 && tStart < LOOK_AHEAD && h > 8) {
-        if (Math.random() < 0.06) {
-          spawnParticle(x + Math.random() * w, topY + Math.random() * h, null, isBlack);
-        }
+      // Sparse particles at full quality only
+      if (quality >= 2 && tStart > 0 && tStart < LOOK_AHEAD && h > 8 && Math.random() < 0.08) {
+        spawnParticle(x + Math.random() * w, topY + Math.random() * h, isBlack);
       }
 
-      // Hit effect
       if (tStart <= 0 && tStart > -80 && !bar.hitTriggered) {
         bar.hitTriggered = true;
         spawnHitEffect(x + w / 2, fallH - 2, isBlack);
       }
 
-      // Anticipatory spotlight on keyboard (full quality)
-      if (quality >= 2 && tStart > 0 && tStart < 200) {
-        var spotInt = 1 - tStart / 200;
-        var spotTex = isBlack ? spotTexBlack : spotTexWhite;
-        ctx.globalAlpha = spotInt * 0.55;
-        ctx.drawImage(spotTex, x - 10, fallH - 38, w + 20, 38);
-        ctx.globalAlpha = 1;
-      }
-
-      // Soft ambient glow behind bar
-      if (quality >= 2 && glowTex) {
-        ctx.drawImage(glowTex, x - GLOW_PAD, topY - GLOW_PAD, w + GLOW_PAD * 2, h + GLOW_PAD * 2);
-      } else if (quality === 1 && h > 15) {
-        ctx.fillStyle = isBlack ? GLOW_BLACK_STR : GLOW_WHITE_STR;
-        ctx.fillRect(x - 2, topY - 2, w + 4, h + 4);
-      }
-
-      // Bar body
+      // 1 drawImage per bar — that's it
+      var tex = isBlack ? barTexBlack : barTexWhite;
       if (tex) {
         ctx.drawImage(tex, x, topY, w, h);
       } else {
@@ -635,15 +449,6 @@ window.PianoApp.FallingNotes = (function () {
         ctx.fillRect(x, topY, w, h);
       }
     }
-  }
-
-  // ── Aurora ──
-  function drawAurora(elapsed, cx, cy, fallH) {
-    var t = elapsed / 1000;
-    drawBlob(cx * 0.55 + Math.sin(t * 0.25) * 50, cy * 0.6 + Math.cos(t * 0.2) * 35, 280, 235, 195, 130, 0.065);
-    drawBlob(cx * 1.45 + Math.cos(t * 0.3) * 60, cy * 0.9 + Math.sin(t * 0.18) * 30, 260, 170, 200, 240, 0.055);
-    drawBlob(cx + Math.sin(t * 0.2) * 40, cy * 1.4 + Math.cos(t * 0.25) * 25, 200, 180, 195, 215, 0.045);
-    drawBlob(cx * 0.8 + Math.cos(t * 0.15) * 30, cy * 0.5 + Math.sin(t * 0.22) * 20, 180, 235, 198, 145, 0.04);
   }
 
   function drawBlob(x, y, size, r, g, b, alpha) {
