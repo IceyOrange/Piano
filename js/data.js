@@ -204,6 +204,7 @@ window.PianoApp.data = {
       { name: "MBTI", nameEn: "MBTI", type: "tooltip", tooltipType: "text", tooltipContent: "ENTP" },
       { name: "GitHub", nameEn: "GitHub", type: "link", url: "https://github.com/IceyOrange" },
       { name: "Email", nameEn: "Email", type: "link", url: "mailto:uasgwr@gmail.com" },
+      { name: "领英", nameEn: "LinkedIn", type: "link", url: "https://www.linkedin.com/in/judecheng/" },
       { name: "小红书", nameEn: "Xiaohongshu", type: "tooltip", tooltipType: "image", tooltipContent: "assets/images/xiaohongshu-qr.jpg", tooltipDirection: "right" }
     ],
   },
