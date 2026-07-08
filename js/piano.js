@@ -85,9 +85,10 @@ window.PianoApp.initPiano = function () {
   const svgNS = "http://www.w3.org/2000/svg";
 
   // Load the full page SVG exported from Figma.
-  // If the browser reports a Chinese locale, use the English SVG; otherwise use the Chinese one.
-  const isChineseBrowser = navigator.language && navigator.language.toLowerCase().startsWith("zh");
-  const landingSvgPath = isChineseBrowser
+  // If the browser reports an English locale, use the English SVG; otherwise use the Chinese one.
+  const isEnglishBrowser =
+    navigator.language && navigator.language.toLowerCase().startsWith("en");
+  const landingSvgPath = isEnglishBrowser
     ? "assets/figma/Piano Landing Page_en.svg"
     : "assets/figma/Piano Landing Page.svg";
   fetch(`${landingSvgPath}?v=1`)
