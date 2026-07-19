@@ -3,6 +3,20 @@ window.PianoApp = window.PianoApp || {};
 window.PianoApp.data = {
   projects: [
     {
+      id: "4",
+      name: "Glean · 灵感摘录",
+      nameEn: "Glean",
+      description: "桌面端浏览文章时，常想记下「写得好的一段话 + 脑子里冒出的灵感」，却无处落笔——只能复制到笔记软件再顺手写两句，记录的摩擦太大。<br>做成浏览器插件：选中文本后自动弹出「摘录」按钮，一键摘录并输入灵感；管理面板支持 AI 洞察与云同步。后续计划适配移动端（OCR 识别纸质书文本），并提供专业的灵感洞察，帮助使用者了解自己的思维习惯。",
+      descriptionEn: "When reading in a desktop browser, I often want to capture a well-written passage and the thought it sparks — but there's nowhere to put it. Copying into a note-taking app just to jot down a fleeting idea creates too much friction.<br>So I built a browser extension: select text and a &ldquo;Clip&rdquo; button appears; one click saves the excerpt and gives you a field for your thought. The management panel supports AI-powered insights and cloud sync. Future plans include a mobile version (OCR for paper books) and deeper insight features that help users understand their own thinking patterns.",
+      year: "2026",
+      category: "AI 产品",
+      categoryEn: "AI Product",
+      image: "assets/images/glean.png",
+      tech: ["浏览器插件", "灵感管理", "AI 洞察"],
+      techEn: ["Browser Extension", "Idea Capture", "AI Insights"],
+      link: "https://glean.lovegood.cool",
+    },
+    {
       id: "3",
       name: "抽丝剥茧",
       nameEn: "Unveiling",
