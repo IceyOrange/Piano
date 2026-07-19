@@ -33,14 +33,6 @@ function shuffleArray(arr) {
   return a;
 }
 
-function getRowSpan(width, height) {
-  var ratio = width / height;
-  if (ratio < 0.65) return 3;          // very tall portrait
-  if (ratio < 1.0) return 2;           // portrait
-  if (ratio > 1.55) return 1;          // wide landscape
-  return 1;                            // square-ish / landscape
-}
-
 // ─── Portfolio ──────────────────────────────────────────
 window.PianoApp.initPortfolio = function () {
   var showcaseEl = document.getElementById("portfolio-showcase");
@@ -108,6 +100,77 @@ window.PianoApp.initPortfolio = function () {
   window.PianoApp.rerenderPage = window.PianoApp.initPortfolio;
 };
 
+// ─── Gallery ordering ─────────────────────────────────────
+// Classify a photo by orientation.
+function photoOrientation(photo) {
+  var ratio = photo.width / photo.height;
+  if (ratio < 0.85) return 'portrait';
+  if (ratio > 1.2) return 'landscape';
+  return 'square';
+}
+
+// Sort by date (newest first), then locally reorder to break up
+// long runs of same-orientation photos.  If N consecutive photos
+// share the same orientation, pull the nearest different-orientation
+// photo forward — trading a small time-jump for visual variety.
+// MAX_RUN controls how many same-orientation photos are allowed
+// before we intervene.
+function optimizeGalleryOrder(photos) {
+  var MAX_RUN = 3;
+
+  // Clone and sort by date descending (newest first)
+  var sorted = photos.slice().sort(function (a, b) {
+    return (b.date || '').localeCompare(a.date || '');
+  });
+
+  var result = [];
+  var used = {};
+  var runCount = 0;
+  var lastOrientation = null;
+
+  for (var i = 0; i < sorted.length; i++) {
+    var photo = sorted[i];
+    if (used[i]) continue;
+
+    var orient = photoOrientation(photo);
+
+    // Check: are we in a long run of same orientation?
+    if (orient === lastOrientation && runCount >= MAX_RUN) {
+      // Search ahead for a different-orientation photo to break the run
+      var found = -1;
+      for (var j = i + 1; j < sorted.length; j++) {
+        if (!used[j] && photoOrientation(sorted[j]) !== orient) {
+          found = j;
+          break;
+        }
+      }
+      if (found >= 0) {
+        // Insert the different-orientation photo first
+        result.push(sorted[found]);
+        used[found] = true;
+        runCount = 1;
+        lastOrientation = photoOrientation(sorted[found]);
+      }
+      // Then continue with the current photo (it will be picked up
+      // in the next iteration since it wasn't marked used)
+    }
+
+    // Add the current photo
+    if (!used[i]) {
+      result.push(photo);
+      used[i] = true;
+      if (orient === lastOrientation) {
+        runCount++;
+      } else {
+        runCount = 1;
+        lastOrientation = orient;
+      }
+    }
+  }
+
+  return result;
+}
+
 // ─── Gallery ────────────────────────────────────────────
 window.PianoApp.initGallery = function () {
   var container = document.getElementById("gallery-container");
@@ -119,16 +182,19 @@ window.PianoApp.initGallery = function () {
     return;
   }
 
-  // Build grid items — caption sits below the image (always visible),
-  // and the image tilts toward the cursor on hover (see JS below).
-  container.innerHTML = photos.map(function (photo, i) {
-    var span = getRowSpan(photo.width, photo.height);
+  // Build masonry items — each photo keeps its native aspect ratio
+  // via an inline style on the frame, so no cropping occurs.
+  // CSS columns layout flows top-to-bottom within each column,
+  // automatically balancing column heights — no span math needed.
+  var ordered = optimizeGalleryOrder(photos);
+  container.innerHTML = ordered.map(function (photo, i) {
     var locationLabel = escapeHtml(photo.location);
     var thumb = photo.thumbGrid || photo.src;
+    var ratio = photo.width + '/' + photo.height;
     return ''
-      + '<article class="gallery-item" data-index="' + i + '" style="grid-row: span ' + span + '" tabindex="0" role="button" aria-label="' + escapeHtml(photo.desc) + '">'
+      + '<article class="gallery-item" data-index="' + i + '" tabindex="0" role="button" aria-label="' + escapeHtml(photo.desc) + '">'
       +   '<div class="gallery-item-tilt">'
-      +     '<div class="gallery-item-frame">'
+      +     '<div class="gallery-item-frame" style="aspect-ratio:' + ratio + '">'
       +       '<img src="' + thumb + '" data-full="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
       +     '</div>'
       +   '</div>'
@@ -218,23 +284,23 @@ window.PianoApp.initGallery = function () {
   }
 
   function renderLightbox() {
-    var photo = photos[currentIndex];
+    var photo = ordered[currentIndex];
     var stage = lightboxEl.querySelector('.gallery-lightbox__stage');
     var caption = lightboxEl.querySelector('.gallery-lightbox__caption');
     stage.innerHTML = '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '">';
     caption.innerHTML = ''
       + '<span class="gallery-lightbox__title">' + escapeHtml(photo.desc) + '</span>'
       + (photo.location ? '<span class="gallery-lightbox__location">' + escapeHtml(photo.location) + '</span>' : '')
-      + '<span class="gallery-lightbox__counter">' + (currentIndex + 1) + ' / ' + photos.length + '</span>';
+      + '<span class="gallery-lightbox__counter">' + (currentIndex + 1) + ' / ' + ordered.length + '</span>';
   }
 
   function nextPhoto() {
-    currentIndex = (currentIndex + 1) % photos.length;
+    currentIndex = (currentIndex + 1) % ordered.length;
     renderLightbox();
   }
 
   function prevPhoto() {
-    currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+    currentIndex = (currentIndex - 1 + ordered.length) % ordered.length;
     renderLightbox();
   }
 
