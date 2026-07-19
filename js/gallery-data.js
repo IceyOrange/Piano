@@ -12,6 +12,36 @@ window.PianoApp.galleryData = [
     "date": "2026-02-19T10:22:31+00:00"
   },
   {
+    "src": "assets/gallery/西伯利亚海鸥_深圳.jpg",
+    "thumbFilm": "assets/gallery/thumbs/filmstrip/西伯利亚海鸥_深圳.jpg",
+    "thumbGrid": "assets/gallery/thumbs/grid/西伯利亚海鸥_深圳.jpg",
+    "desc": "西伯利亚海鸥",
+    "location": "深圳",
+    "width": 3072,
+    "height": 4096,
+    "date": "2026-01-10T14:29:28+00:00"
+  },
+  {
+    "src": "assets/gallery/镜中树_广州.jpg",
+    "thumbFilm": "assets/gallery/thumbs/filmstrip/镜中树_广州.jpg",
+    "thumbGrid": "assets/gallery/thumbs/grid/镜中树_广州.jpg",
+    "desc": "镜中树",
+    "location": "广州",
+    "width": 3072,
+    "height": 4096,
+    "date": "2026-01-10T12:57:34+00:00"
+  },
+  {
+    "src": "assets/gallery/很喜欢的一首歌_深圳.jpg",
+    "thumbFilm": "assets/gallery/thumbs/filmstrip/很喜欢的一首歌_深圳.jpg",
+    "thumbGrid": "assets/gallery/thumbs/grid/很喜欢的一首歌_深圳.jpg",
+    "desc": "很喜欢的一首歌",
+    "location": "深圳",
+    "width": 4096,
+    "height": 2304,
+    "date": "2026-01-09T21:40:36+00:00"
+  },
+  {
     "src": "assets/gallery/音乐照耀我们_珠海.jpg",
     "thumbFilm": "assets/gallery/thumbs/filmstrip/音乐照耀我们_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/音乐照耀我们_珠海.jpg",
