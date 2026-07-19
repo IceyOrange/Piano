@@ -9,27 +9,37 @@ function getPageToNote(page) {
 // ─── Transition routing ────────────────────────────
 const transitionVariants = {
   "portfolio.html": "circle-reveal",
-  "experience.html": "circle-reveal",
-  "about.html": "circle-reveal",
-  "index.html": "fade",
+  "gallery.html":   "circle-reveal",
+  "experience.html":"circle-reveal",
+  "about.html":     "circle-reveal",
+  "index.html":     "fade",
 };
 
 const transitionPairs = {
   // index ↔ sub-pages: circle-reveal
   "index.html->portfolio.html": "circle-reveal",
   "portfolio.html->index.html": "circle-reveal",
-  "index.html->experience.html": "circle-reveal",
-  "experience.html->index.html": "circle-reveal",
-  "index.html->about.html": "circle-reveal",
-  "about.html->index.html": "circle-reveal",
+  "index.html->gallery.html":   "circle-reveal",
+  "gallery.html->index.html":   "circle-reveal",
+  "index.html->experience.html":"circle-reveal",
+  "experience.html->index.html":"circle-reveal",
+  "index.html->about.html":     "circle-reveal",
+  "about.html->index.html":     "circle-reveal",
 
   // sub-page ↔ sub-page: slide-from-right
   "portfolio.html->experience.html": "slide-from-right",
   "experience.html->portfolio.html": "slide-from-right",
-  "portfolio.html->about.html": "slide-from-right",
-  "about.html->portfolio.html": "slide-from-right",
-  "experience.html->about.html": "slide-from-right",
-  "about.html->experience.html": "slide-from-right",
+  "portfolio.html->about.html":      "slide-from-right",
+  "about.html->portfolio.html":      "slide-from-right",
+  "experience.html->about.html":     "slide-from-right",
+  "about.html->experience.html":     "slide-from-right",
+
+  "portfolio.html->gallery.html":    "slide-from-right",
+  "gallery.html->portfolio.html":    "slide-from-right",
+  "experience.html->gallery.html":   "slide-from-right",
+  "gallery.html->experience.html":   "slide-from-right",
+  "about.html->gallery.html":        "slide-from-right",
+  "gallery.html->about.html":        "slide-from-right",
 };
 
 function getPageName() {

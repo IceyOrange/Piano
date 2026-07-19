@@ -212,18 +212,19 @@ window.PianoApp.data = {
   navMappings: {
     keys: [
       { note: "C3", label: "portfolio", href: "portfolio.html" },
-      { note: "G3", label: "experience", href: "experience.html" },
-      { note: "B3", label: "about", href: "about.html" },
+      { note: "G3", label: "experience",href: "experience.html" },
+      { note: "B3", label: "about",     href: "about.html" },
     ],
     pageToNote: {
       "portfolio.html": "C3",
-      "experience.html": "G3",
-      "about.html": "B3",
+      "experience.html":"G3",
+      "about.html":     "B3",
     },
     variants: {
       "portfolio.html": "circle-reveal",
-      "experience.html": "circle-reveal",
-      "about.html": "circle-reveal",
+      "gallery.html":   "circle-reveal",
+      "experience.html":"circle-reveal",
+      "about.html":     "circle-reveal",
     },
   },
 };

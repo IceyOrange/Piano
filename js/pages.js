@@ -15,6 +15,32 @@ function pickField(obj, key) {
   return obj[key];
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function shuffleArray(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function getRowSpan(width, height) {
+  var ratio = width / height;
+  if (ratio < 0.65) return 3;          // very tall portrait
+  if (ratio < 1.0) return 2;           // portrait
+  if (ratio > 1.55) return 1;          // wide landscape
+  return 1;                            // square-ish / landscape
+}
+
 // ─── Portfolio ──────────────────────────────────────────
 window.PianoApp.initPortfolio = function () {
   var showcaseEl = document.getElementById("portfolio-showcase");
@@ -23,8 +49,33 @@ window.PianoApp.initPortfolio = function () {
   var lang = getLang();
   var viewLabel = tStr('portfolio.viewProject') || 'View Project';
   var projects = window.PianoApp.data.projects;
+  var galleryData = (window.PianoApp.galleryData || []);
 
-  showcaseEl.innerHTML = projects.map(function (project, i) {
+  // ─── Gallery filmstrip entry ─────────────────────────
+  var filmstripHtml = '';
+  if (galleryData.length > 0) {
+    var previewCount = Math.min(6, galleryData.length);
+    var previews = shuffleArray(galleryData).slice(0, previewCount);
+    var filmstripLabel = tStr('gallery.filmstripLabel') || 'Photography';
+    var framesHtml = previews.map(function (photo) {
+      return ''
+        + '<div class="filmstrip-frame">'
+        +   '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
+        + '</div>';
+    }).join('');
+    filmstripHtml = ''
+      + '<a href="gallery.html" class="gallery-entry-filmstrip" aria-label="' + escapeHtml(filmstripLabel) + '">'
+      +   '<div class="filmstrip-sprockets filmstrip-sprockets--top" aria-hidden="true"></div>'
+      +   '<div class="filmstrip-track">' + framesHtml + '</div>'
+      +   '<div class="filmstrip-sprockets filmstrip-sprockets--bottom" aria-hidden="true"></div>'
+      +   '<div class="filmstrip-meta">'
+      +     '<span class="filmstrip-label">' + escapeHtml(filmstripLabel) + '</span>'
+      +     '<span class="filmstrip-arrow" aria-hidden="true">→</span>'
+      +   '</div>'
+      + '</a>';
+  }
+
+  showcaseEl.innerHTML = filmstripHtml + projects.map(function (project, i) {
     var name = pickField(project, 'name');
     var description = pickField(project, 'description');
     var category = pickField(project, 'category');
@@ -55,6 +106,160 @@ window.PianoApp.initPortfolio = function () {
 
   // Register re-render hook so the lang toggle can call back here
   window.PianoApp.rerenderPage = window.PianoApp.initPortfolio;
+};
+
+// ─── Gallery ────────────────────────────────────────────
+window.PianoApp.initGallery = function () {
+  var container = document.getElementById("gallery-container");
+  if (!container) return;
+
+  var photos = window.PianoApp.galleryData || [];
+  if (photos.length === 0) {
+    container.innerHTML = '<p class="gallery-empty">No photos yet.</p>';
+    return;
+  }
+
+  // Build grid items
+  container.innerHTML = photos.map(function (photo, i) {
+    var span = getRowSpan(photo.width, photo.height);
+    var locationLabel = escapeHtml(photo.location);
+    return ''
+      + '<article class="gallery-item" data-index="' + i + '" style="grid-row: span ' + span + '" tabindex="0" role="button" aria-label="' + escapeHtml(photo.desc) + '">'
+      +   '<div class="gallery-item-frame">'
+      +     '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
+      +     '<div class="gallery-item-overlay">'
+      +       '<div class="gallery-item-desc">' + escapeHtml(photo.desc) + '</div>'
+      +       (locationLabel ? '<div class="gallery-item-location">' + locationLabel + '</div>' : '')
+      +     '</div>'
+      +   '</div>'
+      + '</article>';
+  }).join('');
+
+  // Lightbox state
+  var currentIndex = 0;
+  var lightboxEl = null;
+
+  function openLightbox(index) {
+    currentIndex = index;
+    if (!lightboxEl) {
+      lightboxEl = document.createElement('div');
+      lightboxEl.className = 'gallery-lightbox';
+      lightboxEl.setAttribute('role', 'dialog');
+      lightboxEl.setAttribute('aria-modal', 'true');
+      lightboxEl.setAttribute('aria-label', 'Photo viewer');
+      lightboxEl.innerHTML = ''
+        + '<button class="gallery-lightbox__close" aria-label="' + escapeHtml(tStr('gallery.lightboxClose') || 'Close') + '">×</button>'
+        + '<button class="gallery-lightbox__nav gallery-lightbox__nav--prev" aria-label="Previous">‹</button>'
+        + '<button class="gallery-lightbox__nav gallery-lightbox__nav--next" aria-label="Next">›</button>'
+        + '<div class="gallery-lightbox__stage"></div>'
+        + '<div class="gallery-lightbox__caption"></div>';
+      document.body.appendChild(lightboxEl);
+
+      lightboxEl.querySelector('.gallery-lightbox__close').addEventListener('click', closeLightbox);
+      lightboxEl.querySelector('.gallery-lightbox__nav--prev').addEventListener('click', function (e) { e.stopPropagation(); prevPhoto(); });
+      lightboxEl.querySelector('.gallery-lightbox__nav--next').addEventListener('click', function (e) { e.stopPropagation(); nextPhoto(); });
+      lightboxEl.querySelector('.gallery-lightbox__stage').addEventListener('click', closeLightbox);
+      lightboxEl.addEventListener('click', function (e) {
+        if (e.target === lightboxEl) closeLightbox();
+      });
+    }
+
+    renderLightbox();
+    lightboxEl.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+
+    // Bind keyboard once
+    if (!window.PianoApp._galleryKeyBound) {
+      window.PianoApp._galleryKeyBound = true;
+      document.addEventListener('keydown', onKeyDown);
+    }
+
+    // Bind swipe once
+    if (!window.PianoApp._gallerySwipeBound) {
+      window.PianoApp._gallerySwipeBound = true;
+      bindSwipe();
+    }
+  }
+
+  function closeLightbox() {
+    if (!lightboxEl) return;
+    lightboxEl.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  function renderLightbox() {
+    var photo = photos[currentIndex];
+    var stage = lightboxEl.querySelector('.gallery-lightbox__stage');
+    var caption = lightboxEl.querySelector('.gallery-lightbox__caption');
+    stage.innerHTML = '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '">';
+    caption.innerHTML = ''
+      + '<span class="gallery-lightbox__title">' + escapeHtml(photo.desc) + '</span>'
+      + (photo.location ? '<span class="gallery-lightbox__location">' + escapeHtml(photo.location) + '</span>' : '')
+      + '<span class="gallery-lightbox__counter">' + (currentIndex + 1) + ' / ' + photos.length + '</span>';
+  }
+
+  function nextPhoto() {
+    currentIndex = (currentIndex + 1) % photos.length;
+    renderLightbox();
+  }
+
+  function prevPhoto() {
+    currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+    renderLightbox();
+  }
+
+  function onKeyDown(e) {
+    if (!lightboxEl || !lightboxEl.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') nextPhoto();
+    if (e.key === 'ArrowLeft') prevPhoto();
+  }
+
+  function bindSwipe() {
+    var startX = 0;
+    var startY = 0;
+    var startTime = 0;
+
+    document.addEventListener('touchstart', function (e) {
+      if (!lightboxEl || !lightboxEl.classList.contains('is-open')) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+      if (!lightboxEl || !lightboxEl.classList.contains('is-open')) return;
+      if (!startX && !startY) return;
+      var endX = e.changedTouches[0].clientX;
+      var endY = e.changedTouches[0].clientY;
+      var dx = endX - startX;
+      var dy = endY - startY;
+      var dt = Date.now() - startTime;
+      startX = 0; startY = 0;
+
+      if (dt > 700 || Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx) * 1.2) return;
+      if (dx > 0) prevPhoto();
+      else nextPhoto();
+    }, { passive: true });
+  }
+
+  // Attach click handlers to grid items
+  container.querySelectorAll('.gallery-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      var idx = parseInt(item.getAttribute('data-index'), 10);
+      openLightbox(idx);
+    });
+    item.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var idx = parseInt(item.getAttribute('data-index'), 10);
+        openLightbox(idx);
+      }
+    });
+  });
+
+  // Register re-render hook for the lang toggle
+  window.PianoApp.rerenderPage = window.PianoApp.initGallery;
 };
 
 // ─── About ──────────────────────────────────────────────
