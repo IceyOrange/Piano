@@ -1732,6 +1732,19 @@ body.vinyl-cursor-active * {
   }
 }
 
+/* Epigraph below the gallery grid — a quiet, artistic sign-off */
+.gallery-epigraph {
+  text-align: center;
+  font-family: 'Ma Shan Zheng', 'LXGW WenKai', 'STXingkai', '华文行楷', 'KaiTi', '楷体', 'Noto Serif SC', serif;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  color: rgba(28, 25, 22, 0.45);
+  letter-spacing: 0.15em;
+  margin: 0 auto 4rem;
+  padding: 0 1rem;
+  max-width: 1200px;
+  user-select: none;
+}
+
 /* About page responsive */
 @media (max-width: 900px) {
   .about-hero {
