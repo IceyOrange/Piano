@@ -65,13 +65,11 @@ window.PianoApp.initPortfolio = function () {
     }).join('');
     filmstripHtml = ''
       + '<a href="gallery.html" class="gallery-entry-filmstrip" aria-label="' + escapeHtml(filmstripLabel) + '">'
+      +   '<span class="filmstrip-label">' + escapeHtml(filmstripLabel) + '</span>'
+      +   '<span class="filmstrip-arrow" aria-hidden="true">→</span>'
       +   '<div class="filmstrip-sprockets filmstrip-sprockets--top" aria-hidden="true"></div>'
       +   '<div class="filmstrip-track">' + framesHtml + '</div>'
       +   '<div class="filmstrip-sprockets filmstrip-sprockets--bottom" aria-hidden="true"></div>'
-      +   '<div class="filmstrip-meta">'
-      +     '<span class="filmstrip-label">' + escapeHtml(filmstripLabel) + '</span>'
-      +     '<span class="filmstrip-arrow" aria-hidden="true">→</span>'
-      +   '</div>'
       + '</a>';
   }
 
