@@ -1300,66 +1300,68 @@ body.vinyl-cursor-active * {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto clamp(2.5rem, 6vh, 4rem);
-  /* Real film look: dark amber-brown base with a faint glossy sheen */
+  /* Warm film base: blends with the page's ivory tone, with a subtle
+     paper-grain gradient so it reads as a strip rather than a flat bar. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.18)),
-    #2A211A;
+    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(28,25,22,0.04)),
+    #E3D9CA;
   border-radius: 6px;
   overflow: hidden;
   text-decoration: none;
-  color: #F2ECE2;
-  /* The film body is just sprocket bars + frame strip, kept short */
+  color: #1C1916;
   padding: 0;
-  box-shadow: 0 6px 22px rgba(28, 25, 22, 0.22), 0 1px 3px rgba(28, 25, 22, 0.12);
+  box-shadow: 0 4px 16px rgba(28, 25, 22, 0.1), 0 1px 3px rgba(28, 25, 22, 0.05);
   transition: box-shadow 0.4s ease, transform 0.4s ease;
 }
 
 .gallery-entry-filmstrip:hover {
-  box-shadow: 0 10px 30px rgba(28, 25, 22, 0.28), 0 2px 6px rgba(28, 25, 22, 0.16);
+  box-shadow: 0 8px 24px rgba(28, 25, 22, 0.16), 0 2px 6px rgba(28, 25, 22, 0.08);
   transform: translateY(-2px);
 }
 
-/* Sprocket hole rows: the perforated edges of a film strip */
+/* Sprocket rows: a row of small punched holes along the warm strip edges.
+   Darker brown dots on the lighter base read as perforations without
+   forcing the whole strip dark. */
 .filmstrip-sprockets {
   position: relative;
-  height: 10px;
-  background: #1C150F;
-  /* Evenly spaced rounded holes punched through the dark edge */
-  background-image: radial-gradient(circle, #F2ECE2 2.4px, transparent 2.8px);
-  background-size: 22px 10px;
+  height: 9px;
+  background: #D6C9B4;
+  background-image: radial-gradient(circle, #9C8B73 1.8px, transparent 2.2px);
+  background-size: 20px 9px;
   background-position: center;
   background-repeat: repeat-x;
 }
 
-.filmstrip-sprockets--top { border-bottom: 1px solid rgba(0,0,0,0.35); }
-.filmstrip-sprockets--bottom { border-top: 1px solid rgba(0,0,0,0.35); }
+.filmstrip-sprockets--top { border-bottom: 1px solid rgba(28,25,22,0.08); }
+.filmstrip-sprockets--bottom { border-top: 1px solid rgba(28,25,22,0.08); }
 
-/* The row of photo frames running between the sprocket bars */
+/* Marquee: the frame set is duplicated in JS, so translating by -50% loops
+   seamlessly. Paused unless hovered, so the strip is calm at rest. */
 .filmstrip-track {
   display: flex;
   gap: 6px;
   padding: 6px 12px;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  width: max-content;
+  animation: filmstrip-marquee 40s linear infinite paused;
 }
 
 .gallery-entry-filmstrip:hover .filmstrip-track {
-  animation: filmstrip-pan 4s linear infinite;
+  animation-play-state: running;
 }
 
-@keyframes filmstrip-pan {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-116px); } /* one frame + gap, seamless-ish */
+@keyframes filmstrip-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .filmstrip-frame {
   flex: 0 0 auto;
-  width: 96px;
-  height: 56px;
+  width: 92px;
+  height: 54px;
   border-radius: 2px;
   overflow: hidden;
-  opacity: 0.9;
-  transition: opacity 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(28, 25, 22, 0.18);
+  background: #CFC1A8;
 }
 
 .filmstrip-frame img {
@@ -1367,9 +1369,11 @@ body.vinyl-cursor-active * {
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0.92;
+  transition: opacity 0.3s ease;
 }
 
-.gallery-entry-filmstrip:hover .filmstrip-frame {
+.gallery-entry-filmstrip:hover .filmstrip-frame img {
   opacity: 1;
 }
 
@@ -1377,11 +1381,11 @@ body.vinyl-cursor-active * {
 .filmstrip-label {
   position: absolute;
   top: 50%;
-  left: 14px;
+  left: 12px;
   transform: translateY(-50%);
   z-index: 3;
   padding: 4px 10px;
-  background: rgba(28, 25, 22, 0.78);
+  background: rgba(28, 25, 22, 0.82);
   backdrop-filter: blur(2px);
   border-radius: 3px;
   font-family: var(--font-sans);
@@ -1395,7 +1399,7 @@ body.vinyl-cursor-active * {
 .filmstrip-arrow {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: 12px;
   transform: translateY(-50%);
   z-index: 3;
   width: 26px;
@@ -1403,7 +1407,7 @@ body.vinyl-cursor-active * {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(242, 236, 226, 0.14);
+  background: rgba(28, 25, 22, 0.82);
   border-radius: 50%;
   font-size: 0.9rem;
   color: #F2ECE2;
@@ -1413,7 +1417,7 @@ body.vinyl-cursor-active * {
 
 .gallery-entry-filmstrip:hover .filmstrip-arrow {
   transform: translateY(-50%) translateX(3px);
-  background: rgba(242, 236, 226, 0.24);
+  background: rgba(28, 25, 22, 0.92);
 }
 
 @media (max-width: 640px) {
@@ -1421,12 +1425,12 @@ body.vinyl-cursor-active * {
     margin-bottom: 2rem;
   }
   .filmstrip-sprockets {
-    height: 8px;
-    background-size: 18px 8px;
+    height: 7px;
+    background-size: 16px 7px;
   }
   .filmstrip-frame {
-    width: 72px;
-    height: 44px;
+    width: 70px;
+    height: 42px;
   }
   .filmstrip-track {
     gap: 5px;
@@ -1443,35 +1447,52 @@ body.vinyl-cursor-active * {
     height: 22px;
     font-size: 0.8rem;
   }
+  /* Slow the marquee a touch on small screens so it stays calm */
+  .filmstrip-track {
+    animation-duration: 30s;
+  }
 }
 
 /* ─── Gallery Page ────────────────────────────────────── */
 .gallery-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 180px;
+  grid-auto-rows: 200px;
   grid-auto-flow: dense;
-  gap: 18px;
+  gap: 24px 18px;
   padding: 0 24px 6rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+/* Each item is a column: image (tilt) on top, caption beneath.
+   grid-row span controls only the image area, so tall items get more
+   room without the caption eating into the photo. */
 .gallery-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  cursor: pointer;
+  outline: none;
+  /* The grid row span applies to the whole item; we keep the caption
+     height stable so the image flexes to fill the rest. */
+}
+
+.gallery-item-tilt {
+  flex: 1 1 auto;
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
   background: #E8DCC8;
   box-shadow: 0 4px 16px rgba(28, 25, 22, 0.08), 0 1px 3px rgba(28, 25, 22, 0.05);
-  transition: box-shadow 0.35s ease, transform 0.35s ease;
-  outline: none;
+  transition: transform 0.25s ease-out, box-shadow 0.35s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
-.gallery-item:hover,
-.gallery-item:focus-visible {
-  box-shadow: 0 10px 32px rgba(28, 25, 22, 0.16), 0 2px 6px rgba(28, 25, 22, 0.08);
-  transform: translateY(-3px);
+.gallery-item:hover .gallery-item-tilt,
+.gallery-item:focus-visible .gallery-item-tilt {
+  box-shadow: 0 14px 36px rgba(28, 25, 22, 0.18), 0 2px 8px rgba(28, 25, 22, 0.08);
 }
 
 .gallery-item-frame {
@@ -1485,45 +1506,41 @@ body.vinyl-cursor-active * {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .gallery-item:hover .gallery-item-frame img,
 .gallery-item:focus-visible .gallery-item-frame img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
-.gallery-item-overlay {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: 2rem 1rem 0.875rem;
-  background: linear-gradient(to top, rgba(28, 25, 22, 0.72), rgba(28, 25, 22, 0) 100%);
-  color: #F2ECE2;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  pointer-events: none;
-}
-
-.gallery-item:hover .gallery-item-overlay,
-.gallery-item:focus-visible .gallery-item-overlay {
-  opacity: 1;
-  transform: translateY(0);
+/* Caption row beneath the photo — always visible */
+.gallery-item-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.15rem;
+  font-family: var(--font-serif);
 }
 
 .gallery-item-desc {
-  font-family: var(--font-serif);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 500;
+  color: var(--warm-ivory);
   line-height: 1.3;
-  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gallery-item-location {
+  flex: 0 0 auto;
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  opacity: 0.85;
+  color: var(--warm-ivory-dim);
   letter-spacing: 0.04em;
+  opacity: 0.85;
 }
 
 .gallery-empty {
@@ -1535,8 +1552,8 @@ body.vinyl-cursor-active * {
 @media (max-width: 900px) {
   .gallery-container {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 160px;
-    gap: 14px;
+    grid-auto-rows: 170px;
+    gap: 20px 14px;
   }
 }
 
@@ -1544,16 +1561,11 @@ body.vinyl-cursor-active * {
   .gallery-container {
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
-    gap: 16px;
+    gap: 22px;
     padding: 0 16px 4rem;
   }
-  .gallery-item {
-    min-height: 320px;
-  }
-  .gallery-item-overlay {
-    opacity: 1;
-    transform: none;
-    background: linear-gradient(to top, rgba(28, 25, 22, 0.6), rgba(28, 25, 22, 0) 100%);
+  .gallery-item-tilt {
+    min-height: 300px;
   }
 }
 

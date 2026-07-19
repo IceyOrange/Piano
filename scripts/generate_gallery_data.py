@@ -75,6 +75,8 @@ def main():
 
         items.append({
             "src": f"assets/gallery/{path.name}",
+            "thumbFilm": f"assets/gallery/thumbs/filmstrip/{path.name}",
+            "thumbGrid": f"assets/gallery/thumbs/grid/{path.name}",
             "desc": desc,
             "location": location,
             "width": width,

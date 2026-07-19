@@ -54,15 +54,17 @@ window.PianoApp.initPortfolio = function () {
   // ─── Gallery filmstrip entry ─────────────────────────
   var filmstripHtml = '';
   if (galleryData.length > 0) {
-    var previewCount = Math.min(6, galleryData.length);
-    var previews = shuffleArray(galleryData).slice(0, previewCount);
-    var filmstripLabel = tStr('gallery.filmstripLabel') || 'Photography';
-    var framesHtml = previews.map(function (photo) {
+    // Shuffle once per render for variety, then duplicate the sequence so the
+    // marquee animation can loop seamlessly (translateX by half = one full set).
+    var shuffled = shuffleArray(galleryData);
+    var framesHtml = shuffled.concat(shuffled).map(function (photo) {
+      var src = photo.thumbFilm || photo.src;
       return ''
         + '<div class="filmstrip-frame">'
-        +   '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
+        +   '<img src="' + src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
         + '</div>';
     }).join('');
+    var filmstripLabel = tStr('gallery.filmstripLabel') || 'Photography';
     filmstripHtml = ''
       + '<a href="gallery.html" class="gallery-entry-filmstrip" aria-label="' + escapeHtml(filmstripLabel) + '">'
       +   '<span class="filmstrip-label">' + escapeHtml(filmstripLabel) + '</span>'
@@ -117,21 +119,51 @@ window.PianoApp.initGallery = function () {
     return;
   }
 
-  // Build grid items
+  // Build grid items — caption sits below the image (always visible),
+  // and the image tilts toward the cursor on hover (see JS below).
   container.innerHTML = photos.map(function (photo, i) {
     var span = getRowSpan(photo.width, photo.height);
     var locationLabel = escapeHtml(photo.location);
+    var thumb = photo.thumbGrid || photo.src;
     return ''
       + '<article class="gallery-item" data-index="' + i + '" style="grid-row: span ' + span + '" tabindex="0" role="button" aria-label="' + escapeHtml(photo.desc) + '">'
-      +   '<div class="gallery-item-frame">'
-      +     '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
-      +     '<div class="gallery-item-overlay">'
-      +       '<div class="gallery-item-desc">' + escapeHtml(photo.desc) + '</div>'
-      +       (locationLabel ? '<div class="gallery-item-location">' + locationLabel + '</div>' : '')
+      +   '<div class="gallery-item-tilt">'
+      +     '<div class="gallery-item-frame">'
+      +       '<img src="' + thumb + '" data-full="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
       +     '</div>'
+      +   '</div>'
+      +   '<div class="gallery-item-caption">'
+      +     '<span class="gallery-item-desc">' + escapeHtml(photo.desc) + '</span>'
+      +     (locationLabel ? '<span class="gallery-item-location">' + locationLabel + '</span>' : '')
       +   '</div>'
       + '</article>';
   }).join('');
+
+  // ─── 3D tilt on hover ─────────────────────────────────
+  var MAX_TILT = 8; // degrees
+  container.querySelectorAll('.gallery-item').forEach(function (item) {
+    var tilt = item.querySelector('.gallery-item-tilt');
+    if (!tilt) return;
+    var raf = null;
+
+    function onMove(e) {
+      var rect = item.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width;  // 0..1
+      var y = (e.clientY - rect.top) / rect.height;  // 0..1
+      var rotY = (x - 0.5) * 2 * MAX_TILT;            // -MAX..MAX
+      var rotX = -(y - 0.5) * 2 * MAX_TILT;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(function () {
+        tilt.style.transform = 'perspective(900px) rotateX(' + rotX.toFixed(2) + 'deg) rotateY(' + rotY.toFixed(2) + 'deg)';
+      });
+    }
+    function onLeave() {
+      if (raf) cancelAnimationFrame(raf);
+      tilt.style.transform = '';
+    }
+    item.addEventListener('mousemove', onMove);
+    item.addEventListener('mouseleave', onLeave);
+  });
 
   // Lightbox state
   var currentIndex = 0;
