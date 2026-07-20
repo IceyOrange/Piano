@@ -6,7 +6,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/奶奶家的猫_岳阳.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/奶奶家的猫_岳阳.jpg",
     "desc": "奶奶家的猫",
+    "descEn": "Grandma's Cat",
     "location": "岳阳",
+    "locationEn": "Yueyang",
     "width": 3072,
     "height": 4096,
     "date": "2026-02-19T10:22:31+00:00"
@@ -16,7 +18,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/西伯利亚海鸥_深圳.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/西伯利亚海鸥_深圳.jpg",
     "desc": "西伯利亚海鸥",
+    "descEn": "Siberian Seagulls",
     "location": "深圳",
+    "locationEn": "Shenzhen",
     "width": 3072,
     "height": 4096,
     "date": "2026-01-10T14:29:28+00:00"
@@ -26,7 +30,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/镜中树_广州.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/镜中树_广州.jpg",
     "desc": "镜中树",
+    "descEn": "Tree in the Mirror",
     "location": "广州",
+    "locationEn": "Guangzhou",
     "width": 3072,
     "height": 4096,
     "date": "2026-01-10T12:57:34+00:00"
@@ -36,7 +42,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/很喜欢的一首歌_深圳.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/很喜欢的一首歌_深圳.jpg",
     "desc": "很喜欢的一首歌",
+    "descEn": "A Song I Love",
     "location": "深圳",
+    "locationEn": "Shenzhen",
     "width": 4096,
     "height": 2304,
     "date": "2026-01-09T21:40:36+00:00"
@@ -46,7 +54,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/音乐照耀我们_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/音乐照耀我们_珠海.jpg",
     "desc": "音乐照耀我们",
+    "descEn": "Music Lights Us Up",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 3072,
     "height": 4096,
     "date": "2026-01-09T19:56:32+00:00"
@@ -56,7 +66,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/光影 Adidas_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/光影 Adidas_珠海.jpg",
     "desc": "光影 Adidas",
+    "descEn": "Light & Shadow: Adidas",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 4096,
     "height": 3072,
     "date": "2025-12-20T16:35:45+00:00"
@@ -66,7 +78,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/孤独的共享单车_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/孤独的共享单车_珠海.jpg",
     "desc": "孤独的共享单车",
+    "descEn": "A Lonely Shared Bike",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 3072,
     "height": 4096,
     "date": "2025-11-28T10:05:36+00:00"
@@ -76,7 +90,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/镜子中_广州.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/镜子中_广州.jpg",
     "desc": "镜子中",
+    "descEn": "In the Mirror",
     "location": "广州",
+    "locationEn": "Guangzhou",
     "width": 3072,
     "height": 4096,
     "date": "2025-11-08T12:40:22+00:00"
@@ -86,7 +102,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/离群的骆驼_乌兰察布.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/离群的骆驼_乌兰察布.jpg",
     "desc": "离群的骆驼",
+    "descEn": "A Stray Camel",
     "location": "乌兰察布",
+    "locationEn": "Ulanqab",
     "width": 4416,
     "height": 5888,
     "date": "2025-10-25T17:43:36+00:00"
@@ -96,7 +114,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/明与暗_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/明与暗_珠海.jpg",
     "desc": "明与暗",
+    "descEn": "Light and Dark",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 3072,
     "height": 4096,
     "date": "2025-10-16T11:50:48+00:00"
@@ -106,7 +126,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/三棱镜_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/三棱镜_珠海.jpg",
     "desc": "三棱镜",
+    "descEn": "Prism",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 3072,
     "height": 4096,
     "date": "2025-10-14T13:05:49+00:00"
@@ -116,7 +138,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/云中月_兴宁.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/云中月_兴宁.jpg",
     "desc": "云中月",
+    "descEn": "Moon in the Clouds",
     "location": "兴宁",
+    "locationEn": "Xingning",
     "width": 3072,
     "height": 4096,
     "date": "2025-10-04T17:15:06+00:00"
@@ -126,7 +150,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/纯净_珠海.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/纯净_珠海.jpg",
     "desc": "纯净",
+    "descEn": "Purity",
     "location": "珠海",
+    "locationEn": "Zhuhai",
     "width": 3072,
     "height": 4096,
     "date": "2025-09-27T18:20:41+00:00"
@@ -136,7 +162,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/非常喜爱的乐队_北京.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/非常喜爱的乐队_北京.jpg",
     "desc": "非常喜爱的乐队",
+    "descEn": "A Band I Adore",
     "location": "北京",
+    "locationEn": "Beijing",
     "width": 4096,
     "height": 2304,
     "date": "2025-08-23T21:35:21+00:00"
@@ -146,7 +174,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/你瞅啥_北京.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/你瞅啥_北京.jpg",
     "desc": "你瞅啥",
+    "descEn": "What're You Looking At?",
     "location": "北京",
+    "locationEn": "Beijing",
     "width": 4096,
     "height": 3072,
     "date": "2025-08-09T15:54:29+00:00"
@@ -156,7 +186,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/上帝东路_北京.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/上帝东路_北京.jpg",
     "desc": "上帝东路",
+    "descEn": "Shangdi East Road",
     "location": "北京",
+    "locationEn": "Beijing",
     "width": 3072,
     "height": 4096,
     "date": "2025-08-06T19:52:08+00:00"
@@ -166,7 +198,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/胡同_北京.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/胡同_北京.jpg",
     "desc": "胡同",
+    "descEn": "Hutong",
     "location": "北京",
+    "locationEn": "Beijing",
     "width": 3072,
     "height": 4096,
     "date": "2025-07-18T21:12:07+00:00"
@@ -176,7 +210,9 @@ window.PianoApp.galleryData = [
     "thumbFilm": "assets/gallery/thumbs/filmstrip/霍格沃茨大桥_北京.jpg",
     "thumbGrid": "assets/gallery/thumbs/grid/霍格沃茨大桥_北京.jpg",
     "desc": "霍格沃茨大桥",
+    "descEn": "Hogwarts Bridge",
     "location": "北京",
+    "locationEn": "Beijing",
     "width": 4096,
     "height": 2304,
     "date": "2025-07-12T20:01:43+00:00"

@@ -53,7 +53,7 @@ window.PianoApp.initPortfolio = function () {
       var src = photo.thumbFilm || photo.src;
       return ''
         + '<div class="filmstrip-frame">'
-        +   '<img src="' + src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
+        +   '<img src="' + src + '" alt="' + escapeHtml(pickField(photo, 'desc')) + '" loading="lazy">'
         + '</div>';
     }).join('');
     var filmstripLabel = tStr('gallery.filmstripLabel') || 'Photography';
@@ -188,18 +188,19 @@ window.PianoApp.initGallery = function () {
   // automatically balancing column heights — no span math needed.
   var ordered = optimizeGalleryOrder(photos);
   container.innerHTML = ordered.map(function (photo, i) {
-    var locationLabel = escapeHtml(photo.location);
+    var desc = pickField(photo, 'desc');
+    var locationLabel = escapeHtml(pickField(photo, 'location'));
     var thumb = photo.thumbGrid || photo.src;
     var ratio = photo.width + '/' + photo.height;
     return ''
-      + '<article class="gallery-item" data-index="' + i + '" tabindex="0" role="button" aria-label="' + escapeHtml(photo.desc) + '">'
+      + '<article class="gallery-item" data-index="' + i + '" tabindex="0" role="button" aria-label="' + escapeHtml(desc) + '">'
       +   '<div class="gallery-item-tilt">'
       +     '<div class="gallery-item-frame" style="aspect-ratio:' + ratio + '">'
-      +       '<img src="' + thumb + '" data-full="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '" loading="lazy">'
+      +       '<img src="' + thumb + '" data-full="' + photo.src + '" alt="' + escapeHtml(desc) + '" loading="lazy">'
       +     '</div>'
       +   '</div>'
       +   '<div class="gallery-item-caption">'
-      +     '<span class="gallery-item-desc">' + escapeHtml(photo.desc) + '</span>'
+      +     '<span class="gallery-item-desc">' + escapeHtml(desc) + '</span>'
       +     (locationLabel ? '<span class="gallery-item-location">' + locationLabel + '</span>' : '')
       +   '</div>'
       + '</article>';
@@ -238,6 +239,12 @@ window.PianoApp.initGallery = function () {
   function openLightbox(index) {
     currentIndex = index;
     if (!lightboxEl) {
+      // Remove any stale lightbox elements left in the DOM from previous
+      // initGallery runs (e.g. after a language toggle). We create a new one
+      // each time initGallery runs so the closures capture the updated
+      // ordered array and pickField language state.
+      var oldLb = document.querySelector('.gallery-lightbox');
+      if (oldLb) oldLb.remove();
       lightboxEl = document.createElement('div');
       lightboxEl.className = 'gallery-lightbox';
       lightboxEl.setAttribute('role', 'dialog');
@@ -281,16 +288,22 @@ window.PianoApp.initGallery = function () {
     if (!lightboxEl) return;
     lightboxEl.classList.remove('is-open');
     document.body.style.overflow = '';
+    // Remove the element so a fresh one is created on next open,
+    // ensuring closures capture the latest ordered/pickField state.
+    lightboxEl.remove();
+    lightboxEl = null;
   }
 
   function renderLightbox() {
     var photo = ordered[currentIndex];
+    var desc = pickField(photo, 'desc');
+    var loc = pickField(photo, 'location');
     var stage = lightboxEl.querySelector('.gallery-lightbox__stage');
     var caption = lightboxEl.querySelector('.gallery-lightbox__caption');
-    stage.innerHTML = '<img src="' + photo.src + '" alt="' + escapeHtml(photo.desc) + '">';
+    stage.innerHTML = '<img src="' + photo.src + '" alt="' + escapeHtml(desc) + '">';
     caption.innerHTML = ''
-      + '<span class="gallery-lightbox__title">' + escapeHtml(photo.desc) + '</span>'
-      + (photo.location ? '<span class="gallery-lightbox__location">' + escapeHtml(photo.location) + '</span>' : '')
+      + '<span class="gallery-lightbox__title">' + escapeHtml(desc) + '</span>'
+      + (loc ? '<span class="gallery-lightbox__location">' + escapeHtml(loc) + '</span>' : '')
       + '<span class="gallery-lightbox__counter">' + (currentIndex + 1) + ' / ' + ordered.length + '</span>';
   }
 
