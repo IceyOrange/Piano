@@ -1299,46 +1299,46 @@ body.vinyl-cursor-active * {
   position: relative;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: clamp(3.5rem, 7vh, 5.5rem) auto 0;
   /* Pull the filmstrip closer to the first project-piece below.
      The parent .portfolio-showcase gap is clamp(5rem,12vh,10rem),
      which is too much for the filmstrip → project transition.
      Negate the flex gap then add a modest breathing space. */
   margin-bottom: calc(-1 * clamp(5rem, 12vh, 10rem) + clamp(2rem, 4vh, 3rem));
   /* Warm film base: blends with the page's ivory tone, with a subtle
-     paper-grain gradient so it reads as a strip rather than a flat bar. */
+     paper-grain gradient so it reads as a strip rather than a flat bar.
+     Softened edges (no hard outline) so it melts into the page. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(28,25,22,0.04)),
-    #E3D9CA;
-  border-radius: 6px;
+    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(28,25,22,0.02)),
+    #EBE3D3;
+  border-radius: 8px;
   overflow: hidden;
   text-decoration: none;
   color: #1C1916;
   padding: 0;
-  box-shadow: 0 4px 16px rgba(28, 25, 22, 0.1), 0 1px 3px rgba(28, 25, 22, 0.05);
-  transition: box-shadow 0.4s ease, transform 0.4s ease;
+  border: 1px solid rgba(28, 25, 22, 0.06);
+  box-shadow: 0 6px 22px -8px rgba(28, 25, 22, 0.18), 0 1px 3px rgba(28, 25, 22, 0.04);
+  transition: box-shadow 0.4s ease, transform 0.4s ease, border-color 0.4s ease;
 }
 
 .gallery-entry-filmstrip:hover {
-  box-shadow: 0 8px 24px rgba(28, 25, 22, 0.16), 0 2px 6px rgba(28, 25, 22, 0.08);
+  box-shadow: 0 10px 30px -8px rgba(28, 25, 22, 0.22), 0 2px 6px rgba(28, 25, 22, 0.06);
   transform: translateY(-2px);
+  border-color: rgba(28, 25, 22, 0.12);
 }
 
-/* Sprocket rows: a row of small punched holes along the warm strip edges.
-   Darker brown dots on the lighter base read as perforations without
-   forcing the whole strip dark. */
+/* Sprocket rows: a faint row of perforations along the strip edges.
+   Kept low-contrast and borderless so the strip reads as a gentle
+   paper band rather than a hard synthetic cassette. */
 .filmstrip-sprockets {
   position: relative;
   height: 9px;
-  background: #D6C9B4;
-  background-image: radial-gradient(circle, #9C8B73 1.8px, transparent 2.2px);
-  background-size: 20px 9px;
+  background: transparent;
+  background-image: radial-gradient(circle, rgba(120, 105, 85, 0.28) 1.7px, transparent 2.1px);
+  background-size: 22px 9px;
   background-position: center;
   background-repeat: repeat-x;
 }
-
-.filmstrip-sprockets--top { border-bottom: 1px solid rgba(28,25,22,0.08); }
-.filmstrip-sprockets--bottom { border-top: 1px solid rgba(28,25,22,0.08); }
 
 /* Marquee: the frame set is duplicated in JS, so translating by -50% loops
    seamlessly. Paused unless hovered, so the strip is calm at rest. */
@@ -1427,12 +1427,14 @@ body.vinyl-cursor-active * {
 
 @media (max-width: 640px) {
   .gallery-entry-filmstrip {
+    /* A touch less top air on mobile; still clear of the fixed header */
+    margin-top: 2.5rem;
     /* Negate the 3rem mobile gap and add a modest space instead */
     margin-bottom: calc(-3rem + 1.5rem);
   }
   .filmstrip-sprockets {
     height: 7px;
-    background-size: 16px 7px;
+    background-size: 18px 7px;
   }
   .filmstrip-frame {
     width: 70px;
