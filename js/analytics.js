@@ -103,30 +103,32 @@ window.PianoApp.Analytics = (function () {
 
   // ─── Domain-specific helpers ────────────────────────────────────────────
   //
-  // 29 distinct events:
-  //   24 piano keys  → e.g. "C3_short_click"
-  //    3 nav keys    → e.g. "portfolio_long_click"
-  //    1 canon play  → "canon_play"
-  //    1 canon done  → "canon_completed"
+  // All 29 actions share a single event name "piano_event" with an "action"
+  // property so PostHog can break down by action in a single bar chart.
+  //
+  //   24 piano keys  → action: "C3_short_click", "F#2_short_click", …
+  //    3 nav keys    → action: "portfolio_long_click", …
+  //    1 canon play  → action: "canon_play"
+  //    1 canon done  → action: "canon_completed"
 
   // Nav-key note → page label mapping (must match data.js navMappings)
   var navLabels = { C3: "portfolio", G3: "experience", B3: "about" };
 
   function keyClick(note) {
-    capture(note + "_short_click");
+    capture("piano_event", { action: note + "_short_click" });
   }
 
   function navLongClick(note) {
     var label = navLabels[note] || note;
-    capture(label + "_long_click");
+    capture("piano_event", { action: label + "_long_click" });
   }
 
   function canonPlay() {
-    capture("canon_play");
+    capture("piano_event", { action: "canon_play" });
   }
 
   function canonCompleted() {
-    capture("canon_completed");
+    capture("piano_event", { action: "canon_completed" });
   }
 
   return {
