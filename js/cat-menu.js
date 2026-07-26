@@ -325,6 +325,7 @@ window.PianoApp.CatMenu = (function () {
   }
 
   function handleAction(id) {
+    if (window.PianoApp.Analytics) window.PianoApp.Analytics.catMenuAction(id);
     if (id === "record") {
       if (mode === "preview") discardRecording();
       startRecording();

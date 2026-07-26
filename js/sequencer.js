@@ -348,11 +348,14 @@ window.PianoApp.Sequencer = {
   toggle() {
     if (this.isPlaying) {
       this.pause();
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("pause");
     } else if (this.isPaused) {
       this.start();
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("resume");
     } else {
       this._humanSeed = Math.random() * 10000;
       this.elapsedMs = 0;
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("play");
       const self = this;
       function begin() {
         self._predecodeSamples().then(
