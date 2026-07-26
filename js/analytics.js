@@ -102,39 +102,39 @@ window.PianoApp.Analytics = (function () {
   });
 
   // ─── Domain-specific helpers ────────────────────────────────────────────
+  //
+  // 29 distinct events:
+  //   24 piano keys  → e.g. "C3_short_click"
+  //    3 nav keys    → e.g. "portfolio_long_click"
+  //    1 canon play  → "canon_play"
+  //    1 canon done  → "canon_completed"
 
-  function pianoKeyPlayed(note, source) {
-    capture("piano_key_played", { note: note, source: source });
+  // Nav-key note → page label mapping (must match data.js navMappings)
+  var navLabels = { C3: "portfolio", G3: "experience", B3: "about" };
+
+  function keyClick(note) {
+    capture(note + "_short_click");
   }
 
-  function catClicked(action) {
-    capture("cat_clicked", { action: action });
+  function navLongClick(note) {
+    var label = navLabels[note] || note;
+    capture(label + "_long_click");
   }
 
-  function canonToggled(state) {
-    capture("canon_toggled", { state: state });
+  function canonPlay() {
+    capture("canon_play");
   }
 
   function canonCompleted() {
     capture("canon_completed");
   }
 
-  function catMenuAction(action) {
-    capture("cat_menu_action", { action: action });
-  }
-
-  function navKeyLongPress(note, targetPage) {
-    capture("nav_key_long_press", { note: note, targetPage: targetPage });
-  }
-
   return {
     capture: capture,
     flush: flush,
-    pianoKeyPlayed: pianoKeyPlayed,
-    catClicked: catClicked,
-    canonToggled: canonToggled,
+    keyClick: keyClick,
+    navLongClick: navLongClick,
+    canonPlay: canonPlay,
     canonCompleted: canonCompleted,
-    catMenuAction: catMenuAction,
-    navKeyLongPress: navKeyLongPress,
   };
 })();

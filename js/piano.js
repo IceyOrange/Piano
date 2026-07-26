@@ -452,7 +452,7 @@ window.PianoApp.initPiano = function () {
             if (group) group.classList.remove("pressed");
             setVisualState(note, "pressed", false);
             cancelPreviewAnimation();
-            if (window.PianoApp.Analytics) window.PianoApp.Analytics.navKeyLongPress(note, nav.href);
+            if (window.PianoApp.Analytics) window.PianoApp.Analytics.navLongClick(note);
             window.PianoApp.navigateWithTransition(
               nav.href,
               getNavVariants()[nav.href] || "fade",
@@ -464,7 +464,7 @@ window.PianoApp.initPiano = function () {
 
         pressedNote = note;
         window.PianoApp.playNote(note);
-        if (window.PianoApp.Analytics) window.PianoApp.Analytics.pianoKeyPlayed(note, "pointer");
+        if (window.PianoApp.Analytics) window.PianoApp.Analytics.keyClick(note);
         if (window.PianoApp.Recorder && window.PianoApp.Recorder.isRecording) {
           window.PianoApp.Recorder.noteOn(note);
         }
@@ -578,7 +578,7 @@ window.PianoApp.initPiano = function () {
         ohCat.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (window.PianoApp.Analytics) window.PianoApp.Analytics.catClicked("canon_toggle");
+          if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonPlay();
           window.PianoApp.Sequencer.toggle();
           // Mouse clicks on a focusable SVG <g> can leave focus stuck on the
           // element, which then keeps :focus-visible true (browsers vary in
@@ -596,7 +596,7 @@ window.PianoApp.initPiano = function () {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             if (window.PianoApp.CatMenu && window.PianoApp.CatMenu.openMenuKeyboard) {
-              if (window.PianoApp.Analytics) window.PianoApp.Analytics.catClicked("menu_open_keyboard");
+              if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonPlay();
               window.PianoApp.CatMenu.openMenuKeyboard();
             }
           }
@@ -796,7 +796,7 @@ window.PianoApp.initPiano = function () {
           const note = e.shiftKey ? noteDef.shift : noteDef.base;
           activeKeyboardNotes.set(digit, note);
           pressNote(note);
-          if (window.PianoApp.Analytics) window.PianoApp.Analytics.pianoKeyPlayed(note, "keyboard_digit");
+          if (window.PianoApp.Analytics) window.PianoApp.Analytics.keyClick(note);
           return;
         }
 
@@ -808,7 +808,7 @@ window.PianoApp.initPiano = function () {
         const notes = e.shiftKey ? chordDef.minor : chordDef.major;
         activeKeyboardChords.set(key, notes);
         playChordNotes(notes);
-        if (window.PianoApp.Analytics) window.PianoApp.Analytics.pianoKeyPlayed(notes.join("+"), "keyboard_chord");
+        if (window.PianoApp.Analytics) window.PianoApp.Analytics.keyClick(notes.join("+"));
       });
 
       document.addEventListener("keyup", (e) => {

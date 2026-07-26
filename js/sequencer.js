@@ -296,6 +296,7 @@ window.PianoApp.Sequencer = {
           seq[seq.length - 1].duration +
           100
     ) {
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonCompleted();
       this._resetState();
       return;
     }
@@ -348,14 +349,13 @@ window.PianoApp.Sequencer = {
   toggle() {
     if (this.isPlaying) {
       this.pause();
-      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("pause");
     } else if (this.isPaused) {
       this.start();
-      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("resume");
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonPlay();
     } else {
       this._humanSeed = Math.random() * 10000;
       this.elapsedMs = 0;
-      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonToggled("play");
+      if (window.PianoApp.Analytics) window.PianoApp.Analytics.canonPlay();
       const self = this;
       function begin() {
         self._predecodeSamples().then(
