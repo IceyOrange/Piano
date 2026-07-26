@@ -65,10 +65,15 @@ window.PianoApp.Analytics = (function () {
     var body = JSON.stringify(payload);
 
     if (sync) {
-      // Fire-and-forget via sendBeacon (most reliable on unload)
+      // Fire-and-forget via sendBeacon (most reliable on unload).
+      // Must wrap in a Blob with the correct Content-Type, otherwise
+      // sendBeacon sends text/plain and the proxy rejects it (415).
       if (navigator.sendBeacon) {
-        navigator.sendBeacon("/api/analytics", body);
-        return;
+        try {
+          var blob = new Blob([body], { type: "application/json" });
+          navigator.sendBeacon("/api/analytics", blob);
+          return;
+        } catch (e) { /* fall through to fetch */ }
       }
     }
 
